@@ -15,6 +15,10 @@
   <a href="#license">License</a>
 </p>
 
+<p align="right">
+  English · <a href="README.ko.md">한국어</a>
+</p>
+
 ---
 
 Lathe takes over the system ⌘+Tab and shows a fan-shaped carousel of
