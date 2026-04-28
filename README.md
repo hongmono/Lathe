@@ -266,5 +266,5 @@ codebase is small enough to add them in an afternoon.
 
 ## License
 
-Personal use. No license granted for redistribution. The code is here
-so you can read it and build it yourself, not so you can ship it.
+[MIT](LICENSE) — fork, modify, ship it however you want. Attribution
+keeps the door open for others to find the source.
