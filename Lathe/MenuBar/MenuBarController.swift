@@ -32,7 +32,7 @@ final class MenuBarController {
 
         let prefs = NSMenuItem(title: "Preferences…",
                                action: #selector(showPreferences),
-                               keyEquivalent: ",")
+                               keyEquivalent: "")
         prefs.target = self
         menu.addItem(prefs)
 

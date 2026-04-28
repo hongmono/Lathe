@@ -166,7 +166,8 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 
 ## 환경설정
 
-메뉴바 점선 원 아이콘 → **Preferences…** (또는 메뉴가 열려 있을 때 ⌘,)
+메뉴바 점선 원 아이콘 → **Preferences…**, 또는 캐러셀이 떠 있을 때
+⌘+, 를 누릅니다 ([사용법](#사용법) 참고).
 
 <p align="center">
   <img src="docs/images/preferences.png" alt="Lathe 환경설정 윈도우" width="480">

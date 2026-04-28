@@ -182,8 +182,8 @@ carousel and the cards rotate around it.
 
 ## Preferences
 
-Open from the menu bar's dotted-circle icon → **Preferences…** (or ⌘,
-while the menu is open).
+Open from the menu bar's dotted-circle icon → **Preferences…**, or
+hit ⌘+, while the carousel is open (see [Use](#use)).
 
 <p align="center">
   <img src="docs/images/preferences.png" alt="Lathe preferences window" width="480">
