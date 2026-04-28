@@ -48,17 +48,22 @@ and sign it yourself.
    brew install xcodegen
    ```
 
-2. Clone and build:
+2. Clone, generate the Xcode project, and open it:
 
    ```bash
    git clone https://github.com/hongmono/Lathe.git
    cd Lathe
-   ./dev run
+   xcodegen generate
+   open Lathe.xcodeproj
    ```
 
-3. The first launch will show a permission window. Grant Accessibility
-   in System Settings, then quit and run `./dev run` again — event taps
-   need a fresh process to attach.
+3. In Xcode, select the `Lathe` target → Signing & Capabilities → Team:
+   your signing identity (see [Code signing](#code-signing) below).
+   Run with ⌘R.
+
+4. The first launch will show a permission window. Grant Accessibility
+   in System Settings, then quit and run again — event taps need a
+   fresh process to attach.
 
 That's it. There is no DMG, no notarization, no `xattr` workaround. The
 whole binary lives in your DerivedData and is signed with your local
@@ -127,30 +132,21 @@ SIGN_ARGS=(
 )
 ```
 
-### The `./dev` helper
+### Day-to-day
 
-A single bash entry point covers everything:
-
-```bash
-./dev run     # build + (re)launch — kills any running Lathe first
-./dev build   # build only
-./dev test    # run unit tests
-./dev stop    # kill the running app
-./dev clean   # wipe Lathe.xcodeproj and build artifacts
-```
-
-`./dev run` regenerates `Lathe.xcodeproj` automatically when
-`Project.yml` or any `*.swift` source has changed since the last build.
-
-### Or via Xcode
+Anytime `Project.yml` or a Swift source changes, regenerate the Xcode
+project:
 
 ```bash
 xcodegen generate
-open Lathe.xcodeproj
 ```
 
-Select the `Lathe` target → Signing & Capabilities → Team: your
-identity. Run with ⌘R.
+Then build/run from Xcode (⌘R), or from the command line:
+
+```bash
+xcodebuild -project Lathe.xcodeproj -scheme Lathe -configuration Debug build
+xcodebuild -project Lathe.xcodeproj -scheme Lathe test
+```
 
 ## Use
 

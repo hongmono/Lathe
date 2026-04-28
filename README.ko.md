@@ -47,17 +47,20 @@ Lathe는 시스템 ⌘+Tab을 가로채 실행 중인 앱들을 부채꼴 캐러
    brew install xcodegen
    ```
 
-2. 클론 후 빌드:
+2. 클론, Xcode 프로젝트 생성, 열기:
 
    ```bash
    git clone https://github.com/hongmono/Lathe.git
    cd Lathe
-   ./dev run
+   xcodegen generate
+   open Lathe.xcodeproj
    ```
 
-3. 첫 실행 시 권한 안내 윈도우가 뜬다. 시스템 설정에서 Accessibility 권한을
-   부여한 뒤 `./dev run` 으로 다시 실행 — event tap은 권한 부여 후 새 프로세스에서만
-   동작한다.
+3. Xcode 에서 `Lathe` target → Signing & Capabilities → Team 에 본인
+   서명 인증서 지정 (아래 [코드 서명](#코드-서명) 참고). ⌘R 로 실행.
+
+4. 첫 실행 시 권한 안내 윈도우가 뜬다. 시스템 설정에서 Accessibility 권한을
+   부여한 뒤 다시 실행 — event tap 은 권한 부여 후 새 프로세스에서만 동작한다.
 
 DMG도, 공증(notarization)도, `xattr` 우회도 없다. 빌드 산출물은
 DerivedData 안에 있고 본인 로컬 인증서로 서명된다.
@@ -123,30 +126,20 @@ SIGN_ARGS=(
 )
 ```
 
-### `./dev` 헬퍼
+### 일상 작업
 
-bash 한 줄로 다 해결:
-
-```bash
-./dev run     # 빌드 + (재)실행 — 실행 중인 Lathe는 종료 후 재시작
-./dev build   # 빌드만
-./dev test    # 단위 테스트 실행
-./dev stop    # 실행 중인 앱 종료
-./dev clean   # Lathe.xcodeproj와 빌드 산출물 정리
-```
-
-`./dev run` 은 `Project.yml` 또는 `*.swift` 소스가 마지막 빌드 이후 변경됐으면
-`Lathe.xcodeproj` 를 자동으로 재생성한다.
-
-### Xcode로 작업
+`Project.yml` 또는 Swift 소스 변경 시 Xcode 프로젝트 재생성:
 
 ```bash
 xcodegen generate
-open Lathe.xcodeproj
 ```
 
-`Lathe` target → Signing & Capabilities → Team: 본인 인증서 선택. ⌘R
-로 실행.
+Xcode 에서 ⌘R 로 빌드·실행하거나, 커맨드라인:
+
+```bash
+xcodebuild -project Lathe.xcodeproj -scheme Lathe -configuration Debug build
+xcodebuild -project Lathe.xcodeproj -scheme Lathe test
+```
 
 ## 사용법
 
