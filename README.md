@@ -39,8 +39,25 @@ to worry about.
 
 ## Install
 
-There is no prebuilt binary — by design. The point is that you compile
-and sign it yourself.
+Two paths:
+
+- **Build it yourself** (recommended — that's the point of this
+  project; see [Build from source](#build-from-source))
+- **Download a signed build** from
+  [Releases](https://github.com/hongmono/Lathe/releases) — same
+  binary the maintainer runs, signed with the `Lathe Local Dev`
+  self-signed identity. After unzipping:
+
+  ```bash
+  xattr -d com.apple.quarantine Lathe.app
+  open Lathe.app
+  ```
+
+  This is the kind of `xattr` workaround we wanted to avoid in
+  closed-source apps. Here you can read the source first; if you
+  don't trust the binary, build it yourself.
+
+### Build it yourself
 
 1. Install the build dependency:
 
@@ -157,6 +174,7 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 | ⌘ held + ⇧Tab        | Rotate backward                                     |
 | ⌘ released           | Activate the focused (center) app                   |
 | ⌘ held + Esc         | Dismiss without switching                           |
+| ⌘ held + ,           | Open Preferences (also dismisses the carousel)      |
 
 Behavior matches the system ⌘+Tab so the muscle memory still works —
 the only difference is that the focus is fixed at the top of the

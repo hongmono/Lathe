@@ -8,6 +8,7 @@ protocol HotKeyMonitorDelegate: AnyObject {
     func hotKeyDidRequestNext()
     func hotKeyDidRequestPrevious()
     func hotKeyDidCancel()
+    func hotKeyDidRequestPreferences()
 }
 
 enum HotKeyMonitorError: Error {
@@ -28,6 +29,7 @@ final class HotKeyMonitor {
 
     private let tabKeyCode: CGKeyCode = 0x30
     private let escKeyCode: CGKeyCode = 0x35
+    private let commaKeyCode: CGKeyCode = 0x2B  // kVK_ANSI_Comma
 
     func start() throws {
         guard AXIsProcessTrusted() else {
@@ -142,6 +144,11 @@ final class HotKeyMonitor {
         case escKeyCode:
             DispatchQueue.main.async { [weak self] in
                 self?.delegate?.hotKeyDidCancel()
+            }
+            return nil
+        case commaKeyCode:
+            DispatchQueue.main.async { [weak self] in
+                self?.delegate?.hotKeyDidRequestPreferences()
             }
             return nil
         default:
