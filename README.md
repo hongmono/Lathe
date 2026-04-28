@@ -27,15 +27,11 @@ your running apps. The card at the top is always the focused app — hold
 
 ## Why
 
-A friend pointed me at [`yuzeguitarist/Orbit`](https://github.com/yuzeguitarist/Orbit),
-a closed-source unsigned macOS menu bar app that wants both
-**Accessibility** and **Input Monitoring** permissions. That permission
-combo on an unsigned, partially-published binary that ships
-`xattr -d com.apple.quarantine` instructions in its README is a
-non-starter — the same combo a keylogger needs.
-
-Lathe is a from-scratch clone in spirit, built and signed by you,
-that you can audit line by line and rebuild with one command.
+I wanted ⌘+Tab to look more interesting than a row of icons, and I
+wanted to be able to read the source of whatever was intercepting my
+keystrokes. Lathe is the result — small enough to audit in an
+afternoon, signed by your own identity, no third-party permissions
+to worry about.
 
 ## Install
 
@@ -254,7 +250,7 @@ The original design spec and implementation plan are checked in:
 
 ## Out of scope (intentional, for now)
 
-- File drag → AirDrop / Trash (Orbit's signature feature)
+- File drag → AirDrop / Trash
 - Same-app window cycling (⌘+\`)
 - Number-key or first-letter jump
 - Trackpad swipe to rotate
