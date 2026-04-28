@@ -45,5 +45,6 @@ targets:
       - target: Lathe
     settings:
       base:
+        GENERATE_INFOPLIST_FILE: YES
         BUNDLE_LOADER: "$(TEST_HOST)"
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Lathe.app/Contents/MacOS/Lathe"
