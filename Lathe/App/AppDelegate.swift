@@ -11,6 +11,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
+        SettingsStore.shared.applyAppearance()
+
         menuBar = MenuBarController()
         menuBar.onShowPermissions = { [weak self] in
             self?.permissionWindow.show()

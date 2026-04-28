@@ -6,7 +6,7 @@ struct LatheApp: App {
 
     var body: some Scene {
         Settings {
-            EmptyView()
+            SettingsView(store: .shared)
         }
     }
 }

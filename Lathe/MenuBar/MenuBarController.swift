@@ -28,11 +28,19 @@ final class MenuBarController {
         header.isEnabled = false
         menu.addItem(header)
         menu.addItem(.separator())
+
+        let prefs = NSMenuItem(title: "Preferences…",
+                               action: #selector(showPreferences),
+                               keyEquivalent: ",")
+        prefs.target = self
+        menu.addItem(prefs)
+
         let perm = NSMenuItem(title: "Permissions…",
                               action: #selector(showPermissions),
                               keyEquivalent: "")
         perm.target = self
         menu.addItem(perm)
+
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Lathe",
                      action: #selector(NSApplication.terminate(_:)),
@@ -42,5 +50,10 @@ final class MenuBarController {
 
     @objc private func showPermissions() {
         onShowPermissions()
+    }
+
+    @objc private func showPreferences() {
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 }

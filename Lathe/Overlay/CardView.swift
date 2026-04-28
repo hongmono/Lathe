@@ -4,29 +4,32 @@ struct CardView: View {
     let entry: AppEntry
     let isFocused: Bool
 
+    private var firstLetter: String {
+        let trimmed = entry.name.trimmingCharacters(in: .whitespaces)
+        return String(trimmed.prefix(1)).uppercased()
+    }
+
     var body: some View {
-        VStack(spacing: 8) {
-            Image(nsImage: entry.icon)
-                .resizable()
-                .interpolation(.high)
-                .frame(width: 80, height: 80)
-            if isFocused {
-                Text(entry.name)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .frame(maxWidth: 160)
+        ZStack {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.18), radius: 14, x: 0, y: 6)
+
+            VStack(spacing: 0) {
+                Text(firstLetter)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 14)
+                Spacer(minLength: 0)
+                Image(nsImage: entry.icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 56, height: 56)
+                Spacer(minLength: 0)
             }
+            .padding(.bottom, 20)
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .opacity(isFocused ? 1 : 0.6)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(Color.accentColor.opacity(isFocused ? 0.9 : 0), lineWidth: 2)
-        )
+        .scaleEffect(isFocused ? 1.04 : 1.0)
+        .animation(.spring(response: 0.22, dampingFraction: 0.78), value: isFocused)
     }
 }
