@@ -241,6 +241,62 @@ docs/
 v1에서는 의도적으로 뺀 항목들입니다 — 필요하다면 코드 베이스가 작아서 한나절이면
 추가할 수 있습니다.
 
+## 릴리스
+
+[`.github/workflows/release.yml`](.github/workflows/release.yml) 의
+GitHub Actions 워크플로가 `v*` 태그 push (또는 수동 `workflow_dispatch`)
+시 서명된 Release 아카이브를 빌드하고, 압축한 `.app` 을 GitHub Release에
+첨부합니다.
+
+### 1회성 secret 설정
+
+워크플로는 로컬의 self-signed `Lathe Local Dev` 인증서를 사용하므로
+runner 가 이 인증서를 import 할 수 있어야 합니다.
+
+1. login keychain 에서 인증서 + private key 를 `.p12` 로 export 합니다:
+
+   ```bash
+   security export -k login.keychain -t identities -f pkcs12 \
+     -P "<export-용-비밀번호>" -o /tmp/lathe-cert.p12
+   # 이어 뜨는 다이얼로그에서 "Lathe Local Dev" 항목을 선택합니다.
+   ```
+
+2. base64 로 인코딩합니다 (GitHub secret 용):
+
+   ```bash
+   base64 -i /tmp/lathe-cert.p12 | pbcopy
+   ```
+
+3. GitHub 에서 **Settings → Secrets and variables → Actions → New
+   repository secret** 으로 다음 세 개를 등록합니다:
+
+   | 이름                    | 값                                                  |
+   |-------------------------|-----------------------------------------------------|
+   | `SIGNING_CERT_P12`      | 2단계에서 복사한 base64 문자열                      |
+   | `SIGNING_CERT_PASSWORD` | 1단계에서 정한 export 비밀번호                      |
+   | `KEYCHAIN_PASSWORD`     | 임의 문자열 — runner 쪽 임시 keychain 용 비밀번호    |
+
+4. 로컬 복사본은 지웁니다: `rm /tmp/lathe-cert.p12`
+
+### 릴리스 만들기
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+워크플로가 빌드·서명·압축·발행을 자동으로 처리하고, 자동 생성된 릴리스
+노트와 함께 release 가 만들어집니다. **Actions** 탭 → **Release**
+워크플로 → **Run workflow** 로 수동 트리거도 가능합니다 (태그 지정).
+
+### 한계
+
+artifact 는 self-signed 인증서로 서명되기 때문에, 다른 사람이 다운받으면
+Gatekeeper 의 "확인되지 않은 개발자" 차단에 걸려 한 번
+`xattr -d com.apple.quarantine Lathe.app` 으로 우회해야 실행할 수
+있습니다. 공개적으로 신뢰받는 배포가 필요하다면 유료 Apple Developer ID
+인증서 + notarization 단계를 이 워크플로에 추가해야 합니다.
+
 ## 라이선스
 
 [MIT](LICENSE) — fork·수정·재배포가 자유롭습니다. attribution만 유지해 주시면

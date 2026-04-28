@@ -260,6 +260,62 @@ The original design spec and implementation plan are checked in:
 These are all deliberate omissions for v1 — if you want them, the
 codebase is small enough to add them in an afternoon.
 
+## Releases
+
+A GitHub Actions workflow at [`.github/workflows/release.yml`](.github/workflows/release.yml)
+builds a signed Release archive on every `v*` tag push (or via manual
+`workflow_dispatch`) and attaches the zipped `.app` to a GitHub Release.
+
+### One-time secret setup
+
+The workflow uses your local self-signed `Lathe Local Dev` identity, so
+the runner needs to import it.
+
+1. Export the cert + private key from your login keychain to a `.p12`:
+
+   ```bash
+   security export -k login.keychain -t identities -f pkcs12 \
+     -P "<choose-an-export-password>" -o /tmp/lathe-cert.p12
+   # Pick the "Lathe Local Dev" identity in the dialog that follows.
+   ```
+
+2. Encode it as base64 (for GitHub secrets):
+
+   ```bash
+   base64 -i /tmp/lathe-cert.p12 | pbcopy
+   ```
+
+3. On GitHub: **Settings → Secrets and variables → Actions → New repository secret**.
+   Add three secrets:
+
+   | Name                    | Value                                           |
+   |-------------------------|-------------------------------------------------|
+   | `SIGNING_CERT_P12`      | Paste the base64 from step 2                    |
+   | `SIGNING_CERT_PASSWORD` | The export password from step 1                 |
+   | `KEYCHAIN_PASSWORD`     | Any random string — used for the runner-side keychain |
+
+4. Wipe the local copy: `rm /tmp/lathe-cert.p12`
+
+### Cutting a release
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The workflow runs, builds, signs, zips, and publishes a release with
+auto-generated notes. You can also trigger it manually from the
+**Actions** tab → **Release** workflow → **Run workflow** (specify
+the tag).
+
+### Caveat
+
+The artifact is signed with a self-signed identity, so anyone else
+downloading it will hit Gatekeeper's "unidentified developer" wall and
+need to run `xattr -d com.apple.quarantine Lathe.app` once before
+opening. For a publicly trusted distribution you'd need a paid Apple
+Developer ID + notarization step in this workflow.
+
 ## License
 
 [MIT](LICENSE) — fork, modify, ship it however you want. Attribution
