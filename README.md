@@ -25,9 +25,6 @@ your running apps. The card at the top is always the focused app — hold
   <img src="docs/images/carousel.png" alt="Lathe carousel" width="640">
 </p>
 
-> Replace `docs/images/carousel.png` with your own screenshot. Until
-> then, this image link will be broken — that's expected.
-
 ## Why
 
 A friend pointed me at [`yuzeguitarist/Orbit`](https://github.com/yuzeguitarist/Orbit),
@@ -245,7 +242,7 @@ Lathe/
 LatheTests/         CarouselViewModelTests.swift
 docs/
 ├── superpowers/    specs/  plans/                (design history)
-└── images/         README screenshots (you populate these)
+└── images/         README screenshots
 ```
 
 ### Spec & plan
