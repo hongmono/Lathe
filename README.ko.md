@@ -50,7 +50,7 @@ Lathe는 시스템 ⌘+Tab을 가로채 실행 중인 앱들을 부채꼴 캐러
 2. 클론 후 빌드:
 
    ```bash
-   git clone <this repo>
+   git clone https://github.com/hongmono/Lathe.git
    cd Lathe
    ./dev run
    ```

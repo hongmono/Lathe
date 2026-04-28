@@ -51,7 +51,7 @@ and sign it yourself.
 2. Clone and build:
 
    ```bash
-   git clone <this repo>
+   git clone https://github.com/hongmono/Lathe.git
    cd Lathe
    ./dev run
    ```
