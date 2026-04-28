@@ -5,11 +5,13 @@ struct CarouselView: View {
     @ObservedObject var settings: SettingsStore = .shared
 
     private let maxVisibleEachSide = 5
+    private let heightRatio: CGFloat = 1.36
+    private let pivotRatio: CGFloat = 2.9
 
     var body: some View {
-        let cardWidth = CGFloat(settings.cardWidth)
-        let cardHeight = CGFloat(settings.cardHeight)
-        let pivotDistance = CGFloat(settings.pivotDistance)
+        let cardWidth = CGFloat(settings.cardSize)
+        let cardHeight = cardWidth * heightRatio
+        let pivotDistance = cardWidth * pivotRatio
         let angularStep = settings.angularStep
         let frameSide = (pivotDistance + cardHeight) * 2
         let anchor = UnitPoint(x: 0.5, y: 0.5 + pivotDistance / cardHeight)

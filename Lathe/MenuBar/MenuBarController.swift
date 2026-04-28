@@ -4,6 +4,7 @@ import AppKit
 final class MenuBarController {
     private let statusItem: NSStatusItem
     var onShowPermissions: () -> Void = {}
+    var onShowPreferences: () -> Void = {}
 
     init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -53,7 +54,6 @@ final class MenuBarController {
     }
 
     @objc private func showPreferences() {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        onShowPreferences()
     }
 }

@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var appList: AppListProvider!
     private var overlay: OverlayController!
     private let permissionWindow = PermissionPromptWindow()
+    private let settingsWindow = SettingsWindowController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -16,6 +17,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBar = MenuBarController()
         menuBar.onShowPermissions = { [weak self] in
             self?.permissionWindow.show()
+        }
+        menuBar.onShowPreferences = { [weak self] in
+            self?.settingsWindow.show()
         }
 
         appList = AppListProvider()
