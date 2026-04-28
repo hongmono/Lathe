@@ -10,12 +10,30 @@ demands Accessibility + Input Monitoring. That permission combo on an
 unsigned, partially-published binary is a non-starter. Lathe is a from-scratch
 clone in spirit, built and signed by you, that you can audit line by line.
 
-## Build
+## Build & Run
 
 Requires Xcode 15+ and `xcodegen`:
 
 ```bash
 brew install xcodegen
+```
+
+### One-liner via the dev helper
+
+```bash
+./dev run     # build + (re)launch
+./dev build   # build only
+./dev test    # run unit tests
+./dev stop    # kill the running app
+./dev clean   # wipe generated Xcode project + build artifacts
+```
+
+`./dev run` regenerates the Xcode project when `Project.yml` changes,
+builds with ad-hoc signing, kills any running Lathe, and re-launches.
+
+### Or via Xcode
+
+```bash
 xcodegen generate
 open Lathe.xcodeproj
 ```
@@ -24,6 +42,9 @@ In Xcode:
 
 1. Select the `Lathe` target → Signing & Capabilities → Team: your personal Apple ID.
 2. Run (⌘R).
+
+### First-launch permissions
+
 3. Grant Accessibility permission when prompted (System Settings → Privacy & Security → Accessibility → enable Lathe).
 4. Quit and relaunch Lathe after granting (event taps need a fresh process).
 
