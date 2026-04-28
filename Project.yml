@@ -1,0 +1,49 @@
+name: Lathe
+options:
+  bundleIdPrefix: com.hongmono
+  deploymentTarget:
+    macOS: "14.6"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+targets:
+  Lathe:
+    type: application
+    platform: macOS
+    sources:
+      - path: Lathe
+        excludes:
+          - "Resources/Info.plist"
+    resources:
+      - Lathe/Resources/Assets.xcassets
+    info:
+      path: Lathe/Resources/Info.plist
+      properties:
+        LSUIElement: true
+        LSMinimumSystemVersion: "14.6"
+        CFBundleName: Lathe
+        CFBundleDisplayName: Lathe
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        NSHighResolutionCapable: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.hongmono.Lathe
+        MACOSX_DEPLOYMENT_TARGET: "14.6"
+  LatheTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: LatheTests
+    dependencies:
+      - target: Lathe
+    settings:
+      base:
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Lathe.app/Contents/MacOS/Lathe"
