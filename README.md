@@ -266,18 +266,6 @@ The original design spec and implementation plan are checked in:
 - [Design spec](docs/superpowers/specs/2026-04-28-lathe-design.md)
 - [Implementation plan](docs/superpowers/plans/2026-04-28-lathe-v1.md)
 
-## Out of scope (intentional, for now)
-
-- File drag → AirDrop / Trash
-- Same-app window cycling (⌘+\`)
-- Number-key or first-letter jump
-- Trackpad swipe to rotate
-- Mouse hover / click to select
-- Auto-update
-
-These are all deliberate omissions for v1 — if you want them, the
-codebase is small enough to add them in an afternoon.
-
 ## Releases
 
 A GitHub Actions workflow at [`.github/workflows/release.yml`](.github/workflows/release.yml)

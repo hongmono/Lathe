@@ -15,7 +15,5 @@ struct CardView: View {
                 .interpolation(.high)
                 .frame(width: 56, height: 56)
         }
-        .scaleEffect(isFocused ? 1.04 : 1.0)
-        .animation(.spring(response: 0.22, dampingFraction: 0.78), value: isFocused)
     }
 }

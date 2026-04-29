@@ -8,6 +8,7 @@ final class SettingsStore: ObservableObject {
 
     private enum Key {
         static let appearance = "appearance"
+        static let layoutStyle = "layoutStyle"
         static let cardSize = "cardSize"
         static let angularStep = "angularStep"
     }
@@ -20,6 +21,10 @@ final class SettingsStore: ObservableObject {
             UserDefaults.standard.set(appearance.rawValue, forKey: Key.appearance)
             applyAppearance()
         }
+    }
+
+    @Published var layoutStyle: LayoutStyle {
+        didSet { UserDefaults.standard.set(layoutStyle.rawValue, forKey: Key.layoutStyle) }
     }
 
     @Published var cardSize: Double {
@@ -43,6 +48,7 @@ final class SettingsStore: ObservableObject {
     private init() {
         let d = UserDefaults.standard
         self.appearance = Appearance(rawValue: d.string(forKey: Key.appearance) ?? "") ?? .system
+        self.layoutStyle = LayoutStyle(rawValue: d.string(forKey: Key.layoutStyle) ?? "") ?? .fan
         self.cardSize = (d.object(forKey: Key.cardSize) as? Double) ?? Self.defaultCardSize
         self.angularStep = (d.object(forKey: Key.angularStep) as? Double) ?? Self.defaultAngularStep
         self.launchAtLogin = LoginItem.isEnabled

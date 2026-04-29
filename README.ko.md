@@ -248,18 +248,6 @@ docs/
 - [디자인 spec](docs/superpowers/specs/2026-04-28-lathe-design.md)
 - [구현 plan](docs/superpowers/plans/2026-04-28-lathe-v1.md)
 
-## 의도적 제외 (현재 v1)
-
-- 파일 드래그 → AirDrop / 휴지통
-- 같은 앱 윈도우 사이클 (⌘+\`)
-- 숫자 키 / 첫글자 점프
-- 트랙패드 스와이프 회전
-- 마우스 hover / 클릭 선택
-- 자동 업데이트
-
-v1에서는 의도적으로 뺀 항목들입니다 — 필요하다면 코드 베이스가 작아서 한나절이면
-추가할 수 있습니다.
-
 ## 릴리스
 
 [`.github/workflows/release.yml`](.github/workflows/release.yml) 의

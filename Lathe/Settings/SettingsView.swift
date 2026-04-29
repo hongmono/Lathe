@@ -15,6 +15,13 @@ struct SettingsView: View {
             }
 
             Section("Carousel") {
+                Picker("Layout", selection: $store.layoutStyle) {
+                    ForEach(LayoutStyle.allCases) { style in
+                        Text(style.label).tag(style)
+                    }
+                }
+                .pickerStyle(.segmented)
+
                 slider(label: "Card size",
                        value: $store.cardSize,
                        range: 80...180,

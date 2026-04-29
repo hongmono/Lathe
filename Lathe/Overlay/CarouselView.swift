@@ -20,7 +20,9 @@ struct CarouselView: View {
             ForEach(visibleEntries(angularStep: angularStep), id: \.entry.id) { item in
                 CardView(entry: item.entry, isFocused: item.isFocused)
                     .frame(width: cardWidth, height: cardHeight)
-                    .rotationEffect(.degrees(item.angleDegrees), anchor: anchor)
+                    .scaleEffect(item.scale)
+                    .rotationEffect(.degrees(item.angleDegrees), anchor: settings.layoutStyle == .fan ? anchor : .center)
+                    .offset(x: item.offsetX, y: item.offsetY)
                     .opacity(item.opacity)
                     .zIndex(item.zIndex)
             }
@@ -28,29 +30,38 @@ struct CarouselView: View {
         .frame(width: frameSide, height: frameSide)
         .animation(.spring(response: 0.32, dampingFraction: 0.74), value: viewModel.selectedIndex)
         .animation(.easeInOut(duration: 0.18), value: viewModel.apps.map(\.id))
+        .animation(.spring(response: 0.28, dampingFraction: 0.78), value: settings.layoutStyle)
     }
 
     private struct Item {
         let entry: AppEntry
         let isFocused: Bool
         let angleDegrees: Double
+        let offsetX: Double
+        let offsetY: Double
+        let scale: Double
         let opacity: Double
         let zIndex: Double
     }
 
     private func visibleEntries(angularStep: Double) -> [Item] {
-        let selected = viewModel.selectedIndex
-        let limit = maxVisibleEachSide
-        return viewModel.apps.enumerated().compactMap { index, entry -> Item? in
-            let d = index - selected
-            let absD = abs(d)
-            guard absD <= limit else { return nil }
+        CarouselLayout.items(
+            appCount: viewModel.apps.count,
+            selectedIndex: viewModel.selectedIndex,
+            style: settings.layoutStyle,
+            angularStep: angularStep,
+            maxVisibleEachSide: maxVisibleEachSide
+        ).map { layoutItem in
+            let entry = viewModel.apps[layoutItem.index]
             return Item(
                 entry: entry,
-                isFocused: d == 0,
-                angleDegrees: Double(d) * angularStep,
-                opacity: max(1.0 - Double(absD) * 0.13, 0.35),
-                zIndex: Double(limit - absD)
+                isFocused: layoutItem.relativeIndex == 0,
+                angleDegrees: layoutItem.angleDegrees,
+                offsetX: layoutItem.offsetX,
+                offsetY: layoutItem.offsetY,
+                scale: layoutItem.scale,
+                opacity: layoutItem.opacity,
+                zIndex: layoutItem.zIndex
             )
         }
     }
