@@ -8,6 +8,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var overlay: OverlayController!
     private let permissionWindow = PermissionPromptWindow()
     private let settingsWindow = SettingsWindowController()
+    private var updateCheckTask: Task<Void, Never>?
+
+    private static let updateCheckInterval: Duration = .seconds(86_400)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -40,6 +43,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             menuBar.setPermissionStatus(granted: false)
             permissionWindow.show()
+        }
+
+        startUpdateCheckLoop()
+    }
+
+    private func startUpdateCheckLoop() {
+        updateCheckTask?.cancel()
+        updateCheckTask = Task { @MainActor in
+            while !Task.isCancelled {
+                if SettingsStore.shared.autoCheckUpdates {
+                    await SettingsStore.shared.checkForUpdates()
+                }
+                try? await Task.sleep(for: Self.updateCheckInterval)
+            }
         }
     }
 }

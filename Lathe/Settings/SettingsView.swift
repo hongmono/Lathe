@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
@@ -44,9 +45,64 @@ struct SettingsView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
+
+            Section("About") {
+                HStack {
+                    Text("Version")
+                    Spacer()
+                    Text(UpdateChecker.currentVersion())
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+
+                Toggle("Automatically check for updates", isOn: $store.autoCheckUpdates)
+
+                HStack {
+                    updateStatusView
+                    Spacer()
+                    if let update = store.availableUpdate {
+                        Button("Download \(update.tagName)") {
+                            NSWorkspace.shared.open(update.htmlURL)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    } else {
+                        Button {
+                            Task { await store.checkForUpdates() }
+                        } label: {
+                            if store.isCheckingForUpdates {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Text("Check Now")
+                            }
+                        }
+                        .disabled(store.isCheckingForUpdates)
+                    }
+                }
+            }
         }
         .formStyle(.grouped)
-        .frame(width: 460, height: 440)
+        .frame(width: 460, height: 540)
+    }
+
+    @ViewBuilder
+    private var updateStatusView: some View {
+        if let err = store.updateCheckError {
+            Text(err)
+                .font(.system(size: 11))
+                .foregroundStyle(.red)
+        } else if store.availableUpdate != nil {
+            Text("A new version is available.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        } else if let last = store.lastUpdateCheck {
+            Text("Up to date · checked \(last.formatted(.relative(presentation: .named)))")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        } else {
+            Text("Lathe checks GitHub Releases for new versions.")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        }
     }
 
     private func slider(label: String,

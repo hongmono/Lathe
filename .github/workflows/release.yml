@@ -68,6 +68,15 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
+      - name: Inject tag version into Info.plist
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          VERSION="${TAG#v}"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION}" Lathe/Resources/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VERSION}" Lathe/Resources/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Lathe/Resources/Info.plist
+
       - name: Build Release archive
         run: |
           xcodebuild -project Lathe.xcodeproj \

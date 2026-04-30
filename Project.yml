@@ -29,8 +29,8 @@ targets:
         LSMinimumSystemVersion: "14.6"
         CFBundleName: Lathe
         CFBundleDisplayName: Lathe
-        CFBundleShortVersionString: "0.2.0"
-        CFBundleVersion: "2"
+        CFBundleShortVersionString: "0.2.2"
+        CFBundleVersion: "0.2.2"
         NSHighResolutionCapable: true
     settings:
       base:
