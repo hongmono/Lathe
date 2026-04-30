@@ -159,15 +159,13 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 | ⌘ 유지 + ⇧Tab         | 이전 앱으로 회전                                 |
 | ⌘ 떼기                | 가운데(포커스) 앱 활성화                          |
 | ⌘ 유지 + Esc          | 활성화 없이 닫기                                  |
-| ⌘ 유지 + ,            | 환경설정 열기 (캐러셀 자동 닫힘)                  |
 
 시스템 ⌘+Tab과 동작 모델이 같아 머슬 메모리를 그대로 쓸 수 있습니다. 차이점은
 포커스가 캐러셀 가운데에 고정되고 카드들이 그 주위로 회전한다는 것뿐입니다.
 
 ## 환경설정
 
-메뉴바 점선 원 아이콘 → **Preferences…**, 또는 캐러셀이 떠 있을 때
-⌘+, 를 누릅니다 ([사용법](#사용법) 참고).
+메뉴바 점선 원 아이콘 → **Preferences…** 를 선택합니다.
 
 <p align="center">
   <img src="docs/images/preferences.png" alt="Lathe 환경설정 윈도우" width="480">

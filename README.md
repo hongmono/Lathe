@@ -174,7 +174,6 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 | ⌘ held + ⇧Tab        | Rotate backward                                     |
 | ⌘ released           | Activate the focused (center) app                   |
 | ⌘ held + Esc         | Dismiss without switching                           |
-| ⌘ held + ,           | Open Preferences (also dismisses the carousel)      |
 
 Behavior matches the system ⌘+Tab so the muscle memory still works —
 the only difference is that the focus is fixed at the top of the
@@ -182,8 +181,7 @@ carousel and the cards rotate around it.
 
 ## Preferences
 
-Open from the menu bar's dotted-circle icon → **Preferences…**, or
-hit ⌘+, while the carousel is open (see [Use](#use)).
+Open from the menu bar's dotted-circle icon → **Preferences…**.
 
 <p align="center">
   <img src="docs/images/preferences.png" alt="Lathe preferences window" width="480">

@@ -81,9 +81,4 @@ extension AppDelegate: HotKeyMonitorDelegate {
     func hotKeyDidCancel() {
         overlay.hide(animated: true)
     }
-
-    func hotKeyDidRequestPreferences() {
-        overlay.hide(animated: false)
-        settingsWindow.show()
-    }
 }
