@@ -18,7 +18,11 @@ struct CarouselView: View {
 
         return ZStack {
             ForEach(visibleEntries(angularStep: angularStep), id: \.entry.id) { item in
-                CardView(entry: item.entry, isFocused: item.isFocused)
+                CardView(
+                    entry: item.entry,
+                    isFocused: item.isFocused,
+                    showsName: settings.showAppNamesInCarousel
+                )
                     .frame(width: cardWidth, height: cardHeight)
                     .scaleEffect(item.scale)
                     .rotationEffect(.degrees(item.angleDegrees), anchor: settings.layoutStyle == .fan ? anchor : .center)
@@ -31,6 +35,7 @@ struct CarouselView: View {
         .animation(.spring(response: 0.32, dampingFraction: 0.74), value: viewModel.selectedIndex)
         .animation(.easeInOut(duration: 0.18), value: viewModel.apps.map(\.id))
         .animation(.spring(response: 0.28, dampingFraction: 0.78), value: settings.layoutStyle)
+        .animation(.easeInOut(duration: 0.14), value: settings.showAppNamesInCarousel)
     }
 
     private struct Item {

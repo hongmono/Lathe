@@ -11,6 +11,7 @@ final class SettingsStore: ObservableObject {
         static let layoutStyle = "layoutStyle"
         static let cardSize = "cardSize"
         static let angularStep = "angularStep"
+        static let showAppNamesInCarousel = "showAppNamesInCarousel"
         static let autoCheckUpdates = "autoCheckUpdates"
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
     }
@@ -37,6 +38,10 @@ final class SettingsStore: ObservableObject {
 
     @Published var angularStep: Double {
         didSet { defaults.set(angularStep, forKey: Key.angularStep) }
+    }
+
+    @Published var showAppNamesInCarousel: Bool {
+        didSet { defaults.set(showAppNamesInCarousel, forKey: Key.showAppNamesInCarousel) }
     }
 
     @Published var launchAtLogin: Bool {
@@ -70,6 +75,7 @@ final class SettingsStore: ObservableObject {
         self.layoutStyle = LayoutStyle(rawValue: userDefaults.string(forKey: Key.layoutStyle) ?? "") ?? .fan
         self.cardSize = (userDefaults.object(forKey: Key.cardSize) as? Double) ?? Self.defaultCardSize
         self.angularStep = (userDefaults.object(forKey: Key.angularStep) as? Double) ?? Self.defaultAngularStep
+        self.showAppNamesInCarousel = (userDefaults.object(forKey: Key.showAppNamesInCarousel) as? Bool) ?? true
         self.launchAtLogin = LoginItem.isEnabled
         self.autoCheckUpdates = (userDefaults.object(forKey: Key.autoCheckUpdates) as? Bool) ?? true
         self.excludedBundleIdentifiers = Set(userDefaults.stringArray(forKey: Key.excludedBundleIdentifiers) ?? [])
@@ -82,6 +88,7 @@ final class SettingsStore: ObservableObject {
     func resetCarouselDefaults() {
         cardSize = Self.defaultCardSize
         angularStep = Self.defaultAngularStep
+        showAppNamesInCarousel = true
     }
 
     func isExcluded(bundleIdentifier: String?) -> Bool {

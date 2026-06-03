@@ -32,6 +32,8 @@ struct SettingsView: View {
                        value: $store.angularStep,
                        range: 6...28,
                        suffix: "°")
+                Toggle("Show app names", isOn: $store.showAppNamesInCarousel)
+
                 HStack {
                     Spacer()
                     Button("Restore defaults") {
