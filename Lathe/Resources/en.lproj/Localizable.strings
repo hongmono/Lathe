@@ -42,6 +42,7 @@
 "settings.hiddenApps.add" = "Add App...";
 "settings.hiddenApps.remove" = "Remove selected apps";
 "settings.hiddenApps.refresh" = "Refresh";
+"settings.back" = "Back";
 "settings.general.section" = "General";
 "settings.general.launchAtLogin" = "Launch Lathe at login";
 "settings.general.launchAtLogin.description" = "Lathe will start automatically when you sign in. You can revoke this from System Settings > General > Login Items.";
