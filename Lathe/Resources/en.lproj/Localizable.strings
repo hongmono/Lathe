@@ -22,7 +22,11 @@
 
 "settings.window.title" = "Lathe - Preferences";
 "settings.appearance.section" = "Appearance";
+"settings.appearance.language" = "Language";
 "settings.appearance.theme" = "Theme";
+"language.system" = "System";
+"language.english" = "English";
+"language.korean" = "Korean";
 "settings.carousel.section" = "Carousel";
 "settings.carousel.layout" = "Layout";
 "settings.carousel.cardSize" = "Card size";

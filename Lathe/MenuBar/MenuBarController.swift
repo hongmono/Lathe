@@ -1,8 +1,11 @@
 import AppKit
+import Combine
 
 @MainActor
 final class MenuBarController {
     private let statusItem: NSStatusItem
+    private var permissionGranted = true
+    private var cancellables = Set<AnyCancellable>()
     var onShowPermissions: () -> Void = {}
     var onShowPreferences: () -> Void = {}
 
@@ -16,16 +19,21 @@ final class MenuBarController {
             button.image?.isTemplate = true
         }
         rebuildMenu()
+        observeLanguage()
     }
 
     func setPermissionStatus(granted: Bool) {
-        rebuildMenu(granted: granted)
+        permissionGranted = granted
+        rebuildMenu()
     }
 
-    private func rebuildMenu(granted: Bool = true) {
+    private func rebuildMenu() {
+        if let button = statusItem.button {
+            button.image?.accessibilityDescription = L10n.string("menu.accessibilityDescription")
+        }
         let menu = NSMenu()
         let header = NSMenuItem(
-            title: granted ? L10n.string("menu.status.running") : L10n.string("menu.status.needsPermission"),
+            title: permissionGranted ? L10n.string("menu.status.running") : L10n.string("menu.status.needsPermission"),
             action: nil,
             keyEquivalent: ""
         )
@@ -50,6 +58,15 @@ final class MenuBarController {
                      action: #selector(NSApplication.terminate(_:)),
                      keyEquivalent: "q")
         statusItem.menu = menu
+    }
+
+    private func observeLanguage() {
+        SettingsStore.shared.$appLanguage
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.rebuildMenu()
+            }
+            .store(in: &cancellables)
     }
 
     @objc private func showPermissions() {

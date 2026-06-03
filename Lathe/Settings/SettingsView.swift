@@ -8,6 +8,13 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section(L10n.string("settings.appearance.section")) {
+                Picker(L10n.string("settings.appearance.language"), selection: $store.appLanguage) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.label).tag(language)
+                    }
+                }
+                .pickerStyle(.segmented)
+
                 Picker(L10n.string("settings.appearance.theme"), selection: $store.appearance) {
                     ForEach(Appearance.allCases) { a in
                         Text(a.label).tag(a)
@@ -110,7 +117,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460, height: 680)
+        .frame(width: 460, height: 720)
         .onAppear {
             refreshAppExclusionOptions()
         }

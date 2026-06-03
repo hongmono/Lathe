@@ -7,6 +7,7 @@ final class SettingsStore: ObservableObject {
     static let shared = SettingsStore()
 
     private enum Key {
+        static let appLanguage = AppLanguage.defaultsKey
         static let appearance = "appearance"
         static let layoutStyle = "layoutStyle"
         static let cardSize = "cardSize"
@@ -20,6 +21,10 @@ final class SettingsStore: ObservableObject {
     static let defaultAngularStep: Double = 13
 
     private let defaults: UserDefaults
+
+    @Published var appLanguage: AppLanguage {
+        didSet { defaults.set(appLanguage.rawValue, forKey: Key.appLanguage) }
+    }
 
     @Published var appearance: Appearance {
         didSet {
@@ -71,6 +76,7 @@ final class SettingsStore: ObservableObject {
 
     init(userDefaults: UserDefaults = .standard) {
         self.defaults = userDefaults
+        self.appLanguage = AppLanguage(rawValue: userDefaults.string(forKey: Key.appLanguage) ?? "") ?? .system
         self.appearance = Appearance(rawValue: userDefaults.string(forKey: Key.appearance) ?? "") ?? .system
         self.layoutStyle = LayoutStyle(rawValue: userDefaults.string(forKey: Key.layoutStyle) ?? "") ?? .fan
         self.cardSize = (userDefaults.object(forKey: Key.cardSize) as? Double) ?? Self.defaultCardSize

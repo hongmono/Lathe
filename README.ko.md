@@ -176,6 +176,7 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 
 | 섹션       | 항목                  | 동작                                          |
 |------------|-----------------------|-----------------------------------------------|
+| Appearance | Language              | 시스템 / English / 한국어                     |
 | Appearance | Theme                 | 시스템 매칭 / Light / Dark                    |
 | Carousel   | Card size             | 카드 너비. 높이·pivot은 비율에 따라 자동 적용 |
 | Carousel   | Spacing               | 카드 사이 펼침 각도(도)                       |

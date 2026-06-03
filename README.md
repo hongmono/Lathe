@@ -193,6 +193,7 @@ Open from the menu bar's dotted-circle icon → **Preferences…**.
 
 | Section    | Setting                  | What it does                                 |
 |------------|--------------------------|----------------------------------------------|
+| Appearance | Language                 | System / English / Korean                    |
 | Appearance | Theme                    | System / Light / Dark                        |
 | Carousel   | Card size                | Card width; height & pivot scale with it     |
 | Carousel   | Spacing                  | Angle (degrees) between adjacent cards       |
