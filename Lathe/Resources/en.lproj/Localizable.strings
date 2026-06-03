@@ -35,6 +35,9 @@
 "settings.carousel.restoreDefaults" = "Restore defaults";
 "settings.hiddenApps.section" = "Hidden Apps";
 "settings.hiddenApps.empty" = "No apps are listed yet.";
+"settings.hiddenApps.app" = "App";
+"settings.hiddenApps.bundleIdentifier" = "Bundle ID";
+"settings.hiddenApps.hidden" = "Hidden";
 "settings.hiddenApps.add" = "Add App...";
 "settings.hiddenApps.refresh" = "Refresh";
 "settings.general.section" = "General";

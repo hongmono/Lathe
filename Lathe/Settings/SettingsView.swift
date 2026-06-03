@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
@@ -56,24 +55,7 @@ struct SettingsView: View {
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(appExclusionOptions) { option in
-                        Toggle(isOn: excludedBinding(for: option.bundleIdentifier)) {
-                            HStack(spacing: 8) {
-                                if let icon = option.icon {
-                                    Image(nsImage: icon)
-                                        .resizable()
-                                        .frame(width: 20, height: 20)
-                                }
-
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(option.name)
-                                    Text(option.bundleIdentifier)
-                                        .font(.system(size: 10))
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
+                    hiddenAppsTable
                 }
 
                 HStack {
@@ -162,6 +144,38 @@ struct SettingsView: View {
         }
     }
 
+    private var hiddenAppsTable: some View {
+        Table(appExclusionOptions) {
+            TableColumn(L10n.string("settings.hiddenApps.app")) { option in
+                HStack(spacing: 8) {
+                    if let icon = option.icon {
+                        Image(nsImage: icon)
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                    }
+                    Text(option.name)
+                        .lineLimit(1)
+                }
+            }
+            .width(min: 140, ideal: 170)
+
+            TableColumn(L10n.string("settings.hiddenApps.bundleIdentifier")) { option in
+                Text(option.bundleIdentifier)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .width(min: 170, ideal: 210)
+
+            TableColumn(L10n.string("settings.hiddenApps.hidden")) { option in
+                Toggle("", isOn: excludedBinding(for: option.bundleIdentifier))
+                    .labelsHidden()
+            }
+            .width(64)
+        }
+        .frame(height: 190)
+    }
+
     private func slider(label: String,
                         value: Binding<Double>,
                         range: ClosedRange<Double>,
@@ -186,14 +200,7 @@ struct SettingsView: View {
     }
 
     private func addHiddenApp() {
-        let panel = NSOpenPanel()
-        panel.title = L10n.string("settings.hiddenApps.add")
-        panel.prompt = L10n.string("settings.hiddenApps.add")
-        panel.directoryURL = URL(fileURLWithPath: "/Applications")
-        panel.allowedContentTypes = [UTType(filenameExtension: "app") ?? .applicationBundle]
-        panel.allowsMultipleSelection = false
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
+        let panel = ApplicationOpenPanel.make(title: L10n.string("settings.hiddenApps.add"))
 
         guard panel.runModal() == .OK,
               let url = panel.url,

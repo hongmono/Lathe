@@ -35,6 +35,9 @@
 "settings.carousel.restoreDefaults" = "기본값 복원";
 "settings.hiddenApps.section" = "숨긴 앱";
 "settings.hiddenApps.empty" = "표시할 앱이 없습니다.";
+"settings.hiddenApps.app" = "앱";
+"settings.hiddenApps.bundleIdentifier" = "번들 ID";
+"settings.hiddenApps.hidden" = "숨김";
 "settings.hiddenApps.add" = "앱 추가...";
 "settings.hiddenApps.refresh" = "새로고침";
 "settings.general.section" = "일반";
