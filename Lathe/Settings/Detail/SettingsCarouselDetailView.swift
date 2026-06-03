@@ -10,6 +10,14 @@ struct SettingsCarouselDetailView: View {
                 .font(.headline)
                 .foregroundStyle(.primary)
 
+            SettingsCarouselExampleView(
+                layoutStyle: store.layoutStyle,
+                cardSize: store.cardSize,
+                angularStep: store.angularStep,
+                showsAppNames: store.showAppNamesInCarousel
+            )
+            .padding(.vertical, SettingsCarouselDetailLayout.previewVerticalPadding)
+
             HStack(spacing: SettingsViewLayout.detailRowSpacing) {
                 Text(L10n.string("settings.carousel.layout", language: store.appLanguage))
 
@@ -58,8 +66,174 @@ struct SettingsCarouselDetailView: View {
 }
 
 private enum SettingsCarouselDetailLayout {
+    static let previewHeight: CGFloat = 196
+    static let previewVerticalPadding: CGFloat = 4
+    static let previewCornerRadius: CGFloat = 16
     static let sliderMaxWidth: CGFloat = 360
     static let sliderValueWidth: CGFloat = 56
+}
+
+private struct SettingsCarouselExampleView: View {
+    let layoutStyle: LayoutStyle
+    let cardSize: Double
+    let angularStep: Double
+    let showsAppNames: Bool
+
+    private let apps = SettingsCarouselExampleApp.samples
+    private let selectedIndex = 2
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: SettingsCarouselDetailLayout.previewCornerRadius, style: .continuous)
+                .fill(.thinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: SettingsCarouselDetailLayout.previewCornerRadius, style: .continuous)
+                        .stroke(.white.opacity(0.28), lineWidth: 0.8)
+                }
+
+            ZStack {
+                ForEach(carouselItems, id: \.index) { item in
+                    SettingsCarouselExampleCard(
+                        app: apps[item.index],
+                        isFocused: item.relativeIndex == 0,
+                        showsName: showsAppNames
+                    )
+                    .frame(width: previewCardWidth, height: previewCardHeight)
+                    .scaleEffect(item.scale)
+                    .rotationEffect(.degrees(item.angleDegrees), anchor: rotationAnchor)
+                    .offset(x: item.offsetX * layoutScale, y: item.offsetY * layoutScale + contentOffsetY)
+                    .opacity(item.opacity)
+                    .zIndex(item.zIndex)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, SettingsCarouselExampleLayout.horizontalPadding)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: SettingsCarouselDetailLayout.previewHeight)
+        .clipShape(RoundedRectangle(cornerRadius: SettingsCarouselDetailLayout.previewCornerRadius, style: .continuous))
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+        .animation(.spring(response: 0.28, dampingFraction: 0.78), value: layoutStyle)
+        .animation(.easeInOut(duration: 0.14), value: cardSize)
+        .animation(.easeInOut(duration: 0.14), value: angularStep)
+        .animation(.easeInOut(duration: 0.14), value: showsAppNames)
+    }
+
+    private var carouselItems: [CarouselLayout.Item] {
+        CarouselLayout.items(
+            appCount: apps.count,
+            selectedIndex: selectedIndex,
+            style: layoutStyle,
+            angularStep: angularStep,
+            maxVisibleEachSide: 2
+        )
+    }
+
+    private var previewCardWidth: CGFloat {
+        min(max(CGFloat(cardSize) * SettingsCarouselExampleLayout.cardScale, SettingsCarouselExampleLayout.minCardWidth),
+            SettingsCarouselExampleLayout.maxCardWidth)
+    }
+
+    private var previewCardHeight: CGFloat {
+        previewCardWidth * SettingsCarouselExampleLayout.cardHeightRatio
+    }
+
+    private var layoutScale: CGFloat {
+        previewCardWidth / max(CGFloat(cardSize), 1)
+    }
+
+    private var rotationAnchor: UnitPoint {
+        layoutStyle == .fan ? .bottom : .center
+    }
+
+    private var contentOffsetY: CGFloat {
+        switch layoutStyle {
+        case .fan:
+            SettingsCarouselExampleLayout.fanContentOffsetY
+        case .strip:
+            SettingsCarouselExampleLayout.stripContentOffsetY
+        case .stack:
+            SettingsCarouselExampleLayout.stackContentOffsetY
+        }
+    }
+}
+
+private struct SettingsCarouselExampleCard: View {
+    let app: SettingsCarouselExampleApp
+    let isFocused: Bool
+    let showsName: Bool
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: SettingsCarouselExampleLayout.cardCornerRadius, style: .continuous)
+                .fill(isFocused ? .regularMaterial : .thinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: SettingsCarouselExampleLayout.cardCornerRadius, style: .continuous)
+                        .stroke(.white.opacity(isFocused ? 0.42 : 0.22), lineWidth: 0.8)
+                }
+                .shadow(color: .black.opacity(isFocused ? 0.22 : 0.12),
+                        radius: isFocused ? 16 : 8,
+                        x: 0,
+                        y: isFocused ? 9 : 4)
+
+            VStack(spacing: showsName ? SettingsCarouselExampleLayout.cardContentSpacing : 0) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: SettingsCarouselExampleLayout.iconCornerRadius, style: .continuous)
+                        .fill(app.tint.opacity(isFocused ? 0.24 : 0.16))
+
+                    Image(systemName: app.systemImage)
+                        .font(.system(size: isFocused ? 30 : 26, weight: .semibold))
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(app.tint)
+                }
+                .frame(width: isFocused ? SettingsCarouselExampleLayout.focusedIconSide : SettingsCarouselExampleLayout.iconSide,
+                       height: isFocused ? SettingsCarouselExampleLayout.focusedIconSide : SettingsCarouselExampleLayout.iconSide)
+
+                if showsName {
+                    Text(app.name)
+                        .font(.system(size: isFocused ? 12 : 11, weight: isFocused ? .semibold : .medium))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundStyle(isFocused ? .primary : .secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, SettingsCarouselExampleLayout.cardTextHorizontalPadding)
+                }
+            }
+        }
+    }
+}
+
+private struct SettingsCarouselExampleApp: Identifiable {
+    let id: Int
+    let name: String
+    let systemImage: String
+    let tint: Color
+
+    static let samples = [
+        SettingsCarouselExampleApp(id: 0, name: "Finder", systemImage: "folder.fill", tint: .blue),
+        SettingsCarouselExampleApp(id: 1, name: "Mail", systemImage: "envelope.fill", tint: .indigo),
+        SettingsCarouselExampleApp(id: 2, name: "Safari", systemImage: "safari.fill", tint: .cyan),
+        SettingsCarouselExampleApp(id: 3, name: "Calendar", systemImage: "calendar", tint: .red),
+        SettingsCarouselExampleApp(id: 4, name: "Notes", systemImage: "note.text", tint: .yellow)
+    ]
+}
+
+private enum SettingsCarouselExampleLayout {
+    static let horizontalPadding: CGFloat = 16
+    static let cardScale: CGFloat = 0.72
+    static let minCardWidth: CGFloat = 78
+    static let maxCardWidth: CGFloat = 116
+    static let cardHeightRatio: CGFloat = 1.36
+    static let cardCornerRadius: CGFloat = 16
+    static let iconCornerRadius: CGFloat = 12
+    static let iconSide: CGFloat = 46
+    static let focusedIconSide: CGFloat = 52
+    static let cardContentSpacing: CGFloat = 8
+    static let cardTextHorizontalPadding: CGFloat = 10
+    static let fanContentOffsetY: CGFloat = 14
+    static let stripContentOffsetY: CGFloat = 4
+    static let stackContentOffsetY: CGFloat = 8
 }
 
 #if DEBUG
