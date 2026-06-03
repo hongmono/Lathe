@@ -9,7 +9,10 @@ final class MenuBarController {
     init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "circle.dotted", accessibilityDescription: "Lathe")
+            button.image = NSImage(
+                systemSymbolName: "circle.dotted",
+                accessibilityDescription: L10n.string("menu.accessibilityDescription")
+            )
             button.image?.isTemplate = true
         }
         rebuildMenu()
@@ -22,7 +25,7 @@ final class MenuBarController {
     private func rebuildMenu(granted: Bool = true) {
         let menu = NSMenu()
         let header = NSMenuItem(
-            title: granted ? "Lathe — running" : "Lathe — needs permission",
+            title: granted ? L10n.string("menu.status.running") : L10n.string("menu.status.needsPermission"),
             action: nil,
             keyEquivalent: ""
         )
@@ -30,20 +33,20 @@ final class MenuBarController {
         menu.addItem(header)
         menu.addItem(.separator())
 
-        let prefs = NSMenuItem(title: "Preferences…",
+        let prefs = NSMenuItem(title: L10n.string("menu.preferences"),
                                action: #selector(showPreferences),
                                keyEquivalent: "")
         prefs.target = self
         menu.addItem(prefs)
 
-        let perm = NSMenuItem(title: "Permissions…",
+        let perm = NSMenuItem(title: L10n.string("menu.permissions"),
                               action: #selector(showPermissions),
                               keyEquivalent: "")
         perm.target = self
         menu.addItem(perm)
 
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Lathe",
+        menu.addItem(withTitle: L10n.string("menu.quit"),
                      action: #selector(NSApplication.terminate(_:)),
                      keyEquivalent: "q")
         statusItem.menu = menu

@@ -26,6 +26,8 @@ Lathe는 시스템 ⌘+Tab을 가로채 실행 중인 앱들을 부채꼴 캐러
 ⌘ 누른 채로 Tab을 누르면 카드들이 회전하고, ⌘ 떼면 가운데 카드의 앱이
 활성화됩니다.
 
+앱 UI는 시스템 언어 설정에 따라 영어와 한국어로 표시됩니다.
+
 <p align="center">
   <img src="docs/images/carousel.png" alt="Lathe 캐러셀" width="640">
 </p>

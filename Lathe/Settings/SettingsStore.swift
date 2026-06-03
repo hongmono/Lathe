@@ -119,7 +119,7 @@ final class SettingsStore: ObservableObject {
                 availableUpdate = nil
             }
         } catch {
-            updateCheckError = "Couldn't reach the update server."
+            updateCheckError = L10n.string("settings.about.updateError")
         }
     }
 }

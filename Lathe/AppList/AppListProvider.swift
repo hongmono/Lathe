@@ -92,7 +92,7 @@ final class AppListProvider {
         let entries = mruOrder.compactMap { pid -> AppEntry? in
             guard let app = byPid[pid] else { return nil }
             let icon = app.icon ?? NSImage()
-            let name = app.localizedName ?? app.bundleIdentifier ?? "Unknown"
+            let name = app.localizedName ?? app.bundleIdentifier ?? L10n.string("app.unknown")
             return AppEntry(
                 id: pid,
                 bundleIdentifier: app.bundleIdentifier,

@@ -1,0 +1,46 @@
+"app.unknown" = "알 수 없음";
+
+"appearance.matchSystem" = "시스템 설정 따름";
+"appearance.light" = "라이트";
+"appearance.dark" = "다크";
+
+"layout.fan" = "부채꼴";
+"layout.strip" = "가로";
+"layout.stack" = "스택";
+
+"menu.accessibilityDescription" = "Lathe";
+"menu.status.running" = "Lathe - 실행 중";
+"menu.status.needsPermission" = "Lathe - 권한 필요";
+"menu.preferences" = "환경설정...";
+"menu.permissions" = "권한...";
+"menu.quit" = "Lathe 종료";
+
+"permission.window.title" = "Lathe - 권한 필요";
+"permission.title" = "Lathe에 손쉬운 사용 권한이 필요합니다";
+"permission.body" = "Lathe는 시스템 Cmd+Tab 전환기를 대체합니다. 전역 키보드 이벤트를 가로채려면 macOS 손쉬운 사용 권한이 필요합니다.\n\n1. \"시스템 설정 열기\"를 클릭합니다.\n2. 목록에서 Lathe를 켭니다.\n3. Lathe를 종료한 뒤 다시 실행합니다.";
+"permission.openSystemSettings" = "시스템 설정 열기";
+
+"settings.window.title" = "Lathe - 환경설정";
+"settings.appearance.section" = "외관";
+"settings.appearance.theme" = "테마";
+"settings.carousel.section" = "캐러셀";
+"settings.carousel.layout" = "레이아웃";
+"settings.carousel.cardSize" = "카드 크기";
+"settings.carousel.spacing" = "간격";
+"settings.carousel.showAppNames" = "앱 이름 표시";
+"settings.carousel.restoreDefaults" = "기본값 복원";
+"settings.hiddenApps.section" = "숨긴 앱";
+"settings.hiddenApps.empty" = "실행 중인 일반 앱이 없습니다.";
+"settings.hiddenApps.refresh" = "새로고침";
+"settings.general.section" = "일반";
+"settings.general.launchAtLogin" = "로그인 시 Lathe 실행";
+"settings.general.launchAtLogin.description" = "로그인하면 Lathe가 자동으로 시작됩니다. 시스템 설정 > 일반 > 로그인 항목에서 해제할 수 있습니다.";
+"settings.about.section" = "정보";
+"settings.about.version" = "버전";
+"settings.about.autoCheckUpdates" = "업데이트 자동 확인";
+"settings.about.downloadFormat" = "%@ 다운로드";
+"settings.about.checkNow" = "지금 확인";
+"settings.about.updateError" = "업데이트 서버에 연결할 수 없습니다.";
+"settings.about.updateAvailable" = "새 버전을 사용할 수 있습니다.";
+"settings.about.upToDateFormat" = "최신 버전 - %@ 확인됨";
+"settings.about.updateDescription" = "Lathe는 GitHub Releases에서 새 버전을 확인합니다.";

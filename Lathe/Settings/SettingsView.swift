@@ -7,8 +7,8 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Appearance") {
-                Picker("Theme", selection: $store.appearance) {
+            Section(L10n.string("settings.appearance.section")) {
+                Picker(L10n.string("settings.appearance.theme"), selection: $store.appearance) {
                     ForEach(Appearance.allCases) { a in
                         Text(a.label).tag(a)
                     }
@@ -16,35 +16,35 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
             }
 
-            Section("Carousel") {
-                Picker("Layout", selection: $store.layoutStyle) {
+            Section(L10n.string("settings.carousel.section")) {
+                Picker(L10n.string("settings.carousel.layout"), selection: $store.layoutStyle) {
                     ForEach(LayoutStyle.allCases) { style in
                         Text(style.label).tag(style)
                     }
                 }
                 .pickerStyle(.segmented)
 
-                slider(label: "Card size",
+                slider(label: L10n.string("settings.carousel.cardSize"),
                        value: $store.cardSize,
                        range: 80...180,
                        suffix: "pt")
-                slider(label: "Spacing",
+                slider(label: L10n.string("settings.carousel.spacing"),
                        value: $store.angularStep,
                        range: 6...28,
                        suffix: "°")
-                Toggle("Show app names", isOn: $store.showAppNamesInCarousel)
+                Toggle(L10n.string("settings.carousel.showAppNames"), isOn: $store.showAppNamesInCarousel)
 
                 HStack {
                     Spacer()
-                    Button("Restore defaults") {
+                    Button(L10n.string("settings.carousel.restoreDefaults")) {
                         store.resetCarouselDefaults()
                     }
                 }
             }
 
-            Section("Hidden Apps") {
+            Section(L10n.string("settings.hiddenApps.section")) {
                 if appExclusionOptions.isEmpty {
-                    Text("No regular apps are running.")
+                    Text(L10n.string("settings.hiddenApps.empty"))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 } else {
@@ -62,35 +62,35 @@ struct SettingsView: View {
 
                 HStack {
                     Spacer()
-                    Button("Refresh") {
+                    Button(L10n.string("settings.hiddenApps.refresh")) {
                         refreshAppExclusionOptions()
                     }
                 }
             }
 
-            Section("General") {
-                Toggle("Launch Lathe at login", isOn: $store.launchAtLogin)
-                Text("Lathe will start automatically when you sign in. You can revoke this from System Settings → General → Login Items.")
+            Section(L10n.string("settings.general.section")) {
+                Toggle(L10n.string("settings.general.launchAtLogin"), isOn: $store.launchAtLogin)
+                Text(L10n.string("settings.general.launchAtLogin.description"))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
 
-            Section("About") {
+            Section(L10n.string("settings.about.section")) {
                 HStack {
-                    Text("Version")
+                    Text(L10n.string("settings.about.version"))
                     Spacer()
                     Text(UpdateChecker.currentVersion())
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
 
-                Toggle("Automatically check for updates", isOn: $store.autoCheckUpdates)
+                Toggle(L10n.string("settings.about.autoCheckUpdates"), isOn: $store.autoCheckUpdates)
 
                 HStack {
                     updateStatusView
                     Spacer()
                     if let update = store.availableUpdate {
-                        Button("Download \(update.tagName)") {
+                        Button(L10n.format("settings.about.downloadFormat", update.tagName)) {
                             NSWorkspace.shared.open(update.htmlURL)
                         }
                         .buttonStyle(.borderedProminent)
@@ -101,7 +101,7 @@ struct SettingsView: View {
                             if store.isCheckingForUpdates {
                                 ProgressView().controlSize(.small)
                             } else {
-                                Text("Check Now")
+                                Text(L10n.string("settings.about.checkNow"))
                             }
                         }
                         .disabled(store.isCheckingForUpdates)
@@ -126,15 +126,18 @@ struct SettingsView: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.red)
         } else if store.availableUpdate != nil {
-            Text("A new version is available.")
+            Text(L10n.string("settings.about.updateAvailable"))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
         } else if let last = store.lastUpdateCheck {
-            Text("Up to date · checked \(last.formatted(.relative(presentation: .named)))")
+            Text(L10n.format(
+                "settings.about.upToDateFormat",
+                last.formatted(.relative(presentation: .named))
+            ))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
         } else {
-            Text("Lathe checks GitHub Releases for new versions.")
+            Text(L10n.string("settings.about.updateDescription"))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
         }
@@ -170,7 +173,7 @@ struct SettingsView: View {
                 AppEntry(
                     id: app.processIdentifier,
                     bundleIdentifier: app.bundleIdentifier,
-                    name: app.localizedName ?? app.bundleIdentifier ?? "Unknown",
+                    name: app.localizedName ?? app.bundleIdentifier ?? L10n.string("app.unknown"),
                     icon: app.icon ?? NSImage()
                 )
             }

@@ -22,6 +22,8 @@ targets:
           - "Resources/Info.plist"
     resources:
       - Lathe/Resources/Assets.xcassets
+      - Lathe/Resources/en.lproj
+      - Lathe/Resources/ko.lproj
     info:
       path: Lathe/Resources/Info.plist
       properties:

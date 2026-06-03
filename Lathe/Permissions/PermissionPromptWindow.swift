@@ -11,12 +11,12 @@ final class PermissionPromptWindow {
             return
         }
         let w = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 240),
+            contentRect: NSRect(x: 0, y: 0, width: 520, height: 260),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
-        w.title = "Lathe — Permission required"
+        w.title = L10n.string("permission.window.title")
         w.center()
         w.isReleasedWhenClosed = false
 
@@ -27,19 +27,17 @@ final class PermissionPromptWindow {
         container.edgeInsets = NSEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
         container.translatesAutoresizingMaskIntoConstraints = false
 
-        let title = NSTextField(labelWithString: "Lathe needs Accessibility permission")
+        let title = NSTextField(labelWithString: L10n.string("permission.title"))
         title.font = .boldSystemFont(ofSize: 16)
 
-        let body = NSTextField(wrappingLabelWithString:
-            "Lathe replaces the system ⌘+Tab switcher. To intercept keyboard events globally, " +
-            "macOS requires Accessibility permission.\n\n" +
-            "1. Click \"Open System Settings\".\n" +
-            "2. Toggle Lathe ON in the list.\n" +
-            "3. Quit and relaunch Lathe."
-        )
-        body.preferredMaxLayoutWidth = 440
+        let body = NSTextField(wrappingLabelWithString: L10n.string("permission.body"))
+        body.preferredMaxLayoutWidth = 480
 
-        let button = NSButton(title: "Open System Settings", target: self, action: #selector(openSettings))
+        let button = NSButton(
+            title: L10n.string("permission.openSystemSettings"),
+            target: self,
+            action: #selector(openSettings)
+        )
         button.bezelStyle = .rounded
         button.keyEquivalent = "\r"
 

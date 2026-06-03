@@ -9,9 +9,9 @@ enum Appearance: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .system: return "Match System"
-        case .light:  return "Light"
-        case .dark:   return "Dark"
+        case .system: return L10n.string("appearance.matchSystem")
+        case .light:  return L10n.string("appearance.light")
+        case .dark:   return L10n.string("appearance.dark")
         }
     }
 

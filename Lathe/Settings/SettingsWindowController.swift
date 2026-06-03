@@ -13,7 +13,7 @@ final class SettingsWindowController {
         }
         let host = NSHostingController(rootView: SettingsView(store: .shared))
         let w = NSWindow(contentViewController: host)
-        w.title = "Lathe — Preferences"
+        w.title = L10n.string("settings.window.title")
         w.styleMask = [.titled, .closable]
         w.isReleasedWhenClosed = false
         w.center()

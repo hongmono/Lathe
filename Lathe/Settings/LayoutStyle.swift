@@ -9,9 +9,9 @@ enum LayoutStyle: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .fan: "Fan"
-        case .strip: "Strip"
-        case .stack: "Stack"
+        case .fan: L10n.string("layout.fan")
+        case .strip: L10n.string("layout.strip")
+        case .stack: L10n.string("layout.stack")
         }
     }
 }
