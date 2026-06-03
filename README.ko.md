@@ -48,11 +48,12 @@ Accessibility 외에는 어떤 권한도 요구하지 않습니다.
 - **서명된 빌드를 다운로드합니다** —
   [Releases](https://github.com/hongmono/Lathe/releases) 에서 받으면
   됩니다. 메인테이너가 직접 사용하는 binary 와 같은 것이며,
-  `Lathe Local Dev` self-signed 인증서로 서명되어 있습니다. 압축 해제 후:
+  `Lathe Local Dev` self-signed 인증서로 서명되어 있습니다. DMG를 열고
+  `Lathe.app` 을 Applications로 옮긴 뒤:
 
   ```bash
-  xattr -d com.apple.quarantine Lathe.app
-  open Lathe.app
+  xattr -d com.apple.quarantine /Applications/Lathe.app
+  open /Applications/Lathe.app
   ```
 
   이런 `xattr` 우회는 폐쇄 소스 앱이라면 피해야 할 작업입니다. 이
@@ -256,8 +257,8 @@ docs/
 
 [`.github/workflows/release.yml`](.github/workflows/release.yml) 의
 GitHub Actions 워크플로가 `v*` 태그 push (또는 수동 `workflow_dispatch`)
-시 서명된 Release 아카이브를 빌드하고, 압축한 `.app` 을 GitHub Release에
-첨부합니다.
+시 서명된 Release 아카이브를 빌드하고, `Lathe.app` 이 들어 있는 DMG를
+GitHub Release에 첨부합니다.
 
 ### 1회성 secret 설정
 
@@ -296,7 +297,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-워크플로가 빌드·서명·압축·발행을 자동으로 처리하고, 자동 생성된 릴리스
+워크플로가 빌드·서명·DMG 패키징·발행을 자동으로 처리하고, 자동 생성된 릴리스
 노트와 함께 release 가 만들어집니다. **Actions** 탭 → **Release**
 워크플로 → **Run workflow** 로 수동 트리거도 가능합니다 (태그 지정).
 

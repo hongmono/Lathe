@@ -50,11 +50,12 @@ Two paths:
 - **Download a signed build** from
   [Releases](https://github.com/hongmono/Lathe/releases) — same
   binary the maintainer runs, signed with the `Lathe Local Dev`
-  self-signed identity. After unzipping:
+  self-signed identity. After opening the DMG and moving `Lathe.app`
+  to Applications:
 
   ```bash
-  xattr -d com.apple.quarantine Lathe.app
-  open Lathe.app
+  xattr -d com.apple.quarantine /Applications/Lathe.app
+  open /Applications/Lathe.app
   ```
 
   This is the kind of `xattr` workaround we wanted to avoid in
@@ -275,7 +276,8 @@ The original design spec and implementation plan are checked in:
 
 A GitHub Actions workflow at [`.github/workflows/release.yml`](.github/workflows/release.yml)
 builds a signed Release archive on every `v*` tag push (or via manual
-`workflow_dispatch`) and attaches the zipped `.app` to a GitHub Release.
+`workflow_dispatch`) and attaches a DMG containing `Lathe.app` to a
+GitHub Release.
 
 ### One-time secret setup
 
@@ -314,7 +316,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The workflow runs, builds, signs, zips, and publishes a release with
+The workflow runs, builds, signs, packages a DMG, and publishes a release with
 auto-generated notes. You can also trigger it manually from the
 **Actions** tab → **Release** workflow → **Run workflow** (specify
 the tag).

@@ -92,15 +92,23 @@ jobs:
         env:
           TAG: ${{ steps.tag.outputs.tag }}
         run: |
-          mkdir -p dist
-          cp -R /tmp/Lathe.xcarchive/Products/Applications/Lathe.app dist/
-          cd dist && zip -ry "Lathe-${TAG}.zip" Lathe.app
+          rm -rf dist
+          mkdir -p dist/dmgroot
+          cp -R /tmp/Lathe.xcarchive/Products/Applications/Lathe.app dist/dmgroot/
+          ln -s /Applications dist/dmgroot/Applications
+          hdiutil create \
+            -volname "Lathe ${TAG}" \
+            -srcfolder dist/dmgroot \
+            -ov \
+            -format UDZO \
+            "dist/Lathe-${TAG}.dmg"
+          hdiutil verify "dist/Lathe-${TAG}.dmg"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
-          files: dist/Lathe-${{ steps.tag.outputs.tag }}.zip
+          files: dist/Lathe-${{ steps.tag.outputs.tag }}.dmg
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
