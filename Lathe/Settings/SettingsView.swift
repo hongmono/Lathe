@@ -14,11 +14,20 @@ struct SettingsView: View {
                 }
             }
             .listStyle(.sidebar)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                Color.clear
+                    .frame(height: SettingsViewLayout.sidebarTopInset)
+            }
             .navigationSplitViewColumnWidth(min: 150, ideal: 170, max: 210)
         } detail: {
             settingsDetail(for: selectedPane ?? .general)
         }
-        .frame(width: 680, height: 560)
+        .ignoresSafeArea(.container, edges: .top)
+        .frame(
+            minWidth: SettingsViewLayout.windowMinWidth,
+            minHeight: SettingsViewLayout.windowMinHeight,
+            alignment: .topLeading
+        )
     }
 
     @ViewBuilder
@@ -42,8 +51,9 @@ struct SettingsView: View {
                 }
             }
             .padding(24)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(.regularMaterial)
     }
 
@@ -206,11 +216,17 @@ private struct SettingsGlassSection<Content: View>: View {
             content
         }
         .padding(16)
-        .frame(maxWidth: 460, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(.quaternary, lineWidth: 0.5)
         }
     }
+}
+
+private enum SettingsViewLayout {
+    static let windowMinWidth: CGFloat = 680
+    static let windowMinHeight: CGFloat = 560
+    static let sidebarTopInset: CGFloat = 42
 }

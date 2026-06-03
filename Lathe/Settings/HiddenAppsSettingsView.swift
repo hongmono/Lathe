@@ -8,7 +8,7 @@ struct HiddenAppsSettingsView: View {
 
     var body: some View {
         hiddenAppsList
-            .frame(maxWidth: 520, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .onAppear {
                 refreshAppExclusionOptions()
             }

@@ -21,11 +21,7 @@ final class SettingsWindowController {
         let host = NSHostingController(rootView: SettingsView(store: .shared))
         let w = NSWindow(contentViewController: host)
         w.title = L10n.string("settings.window.title")
-        w.styleMask = [.titled, .closable, .fullSizeContentView]
-        w.titlebarAppearsTransparent = true
-        w.toolbarStyle = .unified
-        w.backgroundColor = .clear
-        w.isMovableByWindowBackground = true
+        SettingsWindowChromeConfiguration.sidebarIntegrated.apply(to: w)
         w.isReleasedWhenClosed = false
         w.center()
         NSApp.activate(ignoringOtherApps: true)
