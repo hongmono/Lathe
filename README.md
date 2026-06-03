@@ -22,8 +22,9 @@
 ---
 
 Lathe takes over the system ⌘+Tab and shows a fan-shaped carousel of
-your running apps. The card at the top is always the focused app — hold
-⌘ and tap Tab to rotate the deck, release ⌘ to switch.
+your running apps, with apps visible in the current Space listed first.
+The card at the top is always the focused app — hold ⌘ and tap Tab to
+rotate the deck, release ⌘ to switch.
 
 <p align="center">
   <img src="docs/images/carousel.png" alt="Lathe carousel" width="640">

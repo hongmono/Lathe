@@ -7,15 +7,22 @@ final class AppListProvider {
     var didChange: () -> Void = {}
 
     private let settings: SettingsStore
+    private let currentSpaceWindowProvider: any CurrentSpaceWindowProviding
     private var mruOrder: [pid_t] = []
     private var observers: [NSObjectProtocol] = []
     private var cancellables = Set<AnyCancellable>()
 
-    init(settings: SettingsStore = .shared) {
+    init(settings: SettingsStore = .shared,
+         currentSpaceWindowProvider: any CurrentSpaceWindowProviding = CurrentSpaceWindowProvider()) {
         self.settings = settings
+        self.currentSpaceWindowProvider = currentSpaceWindowProvider
         rebuildSnapshot()
         registerObservers()
         observeSettings()
+    }
+
+    func refresh() {
+        rebuildSnapshot()
     }
 
     private func registerObservers() {
@@ -93,9 +100,13 @@ final class AppListProvider {
                 icon: icon
             )
         }
-        apps = AppEntry.visibleInCarousel(
+        let visibleEntries = AppEntry.visibleInCarousel(
             entries,
             excludingBundleIdentifiers: settings.excludedBundleIdentifiers
+        )
+        apps = AppEntry.prioritizingCurrentSpace(
+            visibleEntries,
+            currentSpaceProcessIdentifiers: currentSpaceWindowProvider.processIdentifiers()
         )
         didChange()
     }

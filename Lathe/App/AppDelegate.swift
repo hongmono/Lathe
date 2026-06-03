@@ -78,6 +78,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
         if overlay.isVisible {
             overlay.next()
         } else {
+            appList.refresh()
             let apps = appList.apps
             guard !apps.isEmpty else { return }
             let initial = apps.count > 1 ? 1 : 0
@@ -89,6 +90,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
         if overlay.isVisible {
             overlay.previous()
         } else {
+            appList.refresh()
             let apps = appList.apps
             guard !apps.isEmpty else { return }
             overlay.show(apps: apps, initialIndex: apps.count - 1)

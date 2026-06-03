@@ -17,4 +17,13 @@ struct AppEntry: Identifiable, Equatable {
             return !excluded.contains(bundleIdentifier)
         }
     }
+
+    static func prioritizingCurrentSpace(_ apps: [AppEntry],
+                                         currentSpaceProcessIdentifiers pids: Set<pid_t>) -> [AppEntry] {
+        guard !pids.isEmpty else { return apps }
+
+        let currentSpaceApps = apps.filter { pids.contains($0.id) }
+        let otherApps = apps.filter { !pids.contains($0.id) }
+        return currentSpaceApps + otherApps
+    }
 }
