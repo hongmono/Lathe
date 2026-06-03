@@ -3,109 +3,104 @@ import AppKit
 
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
-    @State private var appExclusionOptions: [AppExclusionOption] = []
-    @State private var selectedHiddenAppBundleIdentifiers: Set<String> = []
 
     var body: some View {
-        Form {
-            Section(L10n.string("settings.appearance.section")) {
-                Picker(L10n.string("settings.appearance.language"), selection: $store.appLanguage) {
-                    ForEach(AppLanguage.allCases) { language in
-                        Text(language.label).tag(language)
+        NavigationStack {
+            Form {
+                Section(L10n.string("settings.appearance.section")) {
+                    Picker(L10n.string("settings.appearance.language"), selection: $store.appLanguage) {
+                        ForEach(AppLanguage.allCases) { language in
+                            Text(language.label).tag(language)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Picker(L10n.string("settings.appearance.theme"), selection: $store.appearance) {
+                        ForEach(Appearance.allCases) { a in
+                            Text(a.label).tag(a)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Section(L10n.string("settings.carousel.section")) {
+                    Picker(L10n.string("settings.carousel.layout"), selection: $store.layoutStyle) {
+                        ForEach(LayoutStyle.allCases) { style in
+                            Text(style.label).tag(style)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    slider(label: L10n.string("settings.carousel.cardSize"),
+                           value: $store.cardSize,
+                           range: 80...180,
+                           suffix: "pt")
+                    slider(label: L10n.string("settings.carousel.spacing"),
+                           value: $store.angularStep,
+                           range: 6...28,
+                           suffix: "°")
+                    Toggle(L10n.string("settings.carousel.showAppNames"), isOn: $store.showAppNamesInCarousel)
+
+                    HStack {
+                        Spacer()
+                        Button(L10n.string("settings.carousel.restoreDefaults")) {
+                            store.resetCarouselDefaults()
+                        }
                     }
                 }
-                .pickerStyle(.segmented)
 
-                Picker(L10n.string("settings.appearance.theme"), selection: $store.appearance) {
-                    ForEach(Appearance.allCases) { a in
-                        Text(a.label).tag(a)
+                Section(L10n.string("settings.hiddenApps.section")) {
+                    NavigationLink {
+                        HiddenAppsSettingsView(store: store)
+                    } label: {
+                        Text(L10n.string("settings.hiddenApps.manage"))
                     }
                 }
-                .pickerStyle(.segmented)
-            }
 
-            Section(L10n.string("settings.carousel.section")) {
-                Picker(L10n.string("settings.carousel.layout"), selection: $store.layoutStyle) {
-                    ForEach(LayoutStyle.allCases) { style in
-                        Text(style.label).tag(style)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                slider(label: L10n.string("settings.carousel.cardSize"),
-                       value: $store.cardSize,
-                       range: 80...180,
-                       suffix: "pt")
-                slider(label: L10n.string("settings.carousel.spacing"),
-                       value: $store.angularStep,
-                       range: 6...28,
-                       suffix: "°")
-                Toggle(L10n.string("settings.carousel.showAppNames"), isOn: $store.showAppNamesInCarousel)
-
-                HStack {
-                    Spacer()
-                    Button(L10n.string("settings.carousel.restoreDefaults")) {
-                        store.resetCarouselDefaults()
-                    }
-                }
-            }
-
-            Section(L10n.string("settings.hiddenApps.section")) {
-                hiddenAppsList
-            }
-
-            Section(L10n.string("settings.general.section")) {
-                Toggle(L10n.string("settings.general.launchAtLogin"), isOn: $store.launchAtLogin)
-                Text(L10n.string("settings.general.launchAtLogin.description"))
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-            }
-
-            Section(L10n.string("settings.about.section")) {
-                HStack {
-                    Text(L10n.string("settings.about.version"))
-                    Spacer()
-                    Text(UpdateChecker.currentVersion())
+                Section(L10n.string("settings.general.section")) {
+                    Toggle(L10n.string("settings.general.launchAtLogin"), isOn: $store.launchAtLogin)
+                    Text(L10n.string("settings.general.launchAtLogin.description"))
+                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
-                        .monospacedDigit()
                 }
 
-                Toggle(L10n.string("settings.about.autoCheckUpdates"), isOn: $store.autoCheckUpdates)
+                Section(L10n.string("settings.about.section")) {
+                    HStack {
+                        Text(L10n.string("settings.about.version"))
+                        Spacer()
+                        Text(UpdateChecker.currentVersion())
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
 
-                HStack {
-                    updateStatusView
-                    Spacer()
-                    if let update = store.availableUpdate {
-                        Button(L10n.format("settings.about.downloadFormat", update.tagName)) {
-                            NSWorkspace.shared.open(update.htmlURL)
-                        }
-                        .buttonStyle(.borderedProminent)
-                    } else {
-                        Button {
-                            Task { await store.checkForUpdates() }
-                        } label: {
-                            if store.isCheckingForUpdates {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Text(L10n.string("settings.about.checkNow"))
+                    Toggle(L10n.string("settings.about.autoCheckUpdates"), isOn: $store.autoCheckUpdates)
+
+                    HStack {
+                        updateStatusView
+                        Spacer()
+                        if let update = store.availableUpdate {
+                            Button(L10n.format("settings.about.downloadFormat", update.tagName)) {
+                                NSWorkspace.shared.open(update.htmlURL)
                             }
+                            .buttonStyle(.borderedProminent)
+                        } else {
+                            Button {
+                                Task { await store.checkForUpdates() }
+                            } label: {
+                                if store.isCheckingForUpdates {
+                                    ProgressView().controlSize(.small)
+                                } else {
+                                    Text(L10n.string("settings.about.checkNow"))
+                                }
+                            }
+                            .disabled(store.isCheckingForUpdates)
                         }
-                        .disabled(store.isCheckingForUpdates)
                     }
                 }
             }
+            .formStyle(.grouped)
         }
-        .formStyle(.grouped)
         .frame(width: 460, height: 720)
-        .onAppear {
-            refreshAppExclusionOptions()
-        }
-        .onReceive(store.$excludedBundleIdentifiers) { _ in
-            refreshAppExclusionOptions()
-        }
-        .onReceive(store.$hiddenAppBundleIdentifiers) { _ in
-            refreshAppExclusionOptions()
-        }
     }
 
     @ViewBuilder
@@ -132,86 +127,6 @@ struct SettingsView: View {
         }
     }
 
-    private var hiddenAppsList: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                hiddenAppsTable
-
-                if appExclusionOptions.isEmpty {
-                    Text(L10n.string("settings.hiddenApps.empty"))
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Divider()
-
-            HStack(spacing: 0) {
-                Button {
-                    addHiddenApp()
-                } label: {
-                    Image(systemName: "plus")
-                        .frame(width: 22, height: 22)
-                }
-                .buttonStyle(.borderless)
-                .help(L10n.string("settings.hiddenApps.add"))
-                .accessibilityLabel(L10n.string("settings.hiddenApps.add"))
-
-                Divider()
-                    .frame(height: 16)
-
-                Button {
-                    removeSelectedHiddenApps()
-                } label: {
-                    Image(systemName: "minus")
-                        .frame(width: 22, height: 22)
-                }
-                .buttonStyle(.borderless)
-                .disabled(selectedHiddenAppBundleIdentifiers.isEmpty)
-                .help(L10n.string("settings.hiddenApps.remove"))
-                .accessibilityLabel(L10n.string("settings.hiddenApps.remove"))
-
-                Spacer()
-            }
-            .frame(height: 26)
-            .padding(.horizontal, 6)
-            .background(.thinMaterial)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-    }
-
-    private var hiddenAppsTable: some View {
-        Table(appExclusionOptions, selection: $selectedHiddenAppBundleIdentifiers) {
-            TableColumn(L10n.string("settings.hiddenApps.app")) { option in
-                HStack(spacing: 8) {
-                    if let icon = option.icon {
-                        Image(nsImage: icon)
-                            .resizable()
-                            .frame(width: 20, height: 20)
-                    }
-                    Text(option.name)
-                        .lineLimit(1)
-                }
-            }
-            .width(min: 140, ideal: 170)
-
-            TableColumn(L10n.string("settings.hiddenApps.bundleIdentifier")) { option in
-                Text(option.bundleIdentifier)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            .width(min: 170, ideal: 210)
-
-            TableColumn(L10n.string("settings.hiddenApps.hidden")) { option in
-                Toggle("", isOn: excludedBinding(for: option.bundleIdentifier))
-                    .labelsHidden()
-            }
-            .width(64)
-        }
-        .frame(height: 220)
-    }
-
     private func slider(label: String,
                         value: Binding<Double>,
                         range: ClosedRange<Double>,
@@ -225,59 +140,5 @@ struct SettingsView: View {
                 .frame(width: 56, alignment: .trailing)
                 .foregroundStyle(.secondary)
         }
-    }
-
-    private func excludedBinding(for bundleIdentifier: String) -> Binding<Bool> {
-        Binding {
-            store.isExcluded(bundleIdentifier: bundleIdentifier)
-        } set: { excluded in
-            store.setExcluded(excluded, bundleIdentifier: bundleIdentifier)
-        }
-    }
-
-    private func addHiddenApp() {
-        let panel = ApplicationOpenPanel.make(title: L10n.string("settings.hiddenApps.add"))
-
-        guard panel.runModal() == .OK,
-              let url = panel.url,
-              let metadata = AppBundleMetadata.metadata(applicationURL: url) else {
-            return
-        }
-
-        store.addHiddenApp(bundleIdentifier: metadata.bundleIdentifier)
-        selectedHiddenAppBundleIdentifiers = [metadata.bundleIdentifier]
-        refreshAppExclusionOptions()
-    }
-
-    private func removeSelectedHiddenApps() {
-        guard !selectedHiddenAppBundleIdentifiers.isEmpty else { return }
-
-        store.removeHiddenApps(bundleIdentifiers: selectedHiddenAppBundleIdentifiers)
-        selectedHiddenAppBundleIdentifiers.removeAll()
-        refreshAppExclusionOptions()
-    }
-
-    private func refreshAppExclusionOptions() {
-        let apps = NSWorkspace.shared.runningApplications
-            .filter { $0.activationPolicy == .regular }
-            .map { app in
-                AppEntry(
-                    id: app.processIdentifier,
-                    bundleIdentifier: app.bundleIdentifier,
-                    name: app.localizedName ?? app.bundleIdentifier ?? L10n.string("app.unknown"),
-                    icon: app.icon ?? NSImage()
-                )
-            }
-        let listedBundleIdentifiers = store.hiddenAppBundleIdentifiers
-        let installedApps = listedBundleIdentifiers.compactMap {
-            AppBundleMetadata.resolve(bundleIdentifier: $0)
-        }
-        appExclusionOptions = AppExclusionOption.options(
-            from: apps,
-            excludedBundleIdentifiers: listedBundleIdentifiers,
-            installedApps: installedApps
-        )
-        let currentBundleIdentifiers = Set(appExclusionOptions.map(\.bundleIdentifier))
-        selectedHiddenAppBundleIdentifiers.formIntersection(currentBundleIdentifiers)
     }
 }
