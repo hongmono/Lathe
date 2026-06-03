@@ -4,6 +4,7 @@ import AppKit
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
     @State private var appExclusionOptions: [AppExclusionOption] = []
+    @State private var selectedHiddenAppBundleIdentifiers: Set<String> = []
 
     var body: some View {
         Form {
@@ -50,23 +51,7 @@ struct SettingsView: View {
             }
 
             Section(L10n.string("settings.hiddenApps.section")) {
-                if appExclusionOptions.isEmpty {
-                    Text(L10n.string("settings.hiddenApps.empty"))
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                } else {
-                    hiddenAppsTable
-                }
-
-                HStack {
-                    Button(L10n.string("settings.hiddenApps.add")) {
-                        addHiddenApp()
-                    }
-                    Spacer()
-                    Button(L10n.string("settings.hiddenApps.refresh")) {
-                        refreshAppExclusionOptions()
-                    }
-                }
+                hiddenAppsList
             }
 
             Section(L10n.string("settings.general.section")) {
@@ -118,6 +103,9 @@ struct SettingsView: View {
         .onReceive(store.$excludedBundleIdentifiers) { _ in
             refreshAppExclusionOptions()
         }
+        .onReceive(store.$hiddenAppBundleIdentifiers) { _ in
+            refreshAppExclusionOptions()
+        }
     }
 
     @ViewBuilder
@@ -144,8 +132,56 @@ struct SettingsView: View {
         }
     }
 
+    private var hiddenAppsList: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                hiddenAppsTable
+
+                if appExclusionOptions.isEmpty {
+                    Text(L10n.string("settings.hiddenApps.empty"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Divider()
+
+            HStack(spacing: 0) {
+                Button {
+                    addHiddenApp()
+                } label: {
+                    Image(systemName: "plus")
+                        .frame(width: 22, height: 22)
+                }
+                .buttonStyle(.borderless)
+                .help(L10n.string("settings.hiddenApps.add"))
+                .accessibilityLabel(L10n.string("settings.hiddenApps.add"))
+
+                Divider()
+                    .frame(height: 16)
+
+                Button {
+                    removeSelectedHiddenApps()
+                } label: {
+                    Image(systemName: "minus")
+                        .frame(width: 22, height: 22)
+                }
+                .buttonStyle(.borderless)
+                .disabled(selectedHiddenAppBundleIdentifiers.isEmpty)
+                .help(L10n.string("settings.hiddenApps.remove"))
+                .accessibilityLabel(L10n.string("settings.hiddenApps.remove"))
+
+                Spacer()
+            }
+            .frame(height: 26)
+            .padding(.horizontal, 6)
+            .background(.thinMaterial)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+    }
+
     private var hiddenAppsTable: some View {
-        Table(appExclusionOptions) {
+        Table(appExclusionOptions, selection: $selectedHiddenAppBundleIdentifiers) {
             TableColumn(L10n.string("settings.hiddenApps.app")) { option in
                 HStack(spacing: 8) {
                     if let icon = option.icon {
@@ -173,7 +209,7 @@ struct SettingsView: View {
             }
             .width(64)
         }
-        .frame(height: 190)
+        .frame(height: 220)
     }
 
     private func slider(label: String,
@@ -208,7 +244,16 @@ struct SettingsView: View {
             return
         }
 
-        store.setExcluded(true, bundleIdentifier: metadata.bundleIdentifier)
+        store.addHiddenApp(bundleIdentifier: metadata.bundleIdentifier)
+        selectedHiddenAppBundleIdentifiers = [metadata.bundleIdentifier]
+        refreshAppExclusionOptions()
+    }
+
+    private func removeSelectedHiddenApps() {
+        guard !selectedHiddenAppBundleIdentifiers.isEmpty else { return }
+
+        store.removeHiddenApps(bundleIdentifiers: selectedHiddenAppBundleIdentifiers)
+        selectedHiddenAppBundleIdentifiers.removeAll()
         refreshAppExclusionOptions()
     }
 
@@ -223,13 +268,16 @@ struct SettingsView: View {
                     icon: app.icon ?? NSImage()
                 )
             }
-        let installedApps = store.excludedBundleIdentifiers.compactMap {
+        let listedBundleIdentifiers = store.hiddenAppBundleIdentifiers
+        let installedApps = listedBundleIdentifiers.compactMap {
             AppBundleMetadata.resolve(bundleIdentifier: $0)
         }
         appExclusionOptions = AppExclusionOption.options(
             from: apps,
-            excludedBundleIdentifiers: store.excludedBundleIdentifiers,
+            excludedBundleIdentifiers: listedBundleIdentifiers,
             installedApps: installedApps
         )
+        let currentBundleIdentifiers = Set(appExclusionOptions.map(\.bundleIdentifier))
+        selectedHiddenAppBundleIdentifiers.formIntersection(currentBundleIdentifiers)
     }
 }

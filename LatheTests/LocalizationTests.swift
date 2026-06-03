@@ -17,6 +17,7 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(bundle.localizedString(forKey: "settings.carousel.showAppNames", value: nil, table: nil), "앱 이름 표시")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.hiddenApps.app", value: nil, table: nil), "앱")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.hiddenApps.add", value: nil, table: nil), "앱 추가...")
+        XCTAssertEqual(bundle.localizedString(forKey: "settings.hiddenApps.remove", value: nil, table: nil), "선택한 앱 제거")
         XCTAssertEqual(bundle.localizedString(forKey: "menu.preferences", value: nil, table: nil), "환경설정...")
     }
 
@@ -28,6 +29,7 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(bundle.localizedString(forKey: "settings.carousel.showAppNames", value: nil, table: nil), "Show app names")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.hiddenApps.app", value: nil, table: nil), "App")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.hiddenApps.add", value: nil, table: nil), "Add App...")
+        XCTAssertEqual(bundle.localizedString(forKey: "settings.hiddenApps.remove", value: nil, table: nil), "Remove selected apps")
         XCTAssertEqual(bundle.localizedString(forKey: "menu.preferences", value: nil, table: nil), "Preferences...")
     }
 

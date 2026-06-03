@@ -14,6 +14,7 @@ final class SettingsStore: ObservableObject {
         static let angularStep = "angularStep"
         static let showAppNamesInCarousel = "showAppNamesInCarousel"
         static let autoCheckUpdates = "autoCheckUpdates"
+        static let hiddenAppBundleIdentifiers = "hiddenAppBundleIdentifiers"
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
     }
 
@@ -69,6 +70,12 @@ final class SettingsStore: ObservableObject {
         }
     }
 
+    @Published var hiddenAppBundleIdentifiers: Set<String> {
+        didSet {
+            defaults.set(hiddenAppBundleIdentifiers.sorted(), forKey: Key.hiddenAppBundleIdentifiers)
+        }
+    }
+
     @Published var availableUpdate: UpdateInfo?
     @Published var lastUpdateCheck: Date?
     @Published var isCheckingForUpdates: Bool = false
@@ -84,7 +91,17 @@ final class SettingsStore: ObservableObject {
         self.showAppNamesInCarousel = (userDefaults.object(forKey: Key.showAppNamesInCarousel) as? Bool) ?? true
         self.launchAtLogin = LoginItem.isEnabled
         self.autoCheckUpdates = (userDefaults.object(forKey: Key.autoCheckUpdates) as? Bool) ?? true
-        self.excludedBundleIdentifiers = Set(userDefaults.stringArray(forKey: Key.excludedBundleIdentifiers) ?? [])
+        let excludedBundleIdentifiers = Set(userDefaults.stringArray(forKey: Key.excludedBundleIdentifiers) ?? [])
+        self.excludedBundleIdentifiers = excludedBundleIdentifiers
+        let hasHiddenAppBundleIdentifiers = userDefaults.object(forKey: Key.hiddenAppBundleIdentifiers) != nil
+        if let hiddenAppBundleIdentifiers = userDefaults.stringArray(forKey: Key.hiddenAppBundleIdentifiers) {
+            self.hiddenAppBundleIdentifiers = Set(hiddenAppBundleIdentifiers)
+        } else {
+            self.hiddenAppBundleIdentifiers = excludedBundleIdentifiers
+        }
+        if !hasHiddenAppBundleIdentifiers {
+            defaults.set(self.hiddenAppBundleIdentifiers.sorted(), forKey: Key.hiddenAppBundleIdentifiers)
+        }
     }
 
     func applyAppearance() {
@@ -104,10 +121,21 @@ final class SettingsStore: ObservableObject {
 
     func setExcluded(_ excluded: Bool, bundleIdentifier: String) {
         if excluded {
+            hiddenAppBundleIdentifiers.insert(bundleIdentifier)
             excludedBundleIdentifiers.insert(bundleIdentifier)
         } else {
             excludedBundleIdentifiers.remove(bundleIdentifier)
         }
+    }
+
+    func addHiddenApp(bundleIdentifier: String) {
+        hiddenAppBundleIdentifiers.insert(bundleIdentifier)
+        excludedBundleIdentifiers.insert(bundleIdentifier)
+    }
+
+    func removeHiddenApps(bundleIdentifiers: Set<String>) {
+        hiddenAppBundleIdentifiers.subtract(bundleIdentifiers)
+        excludedBundleIdentifiers.subtract(bundleIdentifiers)
     }
 
     func checkForUpdates() async {

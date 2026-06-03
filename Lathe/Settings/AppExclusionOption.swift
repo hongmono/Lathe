@@ -45,30 +45,32 @@ struct AppExclusionOption: Identifiable, Equatable {
                         excludedBundleIdentifiers: Set<String>,
                         installedApps: [AppBundleMetadata] = []) -> [AppExclusionOption] {
         var optionsByBundleIdentifier: [String: AppExclusionOption] = [:]
+        var appsByBundleIdentifier: [String: AppEntry] = [:]
+        var installedAppsByBundleIdentifier: [String: AppBundleMetadata] = [:]
 
         for app in apps {
             guard let bundleIdentifier = app.bundleIdentifier else { continue }
-            if optionsByBundleIdentifier[bundleIdentifier] == nil {
+            appsByBundleIdentifier[bundleIdentifier] = appsByBundleIdentifier[bundleIdentifier] ?? app
+        }
+
+        for app in installedApps {
+            installedAppsByBundleIdentifier[app.bundleIdentifier] = app
+        }
+
+        for bundleIdentifier in excludedBundleIdentifiers {
+            if let app = appsByBundleIdentifier[bundleIdentifier] {
                 optionsByBundleIdentifier[bundleIdentifier] = AppExclusionOption(
                     bundleIdentifier: bundleIdentifier,
                     name: app.name,
                     icon: app.icon
                 )
-            }
-        }
-
-        for app in installedApps {
-            if optionsByBundleIdentifier[app.bundleIdentifier] == nil {
+            } else if let app = installedAppsByBundleIdentifier[bundleIdentifier] {
                 optionsByBundleIdentifier[app.bundleIdentifier] = AppExclusionOption(
                     bundleIdentifier: app.bundleIdentifier,
                     name: app.name,
                     icon: app.icon
                 )
-            }
-        }
-
-        for bundleIdentifier in excludedBundleIdentifiers {
-            if optionsByBundleIdentifier[bundleIdentifier] == nil {
+            } else {
                 optionsByBundleIdentifier[bundleIdentifier] = AppExclusionOption(
                     bundleIdentifier: bundleIdentifier,
                     name: bundleIdentifier,

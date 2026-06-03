@@ -39,6 +39,7 @@
 "settings.hiddenApps.bundleIdentifier" = "번들 ID";
 "settings.hiddenApps.hidden" = "숨김";
 "settings.hiddenApps.add" = "앱 추가...";
+"settings.hiddenApps.remove" = "선택한 앱 제거";
 "settings.hiddenApps.refresh" = "새로고침";
 "settings.general.section" = "일반";
 "settings.general.launchAtLogin" = "로그인 시 Lathe 실행";
