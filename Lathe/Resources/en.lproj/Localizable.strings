@@ -34,7 +34,8 @@
 "settings.carousel.showAppNames" = "Show app names";
 "settings.carousel.restoreDefaults" = "Restore defaults";
 "settings.hiddenApps.section" = "Hidden Apps";
-"settings.hiddenApps.empty" = "No regular apps are running.";
+"settings.hiddenApps.empty" = "No apps are listed yet.";
+"settings.hiddenApps.add" = "Add App...";
 "settings.hiddenApps.refresh" = "Refresh";
 "settings.general.section" = "General";
 "settings.general.launchAtLogin" = "Launch Lathe at login";

@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
@@ -76,6 +77,9 @@ struct SettingsView: View {
                 }
 
                 HStack {
+                    Button(L10n.string("settings.hiddenApps.add")) {
+                        addHiddenApp()
+                    }
                     Spacer()
                     Button(L10n.string("settings.hiddenApps.refresh")) {
                         refreshAppExclusionOptions()
@@ -179,6 +183,26 @@ struct SettingsView: View {
         } set: { excluded in
             store.setExcluded(excluded, bundleIdentifier: bundleIdentifier)
         }
+    }
+
+    private func addHiddenApp() {
+        let panel = NSOpenPanel()
+        panel.title = L10n.string("settings.hiddenApps.add")
+        panel.prompt = L10n.string("settings.hiddenApps.add")
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.allowedContentTypes = [UTType(filenameExtension: "app") ?? .applicationBundle]
+        panel.allowsMultipleSelection = false
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+
+        guard panel.runModal() == .OK,
+              let url = panel.url,
+              let metadata = AppBundleMetadata.metadata(applicationURL: url) else {
+            return
+        }
+
+        store.setExcluded(true, bundleIdentifier: metadata.bundleIdentifier)
+        refreshAppExclusionOptions()
     }
 
     private func refreshAppExclusionOptions() {

@@ -9,7 +9,16 @@ struct AppBundleMetadata: Equatable {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else {
             return nil
         }
-        return metadata(bundleIdentifier: bundleIdentifier, applicationURL: url)
+        return metadata(applicationURL: url) ?? metadata(bundleIdentifier: bundleIdentifier, applicationURL: url)
+    }
+
+    static func metadata(applicationURL: URL) -> AppBundleMetadata? {
+        guard let bundle = Bundle(url: applicationURL),
+              let bundleIdentifier = bundle.bundleIdentifier,
+              !bundleIdentifier.isEmpty else {
+            return nil
+        }
+        return metadata(bundleIdentifier: bundleIdentifier, applicationURL: applicationURL)
     }
 
     static func metadata(bundleIdentifier: String, applicationURL: URL) -> AppBundleMetadata {

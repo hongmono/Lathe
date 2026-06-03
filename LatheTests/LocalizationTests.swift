@@ -15,6 +15,7 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(bundle.localizedString(forKey: "settings.window.title", value: nil, table: nil), "Lathe - 환경설정")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.appearance.language", value: nil, table: nil), "언어")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.carousel.showAppNames", value: nil, table: nil), "앱 이름 표시")
+        XCTAssertEqual(bundle.localizedString(forKey: "settings.hiddenApps.add", value: nil, table: nil), "앱 추가...")
         XCTAssertEqual(bundle.localizedString(forKey: "menu.preferences", value: nil, table: nil), "환경설정...")
     }
 
@@ -24,6 +25,7 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(bundle.localizedString(forKey: "settings.window.title", value: nil, table: nil), "Lathe - Preferences")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.appearance.language", value: nil, table: nil), "Language")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.carousel.showAppNames", value: nil, table: nil), "Show app names")
+        XCTAssertEqual(bundle.localizedString(forKey: "settings.hiddenApps.add", value: nil, table: nil), "Add App...")
         XCTAssertEqual(bundle.localizedString(forKey: "menu.preferences", value: nil, table: nil), "Preferences...")
     }
 
