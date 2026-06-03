@@ -5,6 +5,7 @@ import Combine
 @MainActor
 final class SettingsStore: ObservableObject {
     static let shared = SettingsStore()
+    static let finderBundleIdentifier = "com.apple.finder"
 
     private enum Key {
         static let appLanguage = AppLanguage.defaultsKey
@@ -16,6 +17,7 @@ final class SettingsStore: ObservableObject {
         static let autoCheckUpdates = "autoCheckUpdates"
         static let hiddenAppBundleIdentifiers = "hiddenAppBundleIdentifiers"
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
+        static let finderHiddenAppSeeded = "finderHiddenAppSeeded"
     }
 
     static let defaultCardSize: Double = 110
@@ -91,16 +93,32 @@ final class SettingsStore: ObservableObject {
         self.showAppNamesInCarousel = (userDefaults.object(forKey: Key.showAppNamesInCarousel) as? Bool) ?? true
         self.launchAtLogin = LoginItem.isEnabled
         self.autoCheckUpdates = (userDefaults.object(forKey: Key.autoCheckUpdates) as? Bool) ?? true
-        let excludedBundleIdentifiers = Set(userDefaults.stringArray(forKey: Key.excludedBundleIdentifiers) ?? [])
+        var excludedBundleIdentifiers = Set(userDefaults.stringArray(forKey: Key.excludedBundleIdentifiers) ?? [])
         self.excludedBundleIdentifiers = excludedBundleIdentifiers
         let hasHiddenAppBundleIdentifiers = userDefaults.object(forKey: Key.hiddenAppBundleIdentifiers) != nil
+        let hasSeededFinderHiddenApp = userDefaults.bool(forKey: Key.finderHiddenAppSeeded)
+        var shouldPersistHiddenAppBundleIdentifiers = !hasHiddenAppBundleIdentifiers
+        var shouldPersistExcludedBundleIdentifiers = false
         if let hiddenAppBundleIdentifiers = userDefaults.stringArray(forKey: Key.hiddenAppBundleIdentifiers) {
             self.hiddenAppBundleIdentifiers = Set(hiddenAppBundleIdentifiers)
         } else {
             self.hiddenAppBundleIdentifiers = excludedBundleIdentifiers
         }
-        if !hasHiddenAppBundleIdentifiers {
+
+        if !hasSeededFinderHiddenApp {
+            self.hiddenAppBundleIdentifiers.insert(Self.finderBundleIdentifier)
+            excludedBundleIdentifiers.insert(Self.finderBundleIdentifier)
+            self.excludedBundleIdentifiers = excludedBundleIdentifiers
+            shouldPersistHiddenAppBundleIdentifiers = true
+            shouldPersistExcludedBundleIdentifiers = true
+            defaults.set(true, forKey: Key.finderHiddenAppSeeded)
+        }
+
+        if shouldPersistHiddenAppBundleIdentifiers {
             defaults.set(self.hiddenAppBundleIdentifiers.sorted(), forKey: Key.hiddenAppBundleIdentifiers)
+        }
+        if shouldPersistExcludedBundleIdentifiers {
+            defaults.set(self.excludedBundleIdentifiers.sorted(), forKey: Key.excludedBundleIdentifiers)
         }
     }
 

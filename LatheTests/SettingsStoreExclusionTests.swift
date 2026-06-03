@@ -4,6 +4,37 @@ import XCTest
 final class SettingsStoreExclusionTests: XCTestCase {
 
     @MainActor
+    func test_defaultHiddenAppsIncludeFinderAndExcludeItByDefault() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+
+        XCTAssertEqual(store.hiddenAppBundleIdentifiers, [SettingsStore.finderBundleIdentifier])
+        XCTAssertEqual(store.excludedBundleIdentifiers, [SettingsStore.finderBundleIdentifier])
+    }
+
+    @MainActor
+    func test_finderSeedAppliesToExistingHiddenAppPreferencesOnlyOnce() {
+        let defaults = makeDefaults()
+        defaults.set(["com.example.browser"], forKey: "hiddenAppBundleIdentifiers")
+        defaults.set(["com.example.browser"], forKey: "excludedBundleIdentifiers")
+        let store = SettingsStore(userDefaults: defaults)
+
+        XCTAssertEqual(store.hiddenAppBundleIdentifiers, [
+            SettingsStore.finderBundleIdentifier,
+            "com.example.browser",
+        ])
+        XCTAssertEqual(store.excludedBundleIdentifiers, [
+            SettingsStore.finderBundleIdentifier,
+            "com.example.browser",
+        ])
+
+        store.removeHiddenApps(bundleIdentifiers: [SettingsStore.finderBundleIdentifier])
+
+        let reloaded = SettingsStore(userDefaults: defaults)
+        XCTAssertEqual(reloaded.hiddenAppBundleIdentifiers, ["com.example.browser"])
+        XCTAssertEqual(reloaded.excludedBundleIdentifiers, ["com.example.browser"])
+    }
+
+    @MainActor
     func test_setExcludedBundleIdentifierPersistsAndReloads() {
         let defaults = makeDefaults()
         let store = SettingsStore(userDefaults: defaults)
@@ -38,11 +69,17 @@ final class SettingsStoreExclusionTests: XCTestCase {
 
         store.addHiddenApp(bundleIdentifier: "com.example.browser")
 
-        XCTAssertEqual(store.hiddenAppBundleIdentifiers, ["com.example.browser"])
+        XCTAssertEqual(store.hiddenAppBundleIdentifiers, [
+            SettingsStore.finderBundleIdentifier,
+            "com.example.browser",
+        ])
         XCTAssertTrue(store.isExcluded(bundleIdentifier: "com.example.browser"))
 
         let reloaded = SettingsStore(userDefaults: defaults)
-        XCTAssertEqual(reloaded.hiddenAppBundleIdentifiers, ["com.example.browser"])
+        XCTAssertEqual(reloaded.hiddenAppBundleIdentifiers, [
+            SettingsStore.finderBundleIdentifier,
+            "com.example.browser",
+        ])
         XCTAssertTrue(reloaded.isExcluded(bundleIdentifier: "com.example.browser"))
     }
 
@@ -53,7 +90,10 @@ final class SettingsStoreExclusionTests: XCTestCase {
         store.addHiddenApp(bundleIdentifier: "com.example.browser")
         store.setExcluded(false, bundleIdentifier: "com.example.browser")
 
-        XCTAssertEqual(store.hiddenAppBundleIdentifiers, ["com.example.browser"])
+        XCTAssertEqual(store.hiddenAppBundleIdentifiers, [
+            SettingsStore.finderBundleIdentifier,
+            "com.example.browser",
+        ])
         XCTAssertFalse(store.isExcluded(bundleIdentifier: "com.example.browser"))
     }
 
@@ -66,7 +106,10 @@ final class SettingsStoreExclusionTests: XCTestCase {
 
         store.removeHiddenApps(bundleIdentifiers: ["com.example.browser"])
 
-        XCTAssertEqual(store.hiddenAppBundleIdentifiers, ["com.example.editor"])
+        XCTAssertEqual(store.hiddenAppBundleIdentifiers, [
+            SettingsStore.finderBundleIdentifier,
+            "com.example.editor",
+        ])
         XCTAssertFalse(store.isExcluded(bundleIdentifier: "com.example.browser"))
         XCTAssertTrue(store.isExcluded(bundleIdentifier: "com.example.editor"))
     }
@@ -78,13 +121,19 @@ final class SettingsStoreExclusionTests: XCTestCase {
 
         let store = SettingsStore(userDefaults: defaults)
 
-        XCTAssertEqual(store.hiddenAppBundleIdentifiers, ["com.example.legacy"])
+        XCTAssertEqual(store.hiddenAppBundleIdentifiers, [
+            SettingsStore.finderBundleIdentifier,
+            "com.example.legacy",
+        ])
         XCTAssertTrue(store.isExcluded(bundleIdentifier: "com.example.legacy"))
 
         store.setExcluded(false, bundleIdentifier: "com.example.legacy")
 
         let reloaded = SettingsStore(userDefaults: defaults)
-        XCTAssertEqual(reloaded.hiddenAppBundleIdentifiers, ["com.example.legacy"])
+        XCTAssertEqual(reloaded.hiddenAppBundleIdentifiers, [
+            SettingsStore.finderBundleIdentifier,
+            "com.example.legacy",
+        ])
         XCTAssertFalse(reloaded.isExcluded(bundleIdentifier: "com.example.legacy"))
     }
 
