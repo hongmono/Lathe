@@ -14,10 +14,7 @@ struct SettingsView: View {
                 }
             }
             .listStyle(.sidebar)
-            .safeAreaInset(edge: .top, spacing: 0) {
-                Color.clear
-                    .frame(height: SettingsViewLayout.sidebarTopInset)
-            }
+            .contentMargins(.top, SettingsViewLayout.sidebarTopMargin, for: .scrollContent)
             .navigationSplitViewColumnWidth(min: 150, ideal: 170, max: 210)
         } detail: {
             settingsDetail(for: selectedPane ?? .general)
@@ -50,9 +47,13 @@ struct SettingsView: View {
                     aboutSettings
                 }
             }
-            .padding(24)
+            .padding(.horizontal, 24)
+            .padding(.top, SettingsViewLayout.detailTopMargin)
+            .padding(.bottom, 24)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .offset(y: SettingsViewLayout.detailContentOffsetY)
         }
+        .contentMargins(.top, 0, for: .scrollContent)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(.regularMaterial)
     }
@@ -228,5 +229,7 @@ private struct SettingsGlassSection<Content: View>: View {
 private enum SettingsViewLayout {
     static let windowMinWidth: CGFloat = 680
     static let windowMinHeight: CGFloat = 560
-    static let sidebarTopInset: CGFloat = 42
+    static let sidebarTopMargin: CGFloat = 86
+    static let detailTopMargin: CGFloat = 60
+    static let detailContentOffsetY: CGFloat = -72
 }
