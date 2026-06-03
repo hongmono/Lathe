@@ -34,6 +34,7 @@ struct SettingsGlassSurfaceModifier: ViewModifier {
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
 
+        #if compiler(>=6.2)
         if #available(macOS 26.0, *) {
             if interactive {
                 content
@@ -49,15 +50,23 @@ struct SettingsGlassSurfaceModifier: ViewModifier {
                         shape.stroke(.quaternary, lineWidth: 0.5)
                             .allowsHitTesting(false)
                     }
-            }
-        } else {
-            content
-                .background(.thinMaterial, in: shape)
-                .overlay {
-                    shape.stroke(.quaternary, lineWidth: 0.5)
-                        .allowsHitTesting(false)
                 }
+        } else {
+            fallbackSurface(content: content, shape: shape)
         }
+        #else
+        fallbackSurface(content: content, shape: shape)
+        #endif
+    }
+
+    private func fallbackSurface(content: Content,
+                                 shape: RoundedRectangle) -> some View {
+        content
+            .background(.thinMaterial, in: shape)
+            .overlay {
+                shape.stroke(.quaternary, lineWidth: 0.5)
+                    .allowsHitTesting(false)
+            }
     }
 }
 
