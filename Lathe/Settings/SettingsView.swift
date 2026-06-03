@@ -3,41 +3,87 @@ import AppKit
 
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
-    @State private var selectedPane: SettingsPane = .main
+    @State private var selectedPane: SettingsPane? = .general
 
     var body: some View {
-        Group {
-            switch selectedPane {
-            case .main:
-                mainSettings
-            case .hiddenApps:
-                HiddenAppsSettingsView(store: store) {
-                    selectedPane = SettingsPane.hiddenApps.backDestination ?? .main
+        NavigationSplitView {
+            List(selection: $selectedPane) {
+                ForEach(SettingsPane.sidebarPanes) { pane in
+                    Label(L10n.string(pane.titleKey), systemImage: pane.systemImage)
+                        .tag(pane)
+                }
+            }
+            .listStyle(.sidebar)
+            .navigationSplitViewColumnWidth(min: 150, ideal: 170, max: 210)
+        } detail: {
+            settingsDetail(for: selectedPane ?? .general)
+        }
+        .frame(width: 680, height: 560)
+    }
+
+    @ViewBuilder
+    private func settingsDetail(for pane: SettingsPane) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(L10n.string(pane.titleKey))
+                    .font(.largeTitle)
+                    .fontWeight(.semibold)
+                    .padding(.bottom, 2)
+
+                switch pane {
+                case .main, .general:
+                    generalSettings
+                case .carousel:
+                    carouselSettings
+                case .hiddenApps:
+                    HiddenAppsSettingsView(store: store)
+                case .about:
+                    aboutSettings
+                }
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(.regularMaterial)
+    }
+
+    private var generalSettings: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            SettingsGlassSection(title: L10n.string("settings.appearance.section"),
+                                 systemImage: "paintbrush") {
+                VStack(spacing: 14) {
+                    Picker(L10n.string("settings.appearance.language"), selection: $store.appLanguage) {
+                        ForEach(AppLanguage.allCases) { language in
+                            Text(language.label).tag(language)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    Picker(L10n.string("settings.appearance.theme"), selection: $store.appearance) {
+                        ForEach(Appearance.allCases) { a in
+                            Text(a.label).tag(a)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+            }
+
+            SettingsGlassSection(title: L10n.string("settings.general.section"),
+                                 systemImage: "power") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle(L10n.string("settings.general.launchAtLogin"), isOn: $store.launchAtLogin)
+                    Text(L10n.string("settings.general.launchAtLogin.description"))
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
                 }
             }
         }
-        .frame(width: 460, height: 720)
     }
 
-    private var mainSettings: some View {
-        Form {
-            Section(L10n.string("settings.appearance.section")) {
-                Picker(L10n.string("settings.appearance.language"), selection: $store.appLanguage) {
-                    ForEach(AppLanguage.allCases) { language in
-                        Text(language.label).tag(language)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                Picker(L10n.string("settings.appearance.theme"), selection: $store.appearance) {
-                    ForEach(Appearance.allCases) { a in
-                        Text(a.label).tag(a)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
-
-            Section(L10n.string("settings.carousel.section")) {
+    private var carouselSettings: some View {
+        SettingsGlassSection(title: L10n.string("settings.carousel.section"),
+                             systemImage: "rectangle.stack") {
+            VStack(spacing: 14) {
                 Picker(L10n.string("settings.carousel.layout"), selection: $store.layoutStyle) {
                     ForEach(LayoutStyle.allCases) { style in
                         Text(style.label).tag(style)
@@ -62,30 +108,13 @@ struct SettingsView: View {
                     }
                 }
             }
+        }
+    }
 
-            Section(L10n.string("settings.hiddenApps.section")) {
-                Button {
-                    selectedPane = .hiddenApps
-                } label: {
-                    HStack {
-                        Text(L10n.string("settings.hiddenApps.manage"))
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundStyle(.tertiary)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-
-            Section(L10n.string("settings.general.section")) {
-                Toggle(L10n.string("settings.general.launchAtLogin"), isOn: $store.launchAtLogin)
-                Text(L10n.string("settings.general.launchAtLogin.description"))
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-            }
-
-            Section(L10n.string("settings.about.section")) {
+    private var aboutSettings: some View {
+        SettingsGlassSection(title: L10n.string("settings.about.section"),
+                             systemImage: "info.circle") {
+            VStack(spacing: 14) {
                 HStack {
                     Text(L10n.string("settings.about.version"))
                     Spacer()
@@ -93,6 +122,8 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
+
+                Divider()
 
                 Toggle(L10n.string("settings.about.autoCheckUpdates"), isOn: $store.autoCheckUpdates)
 
@@ -119,7 +150,6 @@ struct SettingsView: View {
                 }
             }
         }
-        .formStyle(.grouped)
     }
 
     @ViewBuilder
@@ -158,6 +188,29 @@ struct SettingsView: View {
                 .monospacedDigit()
                 .frame(width: 56, alignment: .trailing)
                 .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct SettingsGlassSection<Content: View>: View {
+    let title: String
+    let systemImage: String
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label(title, systemImage: systemImage)
+                .font(.headline)
+                .foregroundStyle(.primary)
+
+            content
+        }
+        .padding(16)
+        .frame(maxWidth: 460, alignment: .leading)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(.quaternary, lineWidth: 0.5)
         }
     }
 }

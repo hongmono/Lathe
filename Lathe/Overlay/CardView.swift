@@ -8,14 +8,22 @@ struct CardView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(.regularMaterial)
-                .shadow(color: .black.opacity(0.18), radius: 14, x: 0, y: 6)
+                .fill(isFocused ? .regularMaterial : .thinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(.white.opacity(isFocused ? 0.42 : 0.24), lineWidth: 0.8)
+                }
+                .shadow(color: .black.opacity(isFocused ? 0.28 : 0.16),
+                        radius: isFocused ? 22 : 12,
+                        x: 0,
+                        y: isFocused ? 12 : 6)
 
             VStack(spacing: showsName ? 10 : 0) {
                 Image(nsImage: entry.icon)
                     .resizable()
                     .interpolation(.high)
-                    .frame(width: 56, height: 56)
+                    .frame(width: isFocused ? 60 : 54, height: isFocused ? 60 : 54)
+                    .shadow(color: .black.opacity(isFocused ? 0.16 : 0.08), radius: 4, x: 0, y: 2)
 
                 if showsName {
                     Text(entry.name)

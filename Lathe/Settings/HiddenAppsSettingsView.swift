@@ -3,45 +3,21 @@ import AppKit
 
 struct HiddenAppsSettingsView: View {
     @ObservedObject var store: SettingsStore
-    let onBack: () -> Void
     @State private var hiddenAppRows: [HiddenAppRowModel] = []
     @State private var selectedHiddenAppBundleIdentifiers: Set<String> = []
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Button {
-                onBack()
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left")
-                    Text(L10n.string("settings.back"))
-                }
+        hiddenAppsList
+            .frame(maxWidth: 520, alignment: .leading)
+            .onAppear {
+                refreshAppExclusionOptions()
             }
-            .buttonStyle(.borderless)
-            .controlSize(.small)
-            .accessibilityLabel(L10n.string("settings.back"))
-
-            VStack(alignment: .leading, spacing: 12) {
-                Text(L10n.string("settings.hiddenApps.section"))
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                hiddenAppsList
+            .onReceive(store.$excludedBundleIdentifiers) { _ in
+                refreshAppExclusionOptions()
             }
-
-            Spacer()
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 18)
-        .onAppear {
-            refreshAppExclusionOptions()
-        }
-        .onReceive(store.$excludedBundleIdentifiers) { _ in
-            refreshAppExclusionOptions()
-        }
-        .onReceive(store.$hiddenAppBundleIdentifiers) { _ in
-            refreshAppExclusionOptions()
-        }
+            .onReceive(store.$hiddenAppBundleIdentifiers) { _ in
+                refreshAppExclusionOptions()
+            }
     }
 
     private var hiddenAppsList: some View {
@@ -80,11 +56,10 @@ struct HiddenAppsSettingsView: View {
 
             hiddenAppsControlBar
         }
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(Color(nsColor: .separatorColor), lineWidth: 0.5)
+                .stroke(.quaternary, lineWidth: 0.5)
         }
     }
 
@@ -102,36 +77,36 @@ struct HiddenAppsSettingsView: View {
         .font(.system(size: 13, weight: .semibold))
         .padding(.horizontal, HiddenAppsListLayout.rowHorizontalPadding)
         .frame(height: HiddenAppsListLayout.headerHeight)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(.ultraThinMaterial)
     }
 
     private var hiddenAppsControlBar: some View {
         HStack(spacing: 0) {
-                Button {
-                    addHiddenApp()
-                } label: {
-                    Image(systemName: "plus")
-                        .frame(width: 22, height: 22)
-                }
-                .buttonStyle(.borderless)
-                .help(L10n.string("settings.hiddenApps.add"))
-                .accessibilityLabel(L10n.string("settings.hiddenApps.add"))
+            Button {
+                addHiddenApp()
+            } label: {
+                Image(systemName: "plus")
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.borderless)
+            .help(L10n.string("settings.hiddenApps.add"))
+            .accessibilityLabel(L10n.string("settings.hiddenApps.add"))
 
-                Divider()
-                    .frame(height: 16)
+            Divider()
+                .frame(height: 16)
 
-                Button {
-                    removeSelectedHiddenApps()
-                } label: {
-                    Image(systemName: "minus")
-                        .frame(width: 22, height: 22)
-                }
-                .buttonStyle(.borderless)
-                .disabled(selectedHiddenAppBundleIdentifiers.isEmpty)
-                .help(L10n.string("settings.hiddenApps.remove"))
-                .accessibilityLabel(L10n.string("settings.hiddenApps.remove"))
+            Button {
+                removeSelectedHiddenApps()
+            } label: {
+                Image(systemName: "minus")
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.borderless)
+            .disabled(selectedHiddenAppBundleIdentifiers.isEmpty)
+            .help(L10n.string("settings.hiddenApps.remove"))
+            .accessibilityLabel(L10n.string("settings.hiddenApps.remove"))
 
-                Spacer()
+            Spacer()
         }
         .frame(height: 26)
         .padding(.horizontal, 6)
@@ -251,7 +226,7 @@ private struct HiddenAppRowView: View {
         .padding(.horizontal, HiddenAppsListLayout.rowHorizontalPadding)
         .frame(height: HiddenAppsListLayout.rowHeight)
         .foregroundStyle(isSelected ? .white : .primary)
-        .background(isSelected ? Color.accentColor : Color.clear)
+        .background(isSelected ? Color.accentColor.opacity(0.9) : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture {
             onSelect()
