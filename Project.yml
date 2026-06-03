@@ -36,6 +36,7 @@ targets:
         NSHighResolutionCapable: true
     settings:
       base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         PRODUCT_BUNDLE_IDENTIFIER: com.hongmono.Lathe
         MACOSX_DEPLOYMENT_TARGET: "14.6"
   LatheTests:

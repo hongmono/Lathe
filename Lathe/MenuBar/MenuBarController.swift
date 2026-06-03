@@ -12,11 +12,7 @@ final class MenuBarController {
     init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            button.image = NSImage(
-                systemSymbolName: "circle.dotted",
-                accessibilityDescription: L10n.string("menu.accessibilityDescription")
-            )
-            button.image?.isTemplate = true
+            button.image = Self.makeStatusImage()
         }
         rebuildMenu()
         observeLanguage()
@@ -75,5 +71,14 @@ final class MenuBarController {
 
     @objc private func showPreferences() {
         onShowPreferences()
+    }
+
+    private static func makeStatusImage() -> NSImage? {
+        let image = NSImage(named: "MenuBarIcon")
+            ?? NSImage(systemSymbolName: "circle.dotted",
+                       accessibilityDescription: L10n.string("menu.accessibilityDescription"))
+        image?.isTemplate = true
+        image?.accessibilityDescription = L10n.string("menu.accessibilityDescription")
+        return image
     }
 }

@@ -169,7 +169,7 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 
 ## 환경설정
 
-메뉴바 점선 원 아이콘 → **Preferences…** 를 선택합니다.
+메뉴바 Lathe 아이콘 → **Preferences…** 를 선택합니다.
 
 <p align="center">
   <img src="docs/images/preferences.png" alt="Lathe 환경설정 윈도우" width="480">
