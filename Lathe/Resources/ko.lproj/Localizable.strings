@@ -21,6 +21,7 @@
 "permission.openSystemSettings" = "시스템 설정 열기";
 
 "settings.window.title" = "Lathe - 환경설정";
+"settings.sidebar.toggle" = "사이드바 토글";
 "settings.appearance.section" = "외관";
 "settings.appearance.language" = "언어";
 "settings.appearance.theme" = "테마";

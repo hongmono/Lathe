@@ -26,7 +26,7 @@ struct HiddenAppsSettingsView: View {
 
             Divider()
 
-            ZStack(alignment: .center) {
+            ZStack(alignment: .topLeading) {
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         ForEach(hiddenAppRows) { row in
@@ -48,6 +48,7 @@ struct HiddenAppsSettingsView: View {
                     Text(L10n.string("settings.hiddenApps.empty"))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
+                        .padding(HiddenAppsListLayout.rowHorizontalPadding)
                 }
             }
             .frame(height: HiddenAppsListLayout.listHeight)
@@ -72,7 +73,7 @@ struct HiddenAppsSettingsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(L10n.string("settings.hiddenApps.hidden"))
-                .frame(width: HiddenAppsListLayout.toggleColumnWidth, alignment: .center)
+                .frame(width: HiddenAppsListLayout.toggleColumnWidth, alignment: .trailing)
         }
         .font(.system(size: 13, weight: .semibold))
         .padding(.horizontal, HiddenAppsListLayout.rowHorizontalPadding)

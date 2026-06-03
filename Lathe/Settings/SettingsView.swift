@@ -4,20 +4,20 @@ import AppKit
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
     @State private var selectedPane: SettingsPane? = .general
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        NavigationSplitView {
-            List(selection: $selectedPane) {
-                ForEach(SettingsPane.sidebarPanes) { pane in
-                    Label(L10n.string(pane.titleKey), systemImage: pane.systemImage)
-                        .tag(pane)
-                }
+        HStack(spacing: 0) {
+            if SettingsSidebarVisibilityToggle.isVisible(columnVisibility) {
+                settingsSidebar
+                    .frame(width: SettingsViewLayout.sidebarWidth)
+                    .transition(.move(edge: .leading).combined(with: .opacity))
             }
-            .listStyle(.sidebar)
-            .contentMargins(.top, SettingsViewLayout.sidebarTopMargin, for: .scrollContent)
-            .navigationSplitViewColumnWidth(min: 150, ideal: 170, max: 210)
-        } detail: {
-            settingsDetail(for: selectedPane ?? .general)
+
+            settingsDetail(
+                for: selectedPane ?? .general,
+                sidebarVisible: SettingsSidebarVisibilityToggle.isVisible(columnVisibility)
+            )
         }
         .ignoresSafeArea(.container, edges: .top)
         .frame(
@@ -25,16 +25,100 @@ struct SettingsView: View {
             minHeight: SettingsViewLayout.windowMinHeight,
             alignment: .topLeading
         )
+        .background {
+            SettingsSidebarShortcutMonitor(columnVisibility: $columnVisibility)
+                .frame(width: 0, height: 0)
+        }
+        .background(.regularMaterial)
+        .animation(.easeInOut(duration: 0.16), value: SettingsSidebarVisibilityToggle.isVisible(columnVisibility))
+    }
+
+    private var settingsSidebar: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Spacer(minLength: 0)
+                sidebarToggleButton
+            }
+            .padding(.top, SettingsViewLayout.sidebarChromeTopPadding)
+            .padding(.trailing, SettingsViewLayout.sidebarHorizontalPadding + 2)
+            .frame(height: SettingsViewLayout.sidebarTopMargin, alignment: .topTrailing)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(SettingsPane.sidebarPanes) { pane in
+                    settingsSidebarButton(for: pane)
+                }
+            }
+            .padding(.horizontal, SettingsViewLayout.sidebarHorizontalPadding)
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(.ultraThinMaterial)
+        .overlay(alignment: .trailing) {
+            Divider().opacity(0.45)
+        }
+    }
+
+    private var sidebarToggleButton: some View {
+        Button {
+            columnVisibility = SettingsSidebarVisibilityToggle.toggled(columnVisibility)
+        } label: {
+            Image(systemName: "sidebar.left")
+                .font(.system(size: 18, weight: .medium))
+                .frame(width: 28, height: 28)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+        .accessibilityLabel(L10n.string("settings.sidebar.toggle"))
+    }
+
+    private func settingsSidebarButton(for pane: SettingsPane) -> some View {
+        let isSelected = selectedPane == pane
+
+        return Button {
+            selectedPane = pane
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: pane.systemImage)
+                    .font(.system(size: 16))
+                    .frame(width: 18)
+
+                Text(L10n.string(pane.titleKey))
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+            }
+            .font(.system(size: 15, weight: isSelected ? .semibold : .regular))
+            .foregroundStyle(isSelected ? .white : .primary)
+            .padding(.horizontal, 12)
+            .frame(height: 36)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color.accentColor)
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
-    private func settingsDetail(for pane: SettingsPane) -> some View {
+    private func settingsDetail(for pane: SettingsPane, sidebarVisible: Bool) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text(L10n.string(pane.titleKey))
-                    .font(.largeTitle)
-                    .fontWeight(.semibold)
-                    .padding(.bottom, 2)
+                HStack(spacing: 12) {
+                    if !sidebarVisible {
+                        sidebarToggleButton
+                    }
+
+                    Text(L10n.string(pane.titleKey))
+                        .font(.largeTitle)
+                        .fontWeight(.semibold)
+                }
+                .padding(.bottom, 2)
 
                 switch pane {
                 case .main, .general:
@@ -47,10 +131,21 @@ struct SettingsView: View {
                     aboutSettings
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.top, SettingsViewLayout.detailTopMargin)
+            .padding(
+                .leading,
+                sidebarVisible
+                    ? SettingsViewLayout.detailHorizontalPadding
+                    : SettingsViewLayout.collapsedDetailLeadingPadding
+            )
+            .padding(.trailing, SettingsViewLayout.detailHorizontalPadding)
+            .padding(
+                .top,
+                sidebarVisible
+                    ? SettingsViewLayout.detailTopMargin
+                    : SettingsViewLayout.collapsedDetailTopMargin
+            )
             .padding(.bottom, 24)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
             .offset(y: SettingsViewLayout.detailContentOffsetY)
         }
         .contentMargins(.top, 0, for: .scrollContent)
@@ -62,20 +157,26 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             SettingsGlassSection(title: L10n.string("settings.appearance.section"),
                                  systemImage: "paintbrush") {
-                VStack(spacing: 14) {
-                    Picker(L10n.string("settings.appearance.language"), selection: $store.appLanguage) {
-                        ForEach(AppLanguage.allCases) { language in
-                            Text(language.label).tag(language)
+                VStack(alignment: .leading, spacing: 14) {
+                    formRow(label: L10n.string("settings.appearance.language")) {
+                        Picker("", selection: $store.appLanguage) {
+                            ForEach(AppLanguage.allCases) { language in
+                                Text(language.label).tag(language)
+                            }
                         }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
                     }
-                    .pickerStyle(.segmented)
 
-                    Picker(L10n.string("settings.appearance.theme"), selection: $store.appearance) {
-                        ForEach(Appearance.allCases) { a in
-                            Text(a.label).tag(a)
+                    formRow(label: L10n.string("settings.appearance.theme")) {
+                        Picker("", selection: $store.appearance) {
+                            ForEach(Appearance.allCases) { a in
+                                Text(a.label).tag(a)
+                            }
                         }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
                     }
-                    .pickerStyle(.segmented)
                 }
             }
 
@@ -94,13 +195,16 @@ struct SettingsView: View {
     private var carouselSettings: some View {
         SettingsGlassSection(title: L10n.string("settings.carousel.section"),
                              systemImage: "rectangle.stack") {
-            VStack(spacing: 14) {
-                Picker(L10n.string("settings.carousel.layout"), selection: $store.layoutStyle) {
-                    ForEach(LayoutStyle.allCases) { style in
-                        Text(style.label).tag(style)
+            VStack(alignment: .leading, spacing: 14) {
+                formRow(label: L10n.string("settings.carousel.layout")) {
+                    Picker("", selection: $store.layoutStyle) {
+                        ForEach(LayoutStyle.allCases) { style in
+                            Text(style.label).tag(style)
+                        }
                     }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
                 }
-                .pickerStyle(.segmented)
 
                 slider(label: L10n.string("settings.carousel.cardSize"),
                        value: $store.cardSize,
@@ -112,11 +216,8 @@ struct SettingsView: View {
                        suffix: "°")
                 Toggle(L10n.string("settings.carousel.showAppNames"), isOn: $store.showAppNamesInCarousel)
 
-                HStack {
-                    Spacer()
-                    Button(L10n.string("settings.carousel.restoreDefaults")) {
-                        store.resetCarouselDefaults()
-                    }
+                Button(L10n.string("settings.carousel.restoreDefaults")) {
+                    store.resetCarouselDefaults()
                 }
             }
         }
@@ -125,10 +226,9 @@ struct SettingsView: View {
     private var aboutSettings: some View {
         SettingsGlassSection(title: L10n.string("settings.about.section"),
                              systemImage: "info.circle") {
-            VStack(spacing: 14) {
-                HStack {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 12) {
                     Text(L10n.string("settings.about.version"))
-                    Spacer()
                     Text(UpdateChecker.currentVersion())
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
@@ -138,9 +238,8 @@ struct SettingsView: View {
 
                 Toggle(L10n.string("settings.about.autoCheckUpdates"), isOn: $store.autoCheckUpdates)
 
-                HStack {
+                HStack(alignment: .center, spacing: 12) {
                     updateStatusView
-                    Spacer()
                     if let update = store.availableUpdate {
                         Button(L10n.format("settings.about.downloadFormat", update.tagName)) {
                             NSWorkspace.shared.open(update.htmlURL)
@@ -161,6 +260,19 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private func formRow<Content: View>(label: String, @ViewBuilder content: () -> Content) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            Text(label)
+                .frame(width: SettingsViewLayout.formLabelWidth, alignment: .leading)
+
+            content()
+                .frame(width: SettingsViewLayout.segmentedControlWidth, alignment: .leading)
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
@@ -191,15 +303,16 @@ struct SettingsView: View {
                         value: Binding<Double>,
                         range: ClosedRange<Double>,
                         suffix: String) -> some View {
-        HStack {
+        HStack(spacing: 12) {
             Text(label)
-                .frame(width: 96, alignment: .leading)
+                .frame(width: SettingsViewLayout.formLabelWidth, alignment: .leading)
             Slider(value: value, in: range)
             Text("\(Int(value.wrappedValue))\(suffix)")
                 .monospacedDigit()
                 .frame(width: 56, alignment: .trailing)
                 .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: SettingsViewLayout.formControlMaxWidth, alignment: .leading)
     }
 }
 
@@ -215,6 +328,7 @@ private struct SettingsGlassSection<Content: View>: View {
                 .foregroundStyle(.primary)
 
             content
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -226,10 +340,104 @@ private struct SettingsGlassSection<Content: View>: View {
     }
 }
 
-private enum SettingsViewLayout {
+enum SettingsSidebarVisibilityToggle {
+    static func toggled(_ visibility: NavigationSplitViewVisibility) -> NavigationSplitViewVisibility {
+        switch visibility {
+        case .detailOnly:
+            return .all
+        default:
+            return .detailOnly
+        }
+    }
+
+    static func isVisible(_ visibility: NavigationSplitViewVisibility) -> Bool {
+        switch visibility {
+        case .detailOnly:
+            return false
+        default:
+            return true
+        }
+    }
+}
+
+private struct SettingsSidebarShortcutMonitor: NSViewRepresentable {
+    @Binding var columnVisibility: NavigationSplitViewVisibility
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(columnVisibility: $columnVisibility)
+    }
+
+    func makeNSView(context: Context) -> NSView {
+        context.coordinator.attach()
+        return NSView(frame: .zero)
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        context.coordinator.columnVisibility = $columnVisibility
+    }
+
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        coordinator.detach()
+    }
+
+    final class Coordinator {
+        var columnVisibility: Binding<NavigationSplitViewVisibility>
+        private var monitor: Any?
+
+        init(columnVisibility: Binding<NavigationSplitViewVisibility>) {
+            self.columnVisibility = columnVisibility
+        }
+
+        func attach() {
+            guard monitor == nil else { return }
+
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                guard let self,
+                      Self.isSidebarShortcut(event) else {
+                    return event
+                }
+
+                self.columnVisibility.wrappedValue = SettingsSidebarVisibilityToggle.toggled(
+                    self.columnVisibility.wrappedValue
+                )
+                return nil
+            }
+        }
+
+        func detach() {
+            if let monitor {
+                NSEvent.removeMonitor(monitor)
+            }
+            monitor = nil
+        }
+
+        private static func isSidebarShortcut(_ event: NSEvent) -> Bool {
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            guard flags.contains(.command),
+                  !flags.contains(.shift),
+                  !flags.contains(.option),
+                  !flags.contains(.control),
+                  event.charactersIgnoringModifiers?.lowercased() == "b" else {
+                return false
+            }
+            return true
+        }
+    }
+}
+
+enum SettingsViewLayout {
     static let windowMinWidth: CGFloat = 680
     static let windowMinHeight: CGFloat = 560
-    static let sidebarTopMargin: CGFloat = 86
-    static let detailTopMargin: CGFloat = 60
-    static let detailContentOffsetY: CGFloat = -72
+    static let sidebarWidth: CGFloat = 178
+    static let sidebarTopMargin: CGFloat = 52
+    static let sidebarChromeTopPadding: CGFloat = 20
+    static let sidebarHorizontalPadding: CGFloat = 12
+    static let detailHorizontalPadding: CGFloat = 24
+    static let detailTopMargin: CGFloat = 24
+    static let collapsedDetailTopMargin: CGFloat = 60
+    static let collapsedDetailLeadingPadding: CGFloat = 96
+    static let detailContentOffsetY: CGFloat = 0
+    static let formLabelWidth: CGFloat = 112
+    static let segmentedControlWidth: CGFloat = 260
+    static let formControlMaxWidth: CGFloat = 460
 }
