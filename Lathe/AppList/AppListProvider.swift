@@ -8,7 +8,7 @@ final class AppListProvider {
 
     private let settings: SettingsStore
     private let currentSpaceWindowProvider: any CurrentSpaceWindowProviding
-    private var mruOrder: [pid_t] = []
+    private var appOrder = SpaceScopedAppOrder()
     private var observers: [NSObjectProtocol] = []
     private var cancellables = Set<AnyCancellable>()
 
@@ -57,6 +57,15 @@ final class AppListProvider {
                 self?.rebuildSnapshot()
             }
         })
+        observers.append(nc.addObserver(
+            forName: NSWorkspace.activeSpaceDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.rebuildSnapshot()
+            }
+        })
     }
 
     private func observeSettings() {
@@ -69,27 +78,25 @@ final class AppListProvider {
     }
 
     private func touch(pid: pid_t) {
-        mruOrder.removeAll { $0 == pid }
-        mruOrder.insert(pid, at: 0)
-        rebuildSnapshot()
+        let currentSpaceProcessIdentifiers = currentSpaceWindowProvider.processIdentifiers()
+        appOrder.touch(pid: pid, currentSpaceProcessIdentifiers: currentSpaceProcessIdentifiers)
+        rebuildSnapshot(currentSpaceProcessIdentifiers: currentSpaceProcessIdentifiers)
     }
 
-    private func rebuildSnapshot() {
+    private func rebuildSnapshot(currentSpaceProcessIdentifiers: Set<pid_t>? = nil) {
         let running = NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular }
 
-        let known = Set(mruOrder)
-        for app in running where !known.contains(app.processIdentifier) {
-            mruOrder.append(app.processIdentifier)
-        }
-        let livePids = Set(running.map(\.processIdentifier))
-        mruOrder.removeAll { !livePids.contains($0) }
+        appOrder.reconcileLiveProcessIdentifiers(running.map(\.processIdentifier))
 
         let byPid: [pid_t: NSRunningApplication] = Dictionary(
             uniqueKeysWithValues: running.map { ($0.processIdentifier, $0) }
         )
 
-        let entries = mruOrder.compactMap { pid -> AppEntry? in
+        let currentSpaceProcessIdentifiers = currentSpaceProcessIdentifiers ?? currentSpaceWindowProvider.processIdentifiers()
+        let entries = appOrder.orderedProcessIdentifiers(
+            currentSpaceProcessIdentifiers: currentSpaceProcessIdentifiers
+        ).compactMap { pid -> AppEntry? in
             guard let app = byPid[pid] else { return nil }
             let icon = app.icon ?? NSImage()
             let name = app.localizedName ?? app.bundleIdentifier ?? L10n.string("app.unknown")
@@ -104,10 +111,7 @@ final class AppListProvider {
             entries,
             excludingBundleIdentifiers: settings.excludedBundleIdentifiers
         )
-        apps = AppEntry.prioritizingCurrentSpace(
-            visibleEntries,
-            currentSpaceProcessIdentifiers: currentSpaceWindowProvider.processIdentifiers()
-        )
+        apps = visibleEntries
         didChange()
     }
 }
