@@ -12,28 +12,31 @@ final class SettingsStore: ObservableObject {
         static let cardSize = "cardSize"
         static let angularStep = "angularStep"
         static let autoCheckUpdates = "autoCheckUpdates"
+        static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
     }
 
     static let defaultCardSize: Double = 110
     static let defaultAngularStep: Double = 13
 
+    private let defaults: UserDefaults
+
     @Published var appearance: Appearance {
         didSet {
-            UserDefaults.standard.set(appearance.rawValue, forKey: Key.appearance)
+            defaults.set(appearance.rawValue, forKey: Key.appearance)
             applyAppearance()
         }
     }
 
     @Published var layoutStyle: LayoutStyle {
-        didSet { UserDefaults.standard.set(layoutStyle.rawValue, forKey: Key.layoutStyle) }
+        didSet { defaults.set(layoutStyle.rawValue, forKey: Key.layoutStyle) }
     }
 
     @Published var cardSize: Double {
-        didSet { UserDefaults.standard.set(cardSize, forKey: Key.cardSize) }
+        didSet { defaults.set(cardSize, forKey: Key.cardSize) }
     }
 
     @Published var angularStep: Double {
-        didSet { UserDefaults.standard.set(angularStep, forKey: Key.angularStep) }
+        didSet { defaults.set(angularStep, forKey: Key.angularStep) }
     }
 
     @Published var launchAtLogin: Bool {
@@ -47,7 +50,13 @@ final class SettingsStore: ObservableObject {
     }
 
     @Published var autoCheckUpdates: Bool {
-        didSet { UserDefaults.standard.set(autoCheckUpdates, forKey: Key.autoCheckUpdates) }
+        didSet { defaults.set(autoCheckUpdates, forKey: Key.autoCheckUpdates) }
+    }
+
+    @Published var excludedBundleIdentifiers: Set<String> {
+        didSet {
+            defaults.set(excludedBundleIdentifiers.sorted(), forKey: Key.excludedBundleIdentifiers)
+        }
     }
 
     @Published var availableUpdate: UpdateInfo?
@@ -55,14 +64,15 @@ final class SettingsStore: ObservableObject {
     @Published var isCheckingForUpdates: Bool = false
     @Published var updateCheckError: String?
 
-    private init() {
-        let d = UserDefaults.standard
-        self.appearance = Appearance(rawValue: d.string(forKey: Key.appearance) ?? "") ?? .system
-        self.layoutStyle = LayoutStyle(rawValue: d.string(forKey: Key.layoutStyle) ?? "") ?? .fan
-        self.cardSize = (d.object(forKey: Key.cardSize) as? Double) ?? Self.defaultCardSize
-        self.angularStep = (d.object(forKey: Key.angularStep) as? Double) ?? Self.defaultAngularStep
+    init(userDefaults: UserDefaults = .standard) {
+        self.defaults = userDefaults
+        self.appearance = Appearance(rawValue: userDefaults.string(forKey: Key.appearance) ?? "") ?? .system
+        self.layoutStyle = LayoutStyle(rawValue: userDefaults.string(forKey: Key.layoutStyle) ?? "") ?? .fan
+        self.cardSize = (userDefaults.object(forKey: Key.cardSize) as? Double) ?? Self.defaultCardSize
+        self.angularStep = (userDefaults.object(forKey: Key.angularStep) as? Double) ?? Self.defaultAngularStep
         self.launchAtLogin = LoginItem.isEnabled
-        self.autoCheckUpdates = (d.object(forKey: Key.autoCheckUpdates) as? Bool) ?? true
+        self.autoCheckUpdates = (userDefaults.object(forKey: Key.autoCheckUpdates) as? Bool) ?? true
+        self.excludedBundleIdentifiers = Set(userDefaults.stringArray(forKey: Key.excludedBundleIdentifiers) ?? [])
     }
 
     func applyAppearance() {
@@ -72,6 +82,19 @@ final class SettingsStore: ObservableObject {
     func resetCarouselDefaults() {
         cardSize = Self.defaultCardSize
         angularStep = Self.defaultAngularStep
+    }
+
+    func isExcluded(bundleIdentifier: String?) -> Bool {
+        guard let bundleIdentifier else { return false }
+        return excludedBundleIdentifiers.contains(bundleIdentifier)
+    }
+
+    func setExcluded(_ excluded: Bool, bundleIdentifier: String) {
+        if excluded {
+            excludedBundleIdentifiers.insert(bundleIdentifier)
+        } else {
+            excludedBundleIdentifiers.remove(bundleIdentifier)
+        }
     }
 
     func checkForUpdates() async {

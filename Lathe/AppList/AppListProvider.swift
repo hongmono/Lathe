@@ -1,16 +1,21 @@
 import AppKit
+import Combine
 
 @MainActor
 final class AppListProvider {
     private(set) var apps: [AppEntry] = []
     var didChange: () -> Void = {}
 
+    private let settings: SettingsStore
     private var mruOrder: [pid_t] = []
     private var observers: [NSObjectProtocol] = []
+    private var cancellables = Set<AnyCancellable>()
 
-    init() {
+    init(settings: SettingsStore = .shared) {
+        self.settings = settings
         rebuildSnapshot()
         registerObservers()
+        observeSettings()
     }
 
     private func registerObservers() {
@@ -47,6 +52,15 @@ final class AppListProvider {
         })
     }
 
+    private func observeSettings() {
+        settings.$excludedBundleIdentifiers
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.rebuildSnapshot()
+            }
+            .store(in: &cancellables)
+    }
+
     private func touch(pid: pid_t) {
         mruOrder.removeAll { $0 == pid }
         mruOrder.insert(pid, at: 0)
@@ -68,7 +82,7 @@ final class AppListProvider {
             uniqueKeysWithValues: running.map { ($0.processIdentifier, $0) }
         )
 
-        apps = mruOrder.compactMap { pid -> AppEntry? in
+        let entries = mruOrder.compactMap { pid -> AppEntry? in
             guard let app = byPid[pid] else { return nil }
             let icon = app.icon ?? NSImage()
             let name = app.localizedName ?? app.bundleIdentifier ?? "Unknown"
@@ -79,6 +93,10 @@ final class AppListProvider {
                 icon: icon
             )
         }
+        apps = AppEntry.visibleInCarousel(
+            entries,
+            excludingBundleIdentifiers: settings.excludedBundleIdentifiers
+        )
         didChange()
     }
 }

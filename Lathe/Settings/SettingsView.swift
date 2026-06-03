@@ -3,6 +3,7 @@ import AppKit
 
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
+    @State private var appExclusionOptions: [AppExclusionOption] = []
 
     var body: some View {
         Form {
@@ -35,6 +36,32 @@ struct SettingsView: View {
                     Spacer()
                     Button("Restore defaults") {
                         store.resetCarouselDefaults()
+                    }
+                }
+            }
+
+            Section("Hidden Apps") {
+                if appExclusionOptions.isEmpty {
+                    Text("No regular apps are running.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(appExclusionOptions) { option in
+                        Toggle(isOn: excludedBinding(for: option.bundleIdentifier)) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(option.name)
+                                Text(option.bundleIdentifier)
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+
+                HStack {
+                    Spacer()
+                    Button("Refresh") {
+                        refreshAppExclusionOptions()
                     }
                 }
             }
@@ -81,7 +108,13 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460, height: 540)
+        .frame(width: 460, height: 680)
+        .onAppear {
+            refreshAppExclusionOptions()
+        }
+        .onReceive(store.$excludedBundleIdentifiers) { _ in
+            refreshAppExclusionOptions()
+        }
     }
 
     @ViewBuilder
@@ -118,5 +151,30 @@ struct SettingsView: View {
                 .frame(width: 56, alignment: .trailing)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private func excludedBinding(for bundleIdentifier: String) -> Binding<Bool> {
+        Binding {
+            store.isExcluded(bundleIdentifier: bundleIdentifier)
+        } set: { excluded in
+            store.setExcluded(excluded, bundleIdentifier: bundleIdentifier)
+        }
+    }
+
+    private func refreshAppExclusionOptions() {
+        let apps = NSWorkspace.shared.runningApplications
+            .filter { $0.activationPolicy == .regular }
+            .map { app in
+                AppEntry(
+                    id: app.processIdentifier,
+                    bundleIdentifier: app.bundleIdentifier,
+                    name: app.localizedName ?? app.bundleIdentifier ?? "Unknown",
+                    icon: app.icon ?? NSImage()
+                )
+            }
+        appExclusionOptions = AppExclusionOption.options(
+            from: apps,
+            excludedBundleIdentifiers: store.excludedBundleIdentifiers
+        )
     }
 }

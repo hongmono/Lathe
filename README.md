@@ -192,6 +192,7 @@ Open from the menu bar's dotted-circle icon → **Preferences…**.
 | Appearance | Theme                    | System / Light / Dark                        |
 | Carousel   | Card size                | Card width; height & pivot scale with it     |
 | Carousel   | Spacing                  | Angle (degrees) between adjacent cards       |
+| Hidden Apps| App toggles              | Hide selected apps from the carousel         |
 | General    | Launch Lathe at login    | Register as a Login Item via `SMAppService`  |
 
 The carousel sliders update **live** — leave the Preferences window

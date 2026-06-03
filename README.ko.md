@@ -176,6 +176,7 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 | Appearance | Theme                 | 시스템 매칭 / Light / Dark                    |
 | Carousel   | Card size             | 카드 너비. 높이·pivot은 비율에 따라 자동 적용 |
 | Carousel   | Spacing               | 카드 사이 펼침 각도(도)                       |
+| Hidden Apps| App toggles           | 선택한 앱을 캐러셀에서 숨김                   |
 | General    | Launch Lathe at login | `SMAppService` 로 Login Item 등록             |
 
 캐러셀 슬라이더는 **실시간으로 반영**됩니다 — 환경설정 윈도우를 켜둔 채
