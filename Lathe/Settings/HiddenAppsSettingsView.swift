@@ -3,7 +3,7 @@ import AppKit
 
 struct HiddenAppsSettingsView: View {
     @ObservedObject var store: SettingsStore
-    @State private var appExclusionOptions: [AppExclusionOption] = []
+    @State private var hiddenAppRows: [HiddenAppRowModel] = []
     @State private var selectedHiddenAppBundleIdentifiers: Set<String> = []
 
     var body: some View {
@@ -30,7 +30,7 @@ struct HiddenAppsSettingsView: View {
             ZStack {
                 hiddenAppsTable
 
-                if appExclusionOptions.isEmpty {
+                if hiddenAppRows.isEmpty {
                     Text(L10n.string("settings.hiddenApps.empty"))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
@@ -74,33 +74,38 @@ struct HiddenAppsSettingsView: View {
     }
 
     private var hiddenAppsTable: some View {
-        Table(appExclusionOptions, selection: $selectedHiddenAppBundleIdentifiers) {
-            TableColumn(L10n.string("settings.hiddenApps.app")) { option in
+        Table(hiddenAppRows, selection: $selectedHiddenAppBundleIdentifiers) {
+            TableColumn(L10n.string("settings.hiddenApps.app")) { row in
                 HStack(spacing: 8) {
-                    if let icon = option.icon {
+                    if let icon = row.icon {
                         Image(nsImage: icon)
                             .resizable()
                             .frame(width: 20, height: 20)
                     }
-                    Text(option.name)
+                    Text(row.name)
                         .lineLimit(1)
                 }
             }
-            .width(min: 140, ideal: 170)
+            .width(min: 160, ideal: 220)
 
-            TableColumn(L10n.string("settings.hiddenApps.bundleIdentifier")) { option in
-                Text(option.bundleIdentifier)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            .width(min: 170, ideal: 210)
+            TableColumn(L10n.string("settings.hiddenApps.bundleIdentifier")) { row in
+                HStack(spacing: 12) {
+                    Text(row.bundleIdentifier)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
 
-            TableColumn(L10n.string("settings.hiddenApps.hidden")) { option in
-                Toggle("", isOn: excludedBinding(for: option.bundleIdentifier))
-                    .labelsHidden()
+                    Spacer(minLength: 12)
+
+                    Toggle(L10n.string("settings.hiddenApps.hidden"),
+                           isOn: excludedBinding(for: row.bundleIdentifier))
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .help(L10n.string("settings.hiddenApps.hidden"))
+                        .accessibilityLabel(L10n.string("settings.hiddenApps.hidden"))
+                }
             }
-            .width(64)
+            .width(min: 280, ideal: 420)
         }
         .frame(height: 360)
     }
@@ -150,12 +155,16 @@ struct HiddenAppsSettingsView: View {
         let installedApps = listedBundleIdentifiers.compactMap {
             AppBundleMetadata.resolve(bundleIdentifier: $0)
         }
-        appExclusionOptions = AppExclusionOption.options(
+        let options = AppExclusionOption.options(
             from: apps,
             excludedBundleIdentifiers: listedBundleIdentifiers,
             installedApps: installedApps
         )
-        let currentBundleIdentifiers = Set(appExclusionOptions.map(\.bundleIdentifier))
+        hiddenAppRows = HiddenAppRowModel.rows(
+            from: options,
+            excludedBundleIdentifiers: store.excludedBundleIdentifiers
+        )
+        let currentBundleIdentifiers = Set(hiddenAppRows.map(\.bundleIdentifier))
         selectedHiddenAppBundleIdentifiers.formIntersection(currentBundleIdentifiers)
     }
 }
