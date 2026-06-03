@@ -57,11 +57,19 @@ struct SettingsView: View {
                 } else {
                     ForEach(appExclusionOptions) { option in
                         Toggle(isOn: excludedBinding(for: option.bundleIdentifier)) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(option.name)
-                                Text(option.bundleIdentifier)
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(.secondary)
+                            HStack(spacing: 8) {
+                                if let icon = option.icon {
+                                    Image(nsImage: icon)
+                                        .resizable()
+                                        .frame(width: 20, height: 20)
+                                }
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(option.name)
+                                    Text(option.bundleIdentifier)
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
@@ -184,9 +192,13 @@ struct SettingsView: View {
                     icon: app.icon ?? NSImage()
                 )
             }
+        let installedApps = store.excludedBundleIdentifiers.compactMap {
+            AppBundleMetadata.resolve(bundleIdentifier: $0)
+        }
         appExclusionOptions = AppExclusionOption.options(
             from: apps,
-            excludedBundleIdentifiers: store.excludedBundleIdentifiers
+            excludedBundleIdentifiers: store.excludedBundleIdentifiers,
+            installedApps: installedApps
         )
     }
 }

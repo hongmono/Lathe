@@ -28,4 +28,19 @@ final class AppExclusionOptionTests: XCTestCase {
             "com.example.hidden",
         ])
     }
+
+    func test_optionsUseInstalledMetadataForExcludedAppsThatAreNotRunning() {
+        let installedApps = [
+            AppBundleMetadata(bundleIdentifier: "com.example.hidden", name: "Hidden App", icon: NSImage())
+        ]
+
+        let options = AppExclusionOption.options(
+            from: [],
+            excludedBundleIdentifiers: ["com.example.hidden"],
+            installedApps: installedApps
+        )
+
+        XCTAssertEqual(options.map(\.bundleIdentifier), ["com.example.hidden"])
+        XCTAssertEqual(options.map(\.name), ["Hidden App"])
+    }
 }
