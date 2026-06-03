@@ -17,9 +17,10 @@ final class SettingsWindowChromeConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.titlebarSeparatorStyle, .none)
         XCTAssertEqual(configuration.toolbarStyle, .unified)
         XCTAssertTrue(configuration.collectionBehavior.contains(.fullScreenPrimary))
-        XCTAssertEqual(configuration.initialSize.width, 680)
-        XCTAssertEqual(configuration.initialSize.height, 560)
-        XCTAssertEqual(configuration.minimumSize.width, 680)
-        XCTAssertEqual(configuration.minimumSize.height, 560)
+        XCTAssertFalse(configuration.isMovableByWindowBackground)
+        XCTAssertEqual(configuration.initialSize.width, SettingsViewLayout.windowMinWidth)
+        XCTAssertEqual(configuration.initialSize.height, SettingsViewLayout.windowMinHeight)
+        XCTAssertEqual(configuration.minimumSize.width, SettingsViewLayout.windowMinWidth)
+        XCTAssertEqual(configuration.minimumSize.height, SettingsViewLayout.windowMinHeight)
     }
 }

@@ -48,6 +48,6 @@ final class SettingsWindowController {
 
     private func updateWindowTitle(_ window: NSWindow) {
         window.title = ""
-        window.setAccessibilityTitle(L10n.string("settings.window.title"))
+        window.setAccessibilityTitle(L10n.string("settings.window.title", language: SettingsStore.shared.appLanguage))
     }
 }

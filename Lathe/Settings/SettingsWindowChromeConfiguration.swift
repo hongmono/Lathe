@@ -12,6 +12,11 @@ struct SettingsWindowChromeConfiguration {
     let minimumSize: NSSize
     let toolbarIdentifier: NSToolbar.Identifier
 
+    private static let defaultSize = NSSize(
+        width: SettingsViewLayout.windowMinWidth,
+        height: SettingsViewLayout.windowMinHeight
+    )
+
     static let sidebarIntegrated = SettingsWindowChromeConfiguration(
         styleMask: [
             .titled,
@@ -25,9 +30,9 @@ struct SettingsWindowChromeConfiguration {
         titlebarSeparatorStyle: .none,
         toolbarStyle: .unified,
         collectionBehavior: [.fullScreenPrimary],
-        isMovableByWindowBackground: true,
-        initialSize: NSSize(width: 680, height: 560),
-        minimumSize: NSSize(width: 680, height: 560),
+        isMovableByWindowBackground: false,
+        initialSize: defaultSize,
+        minimumSize: defaultSize,
         toolbarIdentifier: "LatheSettingsToolbar"
     )
 

@@ -7,11 +7,11 @@ enum LayoutStyle: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var label: String {
+    func label(language displayLanguage: AppLanguage) -> String {
         switch self {
-        case .fan: L10n.string("layout.fan")
-        case .strip: L10n.string("layout.strip")
-        case .stack: L10n.string("layout.stack")
+        case .fan: L10n.string("layout.fan", language: displayLanguage)
+        case .strip: L10n.string("layout.strip", language: displayLanguage)
+        case .stack: L10n.string("layout.stack", language: displayLanguage)
         }
     }
 }

@@ -20,14 +20,14 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         }
     }
 
-    var label: String {
+    func label(language displayLanguage: AppLanguage) -> String {
         switch self {
         case .system:
-            return L10n.string("language.system")
+            return L10n.string("language.system", language: displayLanguage)
         case .english:
-            return L10n.string("language.english")
+            return L10n.string("language.english", language: displayLanguage)
         case .korean:
-            return L10n.string("language.korean")
+            return L10n.string("language.korean", language: displayLanguage)
         }
     }
 }

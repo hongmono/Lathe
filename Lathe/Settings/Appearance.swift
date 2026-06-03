@@ -7,11 +7,11 @@ enum Appearance: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var label: String {
+    func label(language displayLanguage: AppLanguage) -> String {
         switch self {
-        case .system: return L10n.string("appearance.matchSystem")
-        case .light:  return L10n.string("appearance.light")
-        case .dark:   return L10n.string("appearance.dark")
+        case .system: return L10n.string("appearance.matchSystem", language: displayLanguage)
+        case .light:  return L10n.string("appearance.light", language: displayLanguage)
+        case .dark:   return L10n.string("appearance.dark", language: displayLanguage)
         }
     }
 

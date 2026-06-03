@@ -171,7 +171,7 @@ final class SettingsStore: ObservableObject {
                 availableUpdate = nil
             }
         } catch {
-            updateCheckError = L10n.string("settings.about.updateError")
+            updateCheckError = L10n.string("settings.about.updateError", language: appLanguage)
         }
     }
 }

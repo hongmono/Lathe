@@ -21,7 +21,7 @@
 "permission.openSystemSettings" = "Open System Settings";
 
 "settings.window.title" = "Lathe - Preferences";
-"settings.sidebar.toggle" = "Toggle Sidebar";
+"settings.search" = "Search";
 "settings.appearance.section" = "Appearance";
 "settings.appearance.language" = "Language";
 "settings.appearance.theme" = "Theme";
