@@ -83,9 +83,9 @@ Two paths:
    your signing identity (see [Code signing](#code-signing) below).
    Run with ⌘R.
 
-4. The first launch will show a permission window. Grant Accessibility
-   in System Settings, then quit and run again — event taps need a
-   fresh process to attach.
+4. The first launch opens Preferences > Permissions if Accessibility is
+   missing. Grant Accessibility in System Settings, then quit and run again —
+   event taps need a fresh process to attach.
 
 That's it. There is no DMG, no notarization, no `xattr` workaround. The
 whole binary lives in your DerivedData and is signed with your local
@@ -254,7 +254,7 @@ Lathe/
 ├── AppList/        AppEntry.swift, AppListProvider.swift
 ├── Overlay/        OverlayPanel + Controller, CarouselView/Model, CardView
 ├── Activation/     AppActivator.swift           (pid → activate)
-├── Permissions/    AccessibilityChecker, PermissionPromptWindow
+├── Permissions/    AccessibilityChecker
 ├── MenuBar/        MenuBarController.swift
 ├── Settings/       SettingsStore, SettingsView, SettingsWindowController,
 │                   Appearance, LoginItem

@@ -78,7 +78,7 @@ struct HiddenAppsSettingsView: View {
         .font(.system(size: 13, weight: .semibold))
         .padding(.horizontal, HiddenAppsListLayout.rowHorizontalPadding)
         .frame(height: HiddenAppsListLayout.headerHeight)
-        .background(.ultraThinMaterial)
+        .background(.regularMaterial)
     }
 
     private var hiddenAppsControlBar: some View {
@@ -117,7 +117,7 @@ struct HiddenAppsSettingsView: View {
         }
         .frame(height: HiddenAppsListLayout.controlBarHeight)
         .padding(.horizontal, HiddenAppsListLayout.controlBarHorizontalPadding)
-        .background(.thinMaterial)
+        .background(.regularMaterial)
     }
 
     private func toggleSelection(for bundleIdentifier: String) {

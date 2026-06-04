@@ -6,7 +6,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotKey: HotKeyMonitor!
     private var appList: AppListProvider!
     private var overlay: OverlayController!
-    private let permissionWindow = PermissionPromptWindow()
     private let settingsWindow = SettingsWindowController()
     private var updateCheckTask: Task<Void, Never>?
 
@@ -19,7 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menuBar = MenuBarController()
         menuBar.onShowPermissions = { [weak self] in
-            self?.permissionWindow.show()
+            self?.settingsWindow.show(pane: .permissions)
         }
         menuBar.onShowPreferences = { [weak self] in
             self?.settingsWindow.show()
@@ -42,7 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menuBar.setPermissionStatus(granted: true)
         } catch {
             menuBar.setPermissionStatus(granted: false)
-            permissionWindow.show()
+            settingsWindow.show(pane: .permissions)
         }
 
         startUpdateCheckLoop()

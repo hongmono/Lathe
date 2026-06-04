@@ -15,11 +15,6 @@
 "menu.permissions" = "Permissions...";
 "menu.quit" = "Quit Lathe";
 
-"permission.window.title" = "Lathe - Permission required";
-"permission.title" = "Lathe needs Accessibility permission";
-"permission.body" = "Lathe replaces the system Cmd+Tab switcher. To intercept keyboard events globally, macOS requires Accessibility permission.\n\n1. Click \"Open System Settings\".\n2. Toggle Lathe ON in the list.\n3. Quit and relaunch Lathe.";
-"permission.openSystemSettings" = "Open System Settings";
-
 "settings.window.title" = "Lathe - Preferences";
 "settings.search" = "Search";
 "settings.appearance.section" = "Appearance";
@@ -47,6 +42,18 @@
 "settings.general.section" = "General";
 "settings.general.launchAtLogin" = "Launch Lathe at login";
 "settings.general.launchAtLogin.description" = "Lathe will start automatically when you sign in. You can revoke this from System Settings > General > Login Items.";
+"settings.permissions.section" = "Permissions";
+"settings.permissions.summary" = "Lathe needs one macOS permission to replace Cmd+Tab globally. You can check the current state here.";
+"settings.permissions.accessibility.name" = "Accessibility";
+"settings.permissions.accessibility.description" = "Required to intercept Cmd+Tab and Shift+Cmd+Tab globally, then show Lathe's carousel instead of the system switcher.";
+"settings.permissions.required" = "Required";
+"settings.permissions.status.granted" = "Granted";
+"settings.permissions.status.missing" = "Not Granted";
+"settings.permissions.openAccessibility" = "Open Accessibility Settings";
+"settings.permissions.refresh" = "Refresh Status";
+"settings.permissions.restartNote" = "If you just granted permission and switching still does not work, quit and reopen Lathe.";
+"settings.permissions.notRequested.title" = "Not requested";
+"settings.permissions.notRequested.description" = "Lathe does not request Input Monitoring, Screen Recording, Full Disk Access, Contacts, or file access.";
 "settings.about.section" = "About";
 "settings.about.version" = "Version";
 "settings.about.autoCheckUpdates" = "Automatically check for updates";

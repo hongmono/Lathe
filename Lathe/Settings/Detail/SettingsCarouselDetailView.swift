@@ -85,10 +85,10 @@ private struct SettingsCarouselExampleView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: SettingsCarouselDetailLayout.previewCornerRadius, style: .continuous)
-                .fill(.thinMaterial)
+                .fill(.regularMaterial)
                 .overlay {
                     RoundedRectangle(cornerRadius: SettingsCarouselDetailLayout.previewCornerRadius, style: .continuous)
-                        .stroke(.white.opacity(0.28), lineWidth: 0.8)
+                        .stroke(.white.opacity(0.18), lineWidth: 0.8)
                 }
 
             ZStack {
@@ -167,10 +167,10 @@ private struct SettingsCarouselExampleCard: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: SettingsCarouselExampleLayout.cardCornerRadius, style: .continuous)
-                .fill(isFocused ? .regularMaterial : .thinMaterial)
+                .fill(isFocused ? .thickMaterial : .regularMaterial)
                 .overlay {
                     RoundedRectangle(cornerRadius: SettingsCarouselExampleLayout.cardCornerRadius, style: .continuous)
-                        .stroke(.white.opacity(isFocused ? 0.42 : 0.22), lineWidth: 0.8)
+                        .stroke(.white.opacity(isFocused ? 0.34 : 0.18), lineWidth: 0.8)
                 }
                 .shadow(color: .black.opacity(isFocused ? 0.22 : 0.12),
                         radius: isFocused ? 16 : 8,

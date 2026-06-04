@@ -12,6 +12,7 @@ final class SettingsSidebarVisibilityTests: XCTestCase {
     func test_sidebarUsesSettingsPaneMenuItems() {
         XCTAssertEqual(SettingsPane.sidebarPanes, [
             .general,
+            .permissions,
             .carousel,
             .hiddenApps,
             .about,

@@ -80,9 +80,9 @@ Accessibility 외에는 어떤 권한도 요구하지 않습니다.
 3. Xcode에서 `Lathe` target → Signing & Capabilities → Team에 본인의
    서명 인증서를 지정합니다 (아래 [코드 서명](#코드-서명) 참고). ⌘R 로 실행합니다.
 
-4. 첫 실행 시 권한 안내 윈도우가 뜹니다. 시스템 설정에서 Accessibility
-   권한을 부여한 뒤 다시 실행하세요 — event tap은 권한 부여 후 새 프로세스에서만
-   동작합니다.
+4. 첫 실행 시 Accessibility 권한이 없으면 환경설정 > 권한 화면이 열립니다.
+   시스템 설정에서 Accessibility 권한을 부여한 뒤 다시 실행하세요 — event tap은
+   권한 부여 후 새 프로세스에서만 동작합니다.
 
 DMG도, 공증(notarization)도, `xattr` 우회도 없습니다. 빌드 산출물은
 DerivedData 안에 있고 본인 로컬 인증서로 서명됩니다.
@@ -235,7 +235,7 @@ Lathe/
 ├── AppList/        AppEntry.swift, AppListProvider.swift
 ├── Overlay/        OverlayPanel + Controller, CarouselView/Model, CardView
 ├── Activation/     AppActivator.swift           (pid → activate)
-├── Permissions/    AccessibilityChecker, PermissionPromptWindow
+├── Permissions/    AccessibilityChecker
 ├── MenuBar/        MenuBarController.swift
 ├── Settings/       SettingsStore, SettingsView, SettingsWindowController,
 │                   Appearance, LoginItem

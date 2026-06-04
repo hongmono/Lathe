@@ -35,6 +35,6 @@ struct SettingsSidebarView: View {
             height: SettingsViewLayout.windowMinHeight
         )
         .padding(SettingsViewLayout.sidebarOuterPadding)
-        .background(.ultraThinMaterial)
+        .background(.regularMaterial)
 }
 #endif

@@ -34,7 +34,7 @@ struct SettingsDetailPreviewSurface<Content: View>: View {
             }
         }
         .frame(width: width, height: height, alignment: .topLeading)
-        .background(.ultraThinMaterial)
+        .background(.regularMaterial)
     }
 }
 #endif

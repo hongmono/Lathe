@@ -8,10 +8,10 @@ struct CardView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(isFocused ? .regularMaterial : .thinMaterial)
+                .fill(isFocused ? .thickMaterial : .regularMaterial)
                 .overlay {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(.white.opacity(isFocused ? 0.42 : 0.24), lineWidth: 0.8)
+                        .stroke(.white.opacity(isFocused ? 0.34 : 0.18), lineWidth: 0.8)
                 }
                 .shadow(color: .black.opacity(isFocused ? 0.28 : 0.16),
                         radius: isFocused ? 22 : 12,

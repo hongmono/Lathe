@@ -1,17 +1,31 @@
 import SwiftUI
 import AppKit
 
+final class SettingsNavigationState: ObservableObject {
+    @Published var selectedPane: SettingsPane?
+
+    init(selectedPane: SettingsPane? = .general) {
+        self.selectedPane = selectedPane
+    }
+}
+
 struct SettingsView: View {
     @ObservedObject var store: SettingsStore
-    @State private var selectedPane: SettingsPane? = .general
+    @ObservedObject var navigation: SettingsNavigationState
+
+    init(store: SettingsStore,
+         navigation: SettingsNavigationState = SettingsNavigationState()) {
+        self.store = store
+        self.navigation = navigation
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: SettingsViewLayout.contentSpacing) {
-            SettingsSidebarView(store: store, selectedPane: $selectedPane)
+            SettingsSidebarView(store: store, selectedPane: $navigation.selectedPane)
                 .frame(width: SettingsViewLayout.sidebarWidth)
                 .frame(maxHeight: .infinity, alignment: .topLeading)
 
-            SettingsDetailView(store: store, pane: selectedPane ?? .general)
+            SettingsDetailView(store: store, pane: navigation.selectedPane ?? .general)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .settingsGlassSurface(cornerRadius: SettingsViewLayout.sidebarCardCornerRadius)
         }
@@ -22,7 +36,7 @@ struct SettingsView: View {
             minHeight: SettingsViewLayout.windowMinHeight,
             alignment: .topLeading
         )
-        .background(.ultraThinMaterial)
+        .background(.regularMaterial)
     }
 }
 
@@ -38,6 +52,7 @@ struct SettingsGlassSurfaceModifier: ViewModifier {
         if #available(macOS 26.0, *) {
             if interactive {
                 content
+                    .background(.regularMaterial, in: shape)
                     .glassEffect(.regular.interactive(), in: shape)
                     .overlay {
                         shape.stroke(.quaternary, lineWidth: 0.5)
@@ -45,6 +60,7 @@ struct SettingsGlassSurfaceModifier: ViewModifier {
                     }
             } else {
                 content
+                    .background(.regularMaterial, in: shape)
                     .glassEffect(.regular, in: shape)
                     .overlay {
                         shape.stroke(.quaternary, lineWidth: 0.5)
@@ -62,7 +78,7 @@ struct SettingsGlassSurfaceModifier: ViewModifier {
     private func fallbackSurface(content: Content,
                                  shape: RoundedRectangle) -> some View {
         content
-            .background(.thinMaterial, in: shape)
+            .background(.regularMaterial, in: shape)
             .overlay {
                 shape.stroke(.quaternary, lineWidth: 0.5)
                     .allowsHitTesting(false)

@@ -5,13 +5,16 @@ import SwiftUI
 @MainActor
 final class SettingsWindowController {
     private var window: NSWindow?
+    private let navigation = SettingsNavigationState()
     private var cancellables = Set<AnyCancellable>()
 
     init() {
         observeLanguage()
     }
 
-    func show() {
+    func show(pane: SettingsPane = .general) {
+        navigation.selectedPane = pane
+
         if let w = window {
             updateWindowTitle(w)
             NSApp.activate(ignoringOtherApps: true)
@@ -19,7 +22,7 @@ final class SettingsWindowController {
             return
         }
         let configuration = SettingsWindowChromeConfiguration.sidebarIntegrated
-        let host = NSHostingController(rootView: SettingsView(store: .shared))
+        let host = NSHostingController(rootView: SettingsView(store: .shared, navigation: navigation))
         let w = NSWindow(
             contentRect: NSRect(origin: .zero, size: configuration.initialSize),
             styleMask: configuration.styleMask,

@@ -29,6 +29,8 @@ struct SettingsDetailView: View {
             switch pane {
             case .main, .general:
                 SettingsGeneralDetailView(store: store)
+            case .permissions:
+                SettingsPermissionsDetailView(store: store)
             case .carousel:
                 SettingsCarouselDetailView(store: store)
             case .hiddenApps:
@@ -59,6 +61,15 @@ struct SettingsDetailView: View {
                 store.angularStep = 18
             },
             pane: .carousel
+        )
+    }
+}
+
+#Preview("Detail - Permissions") {
+    SettingsDetailPreviewSurface(paddedContent: false) {
+        SettingsDetailView(
+            store: SettingsPreviewStore.makeStore(suiteName: "Lathe.SettingsDetail.PermissionsPreview"),
+            pane: .permissions
         )
     }
 }

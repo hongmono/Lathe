@@ -1,6 +1,7 @@
 enum SettingsPane: Equatable, Hashable, Identifiable {
     case main
     case general
+    case permissions
     case carousel
     case hiddenApps
     case about
@@ -9,6 +10,7 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
 
     static let sidebarPanes: [SettingsPane] = [
         .general,
+        .permissions,
         .carousel,
         .hiddenApps,
         .about,
@@ -20,6 +22,8 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
             return "settings.window.title"
         case .general:
             return "settings.general.section"
+        case .permissions:
+            return "settings.permissions.section"
         case .carousel:
             return "settings.carousel.section"
         case .hiddenApps:
@@ -35,6 +39,8 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
             return "gearshape"
         case .general:
             return "gearshape"
+        case .permissions:
+            return "hand.raised"
         case .carousel:
             return "rectangle.stack"
         case .hiddenApps:
@@ -46,7 +52,7 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
 
     var backDestination: SettingsPane? {
         switch self {
-        case .main, .general, .carousel, .about:
+        case .main, .general, .permissions, .carousel, .about:
             return nil
         case .hiddenApps:
             return .main

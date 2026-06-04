@@ -15,11 +15,6 @@
 "menu.permissions" = "권한...";
 "menu.quit" = "Lathe 종료";
 
-"permission.window.title" = "Lathe - 권한 필요";
-"permission.title" = "Lathe에 손쉬운 사용 권한이 필요합니다";
-"permission.body" = "Lathe는 시스템 Cmd+Tab 전환기를 대체합니다. 전역 키보드 이벤트를 가로채려면 macOS 손쉬운 사용 권한이 필요합니다.\n\n1. \"시스템 설정 열기\"를 클릭합니다.\n2. 목록에서 Lathe를 켭니다.\n3. Lathe를 종료한 뒤 다시 실행합니다.";
-"permission.openSystemSettings" = "시스템 설정 열기";
-
 "settings.window.title" = "Lathe - 환경설정";
 "settings.search" = "검색";
 "settings.appearance.section" = "외관";
@@ -47,6 +42,18 @@
 "settings.general.section" = "일반";
 "settings.general.launchAtLogin" = "로그인 시 Lathe 실행";
 "settings.general.launchAtLogin.description" = "로그인하면 Lathe가 자동으로 시작됩니다. 시스템 설정 > 일반 > 로그인 항목에서 해제할 수 있습니다.";
+"settings.permissions.section" = "권한";
+"settings.permissions.summary" = "Lathe가 Cmd+Tab을 전역으로 대체하려면 macOS 권한 하나가 필요합니다. 현재 상태는 여기에서 확인할 수 있습니다.";
+"settings.permissions.accessibility.name" = "손쉬운 사용";
+"settings.permissions.accessibility.description" = "Cmd+Tab과 Shift+Cmd+Tab을 전역으로 가로채고, 시스템 전환기 대신 Lathe 캐러셀을 표시하기 위해 필요합니다.";
+"settings.permissions.required" = "필수";
+"settings.permissions.status.granted" = "허용됨";
+"settings.permissions.status.missing" = "허용 안 됨";
+"settings.permissions.openAccessibility" = "손쉬운 사용 설정 열기";
+"settings.permissions.refresh" = "상태 새로고침";
+"settings.permissions.restartNote" = "방금 권한을 허용했는데도 전환이 동작하지 않으면 Lathe를 종료한 뒤 다시 열어주세요.";
+"settings.permissions.notRequested.title" = "요청하지 않는 권한";
+"settings.permissions.notRequested.description" = "Lathe는 입력 모니터링, 화면 기록, 전체 디스크 접근, 연락처, 파일 접근 권한을 요청하지 않습니다.";
 "settings.about.section" = "정보";
 "settings.about.version" = "버전";
 "settings.about.autoCheckUpdates" = "업데이트 자동 확인";
