@@ -27,6 +27,8 @@
 "settings.carousel.layout" = "레이아웃";
 "settings.carousel.cardSize" = "카드 크기";
 "settings.carousel.spacing" = "간격";
+"settings.carousel.fanRadius" = "부채꼴 반지름";
+"settings.carousel.fanSpacing" = "부채꼴 간격";
 "settings.carousel.showAppNames" = "앱 이름 표시";
 "settings.carousel.restoreDefaults" = "기본값 복원";
 "settings.hiddenApps.section" = "숨긴 앱";

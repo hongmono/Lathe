@@ -63,6 +63,10 @@ struct SettingsGlassSurfaceModifier: ViewModifier {
                     .background(.regularMaterial, in: shape)
                     .glassEffect(.regular, in: shape)
                     .overlay {
+                        shape.fill(Color.white.opacity(SettingsViewLayout.detailSurfaceOverlayOpacity))
+                            .allowsHitTesting(false)
+                    }
+                    .overlay {
                         shape.stroke(.quaternary, lineWidth: 0.5)
                             .allowsHitTesting(false)
                     }
@@ -79,6 +83,12 @@ struct SettingsGlassSurfaceModifier: ViewModifier {
                                  shape: RoundedRectangle) -> some View {
         content
             .background(.regularMaterial, in: shape)
+            .overlay {
+                if !interactive {
+                    shape.fill(Color.white.opacity(SettingsViewLayout.detailSurfaceOverlayOpacity))
+                        .allowsHitTesting(false)
+                }
+            }
             .overlay {
                 shape.stroke(.quaternary, lineWidth: 0.5)
                     .allowsHitTesting(false)
@@ -111,6 +121,7 @@ enum SettingsViewLayout {
     static let detailBottomPadding: CGFloat = 24
     static let detailSectionBreakHeight: CGFloat = 24
     static let sectionCornerRadius: CGFloat = 18
+    static let detailSurfaceOverlayOpacity: Double = 0.07
 }
 
 #if DEBUG

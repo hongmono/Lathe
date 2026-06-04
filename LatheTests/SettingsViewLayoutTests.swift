@@ -15,4 +15,9 @@ final class SettingsViewLayoutTests: XCTestCase {
     func test_settingsSectionsUseCardLikeGlassShape() {
         XCTAssertGreaterThanOrEqual(SettingsViewLayout.sectionCornerRadius, 16)
     }
+
+    func test_settingsDetailSurfaceUsesVisibleBrightnessOverlay() {
+        XCTAssertGreaterThan(SettingsViewLayout.detailSurfaceOverlayOpacity, 0)
+        XCTAssertLessThanOrEqual(SettingsViewLayout.detailSurfaceOverlayOpacity, 0.12)
+    }
 }

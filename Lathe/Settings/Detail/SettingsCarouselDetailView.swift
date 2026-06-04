@@ -14,6 +14,8 @@ struct SettingsCarouselDetailView: View {
                 layoutStyle: store.layoutStyle,
                 cardSize: store.cardSize,
                 angularStep: store.angularStep,
+                fanRadius: store.fanRadius,
+                fanSpacing: store.fanSpacing,
                 showsAppNames: store.showAppNamesInCarousel
             )
             .padding(.vertical, SettingsCarouselDetailLayout.previewVerticalPadding)
@@ -36,10 +38,26 @@ struct SettingsCarouselDetailView: View {
                 slider(value: $store.cardSize, range: 80...180, suffix: "pt")
             }
 
-            HStack(spacing: SettingsViewLayout.detailRowSpacing) {
-                Text(L10n.string("settings.carousel.spacing", language: store.appLanguage))
+            if store.layoutStyle != .fan {
+                HStack(spacing: SettingsViewLayout.detailRowSpacing) {
+                    Text(L10n.string("settings.carousel.spacing", language: store.appLanguage))
 
-                slider(value: $store.angularStep, range: 6...28, suffix: "°")
+                    slider(value: $store.angularStep, range: 6...28, suffix: "°")
+                }
+            }
+
+            if store.layoutStyle == .fan {
+                HStack(spacing: SettingsViewLayout.detailRowSpacing) {
+                    Text(L10n.string("settings.carousel.fanRadius", language: store.appLanguage))
+
+                    slider(value: $store.fanRadius, range: CarouselGeometry.fanRadiusRange, suffix: "pt")
+                }
+
+                HStack(spacing: SettingsViewLayout.detailRowSpacing) {
+                    Text(L10n.string("settings.carousel.fanSpacing", language: store.appLanguage))
+
+                    slider(value: $store.fanSpacing, range: CarouselGeometry.fanSpacingRange, suffix: "pt")
+                }
             }
 
             Toggle(L10n.string("settings.carousel.showAppNames", language: store.appLanguage),
@@ -77,6 +95,8 @@ private struct SettingsCarouselExampleView: View {
     let layoutStyle: LayoutStyle
     let cardSize: Double
     let angularStep: Double
+    let fanRadius: Double
+    let fanSpacing: Double
     let showsAppNames: Bool
 
     private let apps = SettingsCarouselExampleApp.samples
@@ -100,7 +120,7 @@ private struct SettingsCarouselExampleView: View {
                     )
                     .frame(width: previewCardWidth, height: previewCardHeight)
                     .scaleEffect(item.scale)
-                    .rotationEffect(.degrees(item.angleDegrees), anchor: rotationAnchor)
+                    .rotationEffect(.degrees(item.angleDegrees), anchor: .center)
                     .offset(x: item.offsetX * layoutScale, y: item.offsetY * layoutScale + contentOffsetY)
                     .opacity(item.opacity)
                     .zIndex(item.zIndex)
@@ -117,6 +137,8 @@ private struct SettingsCarouselExampleView: View {
         .animation(.spring(response: 0.28, dampingFraction: 0.78), value: layoutStyle)
         .animation(.easeInOut(duration: 0.14), value: cardSize)
         .animation(.easeInOut(duration: 0.14), value: angularStep)
+        .animation(.easeInOut(duration: 0.14), value: fanRadius)
+        .animation(.easeInOut(duration: 0.14), value: fanSpacing)
         .animation(.easeInOut(duration: 0.14), value: showsAppNames)
     }
 
@@ -126,6 +148,8 @@ private struct SettingsCarouselExampleView: View {
             selectedIndex: selectedIndex,
             style: layoutStyle,
             angularStep: angularStep,
+            fanRadius: fanRadius,
+            fanSpacing: fanSpacing,
             maxVisibleEachSide: 2
         )
     }
@@ -141,10 +165,6 @@ private struct SettingsCarouselExampleView: View {
 
     private var layoutScale: CGFloat {
         previewCardWidth / max(CGFloat(cardSize), 1)
-    }
-
-    private var rotationAnchor: UnitPoint {
-        layoutStyle == .fan ? .bottom : .center
     }
 
     private var contentOffsetY: CGFloat {

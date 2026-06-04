@@ -15,9 +15,39 @@ enum HotKeyMonitorError: Error {
     case eventTapCreationFailed
 }
 
+enum HotKeyAction: Equatable {
+    case next
+    case previous
+    case cancel
+
+    private static let tabKeyCode: CGKeyCode = 0x30
+    private static let escKeyCode: CGKeyCode = 0x35
+    private static let leftArrowKeyCode: CGKeyCode = 0x7B
+    private static let rightArrowKeyCode: CGKeyCode = 0x7C
+
+    static func resolve(keyCode: CGKeyCode,
+                        commandDown: Bool,
+                        shiftDown: Bool,
+                        arrowsEnabled: Bool) -> HotKeyAction? {
+        switch keyCode {
+        case leftArrowKeyCode where arrowsEnabled:
+            return .previous
+        case rightArrowKeyCode where arrowsEnabled:
+            return .next
+        case tabKeyCode where commandDown:
+            return shiftDown ? .previous : .next
+        case escKeyCode where commandDown:
+            return .cancel
+        default:
+            return nil
+        }
+    }
+}
+
 @MainActor
 final class HotKeyMonitor {
     weak var delegate: HotKeyMonitorDelegate?
+    nonisolated(unsafe) var arrowsEnabled = false
 
     private var flagsTap: CFMachPort?
     private var keyTap: CFMachPort?
@@ -25,9 +55,6 @@ final class HotKeyMonitor {
     private var keyRunLoopSource: CFRunLoopSource?
 
     private var commandIsDown = false
-
-    private let tabKeyCode: CGKeyCode = 0x30
-    private let escKeyCode: CGKeyCode = 0x35
 
     func start() throws {
         guard AXIsProcessTrusted() else {
@@ -123,29 +150,35 @@ final class HotKeyMonitor {
             }
             return Unmanaged.passUnretained(event)
         }
-        guard event.flags.contains(.maskCommand) else {
-            return Unmanaged.passUnretained(event)
-        }
         let keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
+        let commandDown = event.flags.contains(.maskCommand)
         let shift = event.flags.contains(.maskShift)
 
-        switch keyCode {
-        case tabKeyCode:
+        guard let action = HotKeyAction.resolve(
+            keyCode: keyCode,
+            commandDown: commandDown,
+            shiftDown: shift,
+            arrowsEnabled: arrowsEnabled
+        ) else {
+            return Unmanaged.passUnretained(event)
+        }
+
+        switch action {
+        case .next:
             DispatchQueue.main.async { [weak self] in
-                if shift {
-                    self?.delegate?.hotKeyDidRequestPrevious()
-                } else {
-                    self?.delegate?.hotKeyDidRequestNext()
-                }
+                self?.delegate?.hotKeyDidRequestNext()
             }
             return nil
-        case escKeyCode:
+        case .previous:
+            DispatchQueue.main.async { [weak self] in
+                self?.delegate?.hotKeyDidRequestPrevious()
+            }
+            return nil
+        case .cancel:
             DispatchQueue.main.async { [weak self] in
                 self?.delegate?.hotKeyDidCancel()
             }
             return nil
-        default:
-            return Unmanaged.passUnretained(event)
         }
     }
 }

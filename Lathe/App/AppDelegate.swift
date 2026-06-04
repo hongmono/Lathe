@@ -70,7 +70,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
         if let entry = overlay.currentSelection() {
             AppActivator.activate(entry)
         }
-        overlay.hide(animated: true)
+        hideOverlay(animated: true)
     }
 
     func hotKeyDidRequestNext() {
@@ -82,6 +82,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
             guard !apps.isEmpty else { return }
             let initial = apps.count > 1 ? 1 : 0
             overlay.show(apps: apps, initialIndex: initial)
+            hotKey.arrowsEnabled = overlay.isVisible
         }
     }
 
@@ -93,10 +94,16 @@ extension AppDelegate: HotKeyMonitorDelegate {
             let apps = appList.apps
             guard !apps.isEmpty else { return }
             overlay.show(apps: apps, initialIndex: apps.count - 1)
+            hotKey.arrowsEnabled = overlay.isVisible
         }
     }
 
     func hotKeyDidCancel() {
-        overlay.hide(animated: true)
+        hideOverlay(animated: true)
+    }
+
+    private func hideOverlay(animated: Bool) {
+        hotKey.arrowsEnabled = false
+        overlay.hide(animated: animated)
     }
 }

@@ -27,6 +27,8 @@
 "settings.carousel.layout" = "Layout";
 "settings.carousel.cardSize" = "Card size";
 "settings.carousel.spacing" = "Spacing";
+"settings.carousel.fanRadius" = "Fan radius";
+"settings.carousel.fanSpacing" = "Fan spacing";
 "settings.carousel.showAppNames" = "Show app names";
 "settings.carousel.restoreDefaults" = "Restore defaults";
 "settings.hiddenApps.section" = "Hidden Apps";
