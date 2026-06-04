@@ -13,6 +13,8 @@ final class SettingsStore: ObservableObject {
         static let layoutStyle = "layoutStyle"
         static let cardSize = "cardSize"
         static let angularStep = "angularStep"
+        static let fanRadius = "fanRadius"
+        static let fanSpacing = "fanSpacing"
         static let showAppNamesInCarousel = "showAppNamesInCarousel"
         static let autoCheckUpdates = "autoCheckUpdates"
         static let hiddenAppBundleIdentifiers = "hiddenAppBundleIdentifiers"
@@ -22,6 +24,8 @@ final class SettingsStore: ObservableObject {
 
     static let defaultCardSize: Double = 110
     static let defaultAngularStep: Double = 13
+    static let defaultFanRadius: Double = CarouselGeometry.defaultFanRadius
+    static let defaultFanSpacing: Double = CarouselGeometry.defaultFanSpacing
 
     private let defaults: UserDefaults
 
@@ -46,6 +50,14 @@ final class SettingsStore: ObservableObject {
 
     @Published var angularStep: Double {
         didSet { defaults.set(angularStep, forKey: Key.angularStep) }
+    }
+
+    @Published var fanRadius: Double {
+        didSet { defaults.set(CarouselGeometry.clampedFanRadius(fanRadius), forKey: Key.fanRadius) }
+    }
+
+    @Published var fanSpacing: Double {
+        didSet { defaults.set(CarouselGeometry.clampedFanSpacing(fanSpacing), forKey: Key.fanSpacing) }
     }
 
     @Published var showAppNamesInCarousel: Bool {
@@ -90,6 +102,8 @@ final class SettingsStore: ObservableObject {
         self.layoutStyle = LayoutStyle(rawValue: userDefaults.string(forKey: Key.layoutStyle) ?? "") ?? .fan
         self.cardSize = (userDefaults.object(forKey: Key.cardSize) as? Double) ?? Self.defaultCardSize
         self.angularStep = (userDefaults.object(forKey: Key.angularStep) as? Double) ?? Self.defaultAngularStep
+        self.fanRadius = CarouselGeometry.storedFanRadius(userDefaults.object(forKey: Key.fanRadius) as? Double)
+        self.fanSpacing = CarouselGeometry.storedFanSpacing(userDefaults.object(forKey: Key.fanSpacing) as? Double)
         self.showAppNamesInCarousel = (userDefaults.object(forKey: Key.showAppNamesInCarousel) as? Bool) ?? true
         self.launchAtLogin = LoginItem.isEnabled
         self.autoCheckUpdates = (userDefaults.object(forKey: Key.autoCheckUpdates) as? Bool) ?? true
@@ -129,6 +143,8 @@ final class SettingsStore: ObservableObject {
     func resetCarouselDefaults() {
         cardSize = Self.defaultCardSize
         angularStep = Self.defaultAngularStep
+        fanRadius = Self.defaultFanRadius
+        fanSpacing = Self.defaultFanSpacing
         showAppNamesInCarousel = true
     }
 
