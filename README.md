@@ -48,19 +48,10 @@ Two paths:
 - **Build it yourself** (recommended — that's the point of this
   project; see [Build from source](#build-from-source))
 - **Download a signed build** from
-  [Releases](https://github.com/hongmono/Lathe/releases) — same
-  binary the maintainer runs, signed with the `Lathe Local Dev`
-  self-signed identity. After opening the DMG and moving `Lathe.app`
-  to Applications:
-
-  ```bash
-  xattr -d com.apple.quarantine /Applications/Lathe.app
-  open /Applications/Lathe.app
-  ```
-
-  This is the kind of `xattr` workaround we wanted to avoid in
-  closed-source apps. Here you can read the source first; if you
-  don't trust the binary, build it yourself.
+  [Releases](https://github.com/hongmono/Lathe/releases) — the release
+  DMG is signed with the maintainer's Developer ID certificate and
+  notarized by Apple. Open the DMG, move `Lathe.app` to Applications,
+  then launch it normally.
 
 ### Build it yourself
 
@@ -275,21 +266,24 @@ The original design spec and implementation plan are checked in:
 ## Releases
 
 A GitHub Actions workflow at [`.github/workflows/release.yml`](.github/workflows/release.yml)
-builds a signed Release archive on every `v*` tag push (or via manual
-`workflow_dispatch`) and attaches a DMG containing `Lathe.app` to a
-GitHub Release.
+builds a signed Release archive whenever the `release` branch receives a
+push. It reads the release version from [`VERSION`](VERSION), packages
+`Lathe.app` into a DMG, notarizes and staples the DMG, creates the matching
+`v*` tag, then attaches the DMG to a GitHub Release.
 
 ### One-time secret setup
 
-The workflow uses your local self-signed `Lathe Local Dev` identity, so
-the runner needs to import it.
+The workflow uses a Developer ID Application certificate, so the runner
+needs to import the certificate and private key.
 
-1. Export the cert + private key from your login keychain to a `.p12`:
+1. Export the Developer ID Application certificate + private key from
+   your login keychain to a `.p12`:
 
    ```bash
    security export -k login.keychain -t identities -f pkcs12 \
      -P "<choose-an-export-password>" -o /tmp/lathe-cert.p12
-   # Pick the "Lathe Local Dev" identity in the dialog that follows.
+   # Pick "Developer ID Application: Jungwook Hong (THG2GV26Z9)"
+   # in the dialog that follows.
    ```
 
 2. Encode it as base64 (for GitHub secrets):
@@ -298,36 +292,60 @@ the runner needs to import it.
    base64 -i /tmp/lathe-cert.p12 | pbcopy
    ```
 
-3. On GitHub: **Settings → Secrets and variables → Actions → New repository secret**.
-   Add three secrets:
+3. Create an App Store Connect API Team Key for notarization and encode
+   the downloaded `.p8` file:
 
-   | Name                    | Value                                           |
-   |-------------------------|-------------------------------------------------|
-   | `SIGNING_CERT_P12`      | Paste the base64 from step 2                    |
-   | `SIGNING_CERT_PASSWORD` | The export password from step 1                 |
-   | `KEYCHAIN_PASSWORD`     | Any random string — used for the runner-side keychain |
+   ```bash
+   base64 -i ~/Downloads/AuthKey_<KEY_ID>.p8 | pbcopy
+   ```
 
-4. Wipe the local copy: `rm /tmp/lathe-cert.p12`
+4. On GitHub: **Settings → Secrets and variables → Actions → New repository secret**.
+   Add these secrets:
+
+   | Name                          | Value                                           |
+   |-------------------------------|-------------------------------------------------|
+   | `SIGNING_CERT_P12`            | Paste the certificate base64 from step 2        |
+   | `SIGNING_CERT_PASSWORD`       | The export password from step 1                 |
+   | `KEYCHAIN_PASSWORD`           | Any random string for the runner-side keychain  |
+   | `APPLE_NOTARY_KEY_P8_BASE64`  | Paste the App Store Connect `.p8` base64        |
+   | `APPLE_NOTARY_KEY_ID`         | App Store Connect API key ID                    |
+   | `APPLE_NOTARY_ISSUER_ID`      | App Store Connect issuer ID                     |
+
+5. Wipe the local copy: `rm /tmp/lathe-cert.p12`
 
 ### Cutting a release
 
+1. Update [`VERSION`](VERSION) with the next release number, without the
+   leading `v`:
+
+   ```text
+   0.2.11
+   ```
+
+2. Add a matching [`CHANGELOG.md`](CHANGELOG.md) section. The workflow uses
+   this section as the GitHub Release body and it can also be reused as
+   Sparkle release notes later:
+
+   ```markdown
+   ## 0.2.11
+
+   - Add the release notes users should see.
+   ```
+
+3. Merge or push the release commit to the `release` branch:
+
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git switch release
+git merge main
+git push origin release
 ```
 
-The workflow runs, builds, signs, packages a DMG, and publishes a release with
-auto-generated notes. You can also trigger it manually from the
-**Actions** tab → **Release** workflow → **Run workflow** (specify
-the tag).
-
-### Caveat
-
-The artifact is signed with a self-signed identity, so anyone else
-downloading it will hit Gatekeeper's "unidentified developer" wall and
-need to run `xattr -d com.apple.quarantine Lathe.app` once before
-opening. For a publicly trusted distribution you'd need a paid Apple
-Developer ID + notarization step in this workflow.
+The workflow runs, builds, signs, packages, notarizes, staples, and
+publishes a release with the changelog section as release notes. It fails
+early if the `VERSION` value is invalid, the matching changelog section is
+missing, or the `v<VERSION>` tag already exists. You can also trigger it
+manually from the **Actions** tab → **Release** workflow → **Run workflow**
+(optionally override the version for a test run).
 
 ## License
 

@@ -47,18 +47,9 @@ Accessibility 외에는 어떤 권한도 요구하지 않습니다.
   [소스에서 빌드](#소스에서-빌드) 참고)
 - **서명된 빌드를 다운로드합니다** —
   [Releases](https://github.com/hongmono/Lathe/releases) 에서 받으면
-  됩니다. 메인테이너가 직접 사용하는 binary 와 같은 것이며,
-  `Lathe Local Dev` self-signed 인증서로 서명되어 있습니다. DMG를 열고
-  `Lathe.app` 을 Applications로 옮긴 뒤:
-
-  ```bash
-  xattr -d com.apple.quarantine /Applications/Lathe.app
-  open /Applications/Lathe.app
-  ```
-
-  이런 `xattr` 우회는 폐쇄 소스 앱이라면 피해야 할 작업입니다. 이
-  프로젝트는 소스를 먼저 읽어볼 수 있고, binary 가 미덥지 않다면 직접
-  빌드할 수도 있습니다.
+  됩니다. 릴리스 DMG는 메인테이너의 Developer ID 인증서로 서명되고
+  Apple notarization을 거칩니다. DMG를 열고 `Lathe.app` 을 Applications로
+  옮긴 뒤 일반 앱처럼 실행하면 됩니다.
 
 ### 직접 빌드합니다
 
@@ -256,21 +247,24 @@ docs/
 ## 릴리스
 
 [`.github/workflows/release.yml`](.github/workflows/release.yml) 의
-GitHub Actions 워크플로가 `v*` 태그 push (또는 수동 `workflow_dispatch`)
-시 서명된 Release 아카이브를 빌드하고, `Lathe.app` 이 들어 있는 DMG를
-GitHub Release에 첨부합니다.
+GitHub Actions 워크플로가 `release` 브랜치에 push 될 때 서명된 Release
+아카이브를 빌드합니다. 버전은 [`VERSION`](VERSION) 파일에서 읽고,
+`Lathe.app` 이 들어 있는 DMG를 만든 뒤 notarization과 stapling을 거쳐
+해당 `v*` 태그를 생성하고 GitHub Release에 첨부합니다.
 
 ### 1회성 secret 설정
 
-워크플로는 로컬의 self-signed `Lathe Local Dev` 인증서를 사용하므로
-runner 가 이 인증서를 import 할 수 있어야 합니다.
+워크플로는 Developer ID Application 인증서를 사용하므로 runner 가 인증서와
+private key를 import 할 수 있어야 합니다.
 
-1. login keychain 에서 인증서 + private key 를 `.p12` 로 export 합니다:
+1. login keychain 에서 Developer ID Application 인증서 + private key 를
+   `.p12` 로 export 합니다:
 
    ```bash
    security export -k login.keychain -t identities -f pkcs12 \
      -P "<export-용-비밀번호>" -o /tmp/lathe-cert.p12
-   # 이어 뜨는 다이얼로그에서 "Lathe Local Dev" 항목을 선택합니다.
+   # 이어 뜨는 다이얼로그에서
+   # "Developer ID Application: Jungwook Hong (THG2GV26Z9)" 항목을 선택합니다.
    ```
 
 2. base64 로 인코딩합니다 (GitHub secret 용):
@@ -279,35 +273,59 @@ runner 가 이 인증서를 import 할 수 있어야 합니다.
    base64 -i /tmp/lathe-cert.p12 | pbcopy
    ```
 
-3. GitHub 에서 **Settings → Secrets and variables → Actions → New
-   repository secret** 으로 다음 세 개를 등록합니다:
+3. App Store Connect API Team Key를 만들어 notarization에 사용할 `.p8` 파일도
+   base64 로 인코딩합니다:
 
-   | 이름                    | 값                                                  |
-   |-------------------------|-----------------------------------------------------|
-   | `SIGNING_CERT_P12`      | 2단계에서 복사한 base64 문자열                      |
-   | `SIGNING_CERT_PASSWORD` | 1단계에서 정한 export 비밀번호                      |
-   | `KEYCHAIN_PASSWORD`     | 임의 문자열 — runner 쪽 임시 keychain 용 비밀번호    |
+   ```bash
+   base64 -i ~/Downloads/AuthKey_<KEY_ID>.p8 | pbcopy
+   ```
 
-4. 로컬 복사본은 지웁니다: `rm /tmp/lathe-cert.p12`
+4. GitHub 에서 **Settings → Secrets and variables → Actions → New
+   repository secret** 으로 다음 항목을 등록합니다:
+
+   | 이름                          | 값                                                  |
+   |-------------------------------|-----------------------------------------------------|
+   | `SIGNING_CERT_P12`            | 2단계에서 복사한 인증서 base64 문자열               |
+   | `SIGNING_CERT_PASSWORD`       | 1단계에서 정한 export 비밀번호                      |
+   | `KEYCHAIN_PASSWORD`           | runner 쪽 임시 keychain 용 임의 문자열              |
+   | `APPLE_NOTARY_KEY_P8_BASE64`  | App Store Connect `.p8` 파일의 base64 문자열        |
+   | `APPLE_NOTARY_KEY_ID`         | App Store Connect API key ID                        |
+   | `APPLE_NOTARY_ISSUER_ID`      | App Store Connect issuer ID                         |
+
+5. 로컬 복사본은 지웁니다: `rm /tmp/lathe-cert.p12`
 
 ### 릴리스 만들기
 
+1. [`VERSION`](VERSION)에 다음 릴리스 번호를 적습니다. 앞의 `v`는 붙이지
+   않습니다:
+
+   ```text
+   0.2.11
+   ```
+
+2. [`CHANGELOG.md`](CHANGELOG.md)에 같은 버전의 섹션을 추가합니다. 워크플로는
+   이 내용을 GitHub Release 본문으로 쓰고, 나중에 Sparkle release notes로도
+   재사용할 수 있습니다:
+
+   ```markdown
+   ## 0.2.11
+
+   - 사용자에게 보여줄 업데이트 내역을 적습니다.
+   ```
+
+3. 릴리스 커밋을 `release` 브랜치에 merge 하거나 push 합니다:
+
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git switch release
+git merge main
+git push origin release
 ```
 
-워크플로가 빌드·서명·DMG 패키징·발행을 자동으로 처리하고, 자동 생성된 릴리스
-노트와 함께 release 가 만들어집니다. **Actions** 탭 → **Release**
-워크플로 → **Run workflow** 로 수동 트리거도 가능합니다 (태그 지정).
-
-### 한계
-
-artifact 는 self-signed 인증서로 서명되기 때문에, 다른 사람이 다운받으면
-Gatekeeper 의 "확인되지 않은 개발자" 차단에 걸려 한 번
-`xattr -d com.apple.quarantine Lathe.app` 으로 우회해야 실행할 수
-있습니다. 공개적으로 신뢰받는 배포가 필요하다면 유료 Apple Developer ID
-인증서 + notarization 단계를 이 워크플로에 추가해야 합니다.
+워크플로가 빌드·서명·DMG 패키징·notarization·stapling·발행을 자동으로
+처리하고, changelog 섹션을 릴리스 노트로 사용합니다. `VERSION` 값이 잘못됐거나,
+같은 버전의 changelog 섹션이 없거나, `v<VERSION>` 태그가 이미 있으면 초기에
+실패합니다. **Actions** 탭 → **Release** 워크플로 → **Run workflow** 로
+수동 트리거도 가능합니다(테스트용 버전 override 선택 가능).
 
 ## 라이선스
 

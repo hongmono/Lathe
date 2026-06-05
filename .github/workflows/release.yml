@@ -2,12 +2,12 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    branches: ['release']
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Version tag (e.g. v0.1.0)'
-        required: true
+      version:
+        description: 'Optional version override (defaults to VERSION file, e.g. 0.2.11)'
+        required: false
 
 permissions:
   contents: write
@@ -17,6 +17,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Select latest Xcode
         run: sudo xcode-select -s "$(ls -1d /Applications/Xcode_16*.app /Applications/Xcode_17*.app 2>/dev/null | sort -V | tail -1)"
@@ -26,23 +28,48 @@ jobs:
           xcodebuild -version
           swift --version
 
-      - name: Resolve tag
-        id: tag
+      - name: Resolve release version
+        id: release
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          INPUT_TAG: ${{ github.event.inputs.tag }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            TAG="$INPUT_TAG"
+          if [[ -n "$INPUT_VERSION" ]]; then
+            VERSION="$INPUT_VERSION"
           else
-            TAG="${GITHUB_REF#refs/tags/}"
+            VERSION="$(tr -d '[:space:]' < VERSION)"
           fi
-          # Restrict to v + version chars to avoid shell-meta injection downstream.
-          if ! [[ "$TAG" =~ ^v[0-9A-Za-z._-]+$ ]]; then
-            echo "Refusing unsafe tag: $TAG" >&2
+
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+            echo "Refusing invalid version: $VERSION" >&2
             exit 1
           fi
+
+          TAG="v${VERSION}"
+          git fetch --tags --force
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag already exists: ${TAG}" >&2
+            exit 1
+          fi
+
+          RELEASE_NOTES_PATH="${RUNNER_TEMP}/release-notes.md"
+          export VERSION RELEASE_NOTES_PATH
+          ruby <<'RUBY'
+          version = ENV.fetch("VERSION")
+          output = ENV.fetch("RELEASE_NOTES_PATH")
+          changelog = File.read("CHANGELOG.md")
+          match = changelog.match(/^##\s+#{Regexp.escape(version)}(?:\s|$).*?\n(?<body>.*?)(?=^##\s+|\z)/m)
+
+          abort("CHANGELOG.md needs a '## #{version}' section") unless match
+
+          body = match[:body].strip
+          abort("CHANGELOG.md section for #{version} is empty") if body.empty?
+
+          File.write(output, body + "\n")
+          RUBY
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "release_notes_path=$RELEASE_NOTES_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Install xcodegen
         run: brew install xcodegen
@@ -68,11 +95,10 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Inject tag version into Info.plist
+      - name: Inject release version into Info.plist
         env:
-          TAG: ${{ steps.tag.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
         run: |
-          VERSION="${TAG#v}"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION}" Lathe/Resources/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VERSION}" Lathe/Resources/Info.plist
           /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Lathe/Resources/Info.plist
@@ -85,12 +111,14 @@ jobs:
             -archivePath /tmp/Lathe.xcarchive \
             archive
 
-      - name: Verify signature
-        run: codesign -dvv /tmp/Lathe.xcarchive/Products/Applications/Lathe.app
+      - name: Verify app signature
+        run: |
+          codesign --verify --deep --strict --verbose=2 /tmp/Lathe.xcarchive/Products/Applications/Lathe.app
+          codesign -dvvv --entitlements :- /tmp/Lathe.xcarchive/Products/Applications/Lathe.app
 
       - name: Package
         env:
-          TAG: ${{ steps.tag.outputs.tag }}
+          TAG: ${{ steps.release.outputs.tag }}
         run: |
           rm -rf dist
           mkdir -p dist/dmgroot
@@ -103,12 +131,53 @@ jobs:
             -format UDZO \
             "dist/Lathe-${TAG}.dmg"
           hdiutil verify "dist/Lathe-${TAG}.dmg"
+          codesign --force \
+            --sign "Developer ID Application: Jungwook Hong (THG2GV26Z9)" \
+            --timestamp \
+            "dist/Lathe-${TAG}.dmg"
+          codesign --verify --verbose=2 "dist/Lathe-${TAG}.dmg"
+
+      - name: Notarize and staple
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+          APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          : "${APPLE_NOTARY_KEY_P8_BASE64:?Missing APPLE_NOTARY_KEY_P8_BASE64 secret}"
+          : "${APPLE_NOTARY_KEY_ID:?Missing APPLE_NOTARY_KEY_ID secret}"
+          : "${APPLE_NOTARY_ISSUER_ID:?Missing APPLE_NOTARY_ISSUER_ID secret}"
+
+          NOTARY_KEY_PATH="/tmp/AuthKey_${APPLE_NOTARY_KEY_ID}.p8"
+          trap 'rm -f "$NOTARY_KEY_PATH"' EXIT
+          echo "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$NOTARY_KEY_PATH"
+
+          xcrun notarytool submit "dist/Lathe-${TAG}.dmg" \
+            --key "$NOTARY_KEY_PATH" \
+            --key-id "$APPLE_NOTARY_KEY_ID" \
+            --issuer "$APPLE_NOTARY_ISSUER_ID" \
+            --wait
+
+          xcrun stapler staple "dist/Lathe-${TAG}.dmg"
+          xcrun stapler validate "dist/Lathe-${TAG}.dmg"
+          spctl -a -vv -t open --context context:primary-signature "dist/Lathe-${TAG}.dmg"
+
+      - name: Create release tag
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG" "$GITHUB_SHA"
+          git push origin "$TAG"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          files: dist/Lathe-${{ steps.tag.outputs.tag }}.dmg
-          generate_release_notes: true
+          tag_name: ${{ steps.release.outputs.tag }}
+          body_path: ${{ steps.release.outputs.release_notes_path }}
+          files: dist/Lathe-${{ steps.release.outputs.tag }}.dmg
+          fail_on_unmatched_files: true
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
