@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+- Add Sparkle automatic updates.
+- Add a Check for Updates menu item and update controls in About settings.
+- Publish a signed Sparkle appcast with each GitHub Release.
+
 ## 0.2.11
 
 - Add Developer ID release signing for maintainer builds.

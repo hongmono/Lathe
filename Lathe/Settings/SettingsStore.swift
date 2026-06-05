@@ -16,7 +16,6 @@ final class SettingsStore: ObservableObject {
         static let fanRadius = "fanRadius"
         static let fanSpacing = "fanSpacing"
         static let showAppNamesInCarousel = "showAppNamesInCarousel"
-        static let autoCheckUpdates = "autoCheckUpdates"
         static let hiddenAppBundleIdentifiers = "hiddenAppBundleIdentifiers"
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
         static let finderHiddenAppSeeded = "finderHiddenAppSeeded"
@@ -74,10 +73,6 @@ final class SettingsStore: ObservableObject {
         }
     }
 
-    @Published var autoCheckUpdates: Bool {
-        didSet { defaults.set(autoCheckUpdates, forKey: Key.autoCheckUpdates) }
-    }
-
     @Published var excludedBundleIdentifiers: Set<String> {
         didSet {
             defaults.set(excludedBundleIdentifiers.sorted(), forKey: Key.excludedBundleIdentifiers)
@@ -90,11 +85,6 @@ final class SettingsStore: ObservableObject {
         }
     }
 
-    @Published var availableUpdate: UpdateInfo?
-    @Published var lastUpdateCheck: Date?
-    @Published var isCheckingForUpdates: Bool = false
-    @Published var updateCheckError: String?
-
     init(userDefaults: UserDefaults = .standard) {
         self.defaults = userDefaults
         self.appLanguage = AppLanguage(rawValue: userDefaults.string(forKey: Key.appLanguage) ?? "") ?? .system
@@ -106,7 +96,6 @@ final class SettingsStore: ObservableObject {
         self.fanSpacing = CarouselGeometry.storedFanSpacing(userDefaults.object(forKey: Key.fanSpacing) as? Double)
         self.showAppNamesInCarousel = (userDefaults.object(forKey: Key.showAppNamesInCarousel) as? Bool) ?? true
         self.launchAtLogin = LoginItem.isEnabled
-        self.autoCheckUpdates = (userDefaults.object(forKey: Key.autoCheckUpdates) as? Bool) ?? true
         var excludedBundleIdentifiers = Set(userDefaults.stringArray(forKey: Key.excludedBundleIdentifiers) ?? [])
         self.excludedBundleIdentifiers = excludedBundleIdentifiers
         let hasHiddenAppBundleIdentifiers = userDefaults.object(forKey: Key.hiddenAppBundleIdentifiers) != nil
@@ -170,24 +159,5 @@ final class SettingsStore: ObservableObject {
     func removeHiddenApps(bundleIdentifiers: Set<String>) {
         hiddenAppBundleIdentifiers.subtract(bundleIdentifiers)
         excludedBundleIdentifiers.subtract(bundleIdentifiers)
-    }
-
-    func checkForUpdates() async {
-        guard !isCheckingForUpdates else { return }
-        isCheckingForUpdates = true
-        updateCheckError = nil
-        defer { isCheckingForUpdates = false }
-
-        do {
-            let info = try await UpdateChecker.fetchLatestRelease()
-            lastUpdateCheck = Date()
-            if UpdateChecker.isNewer(latest: info.version, than: UpdateChecker.currentVersion()) {
-                availableUpdate = info
-            } else {
-                availableUpdate = nil
-            }
-        } catch {
-            updateCheckError = L10n.string("settings.about.updateError", language: appLanguage)
-        }
     }
 }

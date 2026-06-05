@@ -86,9 +86,7 @@ struct SettingsDetailView: View {
 #Preview("Detail - About") {
     SettingsDetailPreviewSurface(paddedContent: false) {
         SettingsDetailView(
-            store: SettingsPreviewStore.makeStore(suiteName: "Lathe.SettingsDetail.AboutPreview") { store in
-                store.lastUpdateCheck = Date()
-            },
+            store: SettingsPreviewStore.makeStore(suiteName: "Lathe.SettingsDetail.AboutPreview"),
             pane: .about
         )
     }

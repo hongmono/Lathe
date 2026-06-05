@@ -269,7 +269,7 @@ A GitHub Actions workflow at [`.github/workflows/release.yml`](.github/workflows
 builds a signed Release archive whenever the `release` branch receives a
 push. It reads the release version from [`VERSION`](VERSION), packages
 `Lathe.app` into a DMG, notarizes and staples the DMG, creates the matching
-`v*` tag, then attaches the DMG to a GitHub Release.
+`v*` tag, then attaches the DMG and Sparkle `appcast.xml` to a GitHub Release.
 
 ### One-time secret setup
 
@@ -299,7 +299,15 @@ needs to import the certificate and private key.
    base64 -i ~/Downloads/AuthKey_<KEY_ID>.p8 | pbcopy
    ```
 
-4. On GitHub: **Settings → Secrets and variables → Actions → New repository secret**.
+4. Generate a Sparkle EdDSA key and export the private key for CI. Commit only
+   the public key as `SUPublicEDKey`; keep the private key in GitHub secrets:
+
+   ```bash
+   generate_keys
+   generate_keys -x /tmp/lathe-sparkle-private-key.txt
+   ```
+
+5. On GitHub: **Settings → Secrets and variables → Actions → New repository secret**.
    Add these secrets:
 
    | Name                          | Value                                           |
@@ -310,8 +318,13 @@ needs to import the certificate and private key.
    | `APPLE_NOTARY_KEY_P8_BASE64`  | Paste the App Store Connect `.p8` base64        |
    | `APPLE_NOTARY_KEY_ID`         | App Store Connect API key ID                    |
    | `APPLE_NOTARY_ISSUER_ID`      | App Store Connect issuer ID                     |
+   | `SPARKLE_PRIVATE_KEY`         | Sparkle EdDSA private key from step 4           |
 
-5. Wipe the local copy: `rm /tmp/lathe-cert.p12`
+6. Wipe local secret copies:
+
+   ```bash
+   rm /tmp/lathe-cert.p12 /tmp/lathe-sparkle-private-key.txt
+   ```
 
 ### Cutting a release
 
@@ -319,15 +332,14 @@ needs to import the certificate and private key.
    leading `v`:
 
    ```text
-   0.2.11
+   0.3.0
    ```
 
 2. Add a matching [`CHANGELOG.md`](CHANGELOG.md) section. The workflow uses
-   this section as the GitHub Release body and it can also be reused as
-   Sparkle release notes later:
+   this section as the GitHub Release body and embeds it in the Sparkle appcast:
 
    ```markdown
-   ## 0.2.11
+   ## 0.3.0
 
    - Add the release notes users should see.
    ```
@@ -341,11 +353,13 @@ git push origin release
 ```
 
 The workflow runs, builds, signs, packages, notarizes, staples, and
-publishes a release with the changelog section as release notes. It fails
-early if the `VERSION` value is invalid, the matching changelog section is
-missing, or the `v<VERSION>` tag already exists. You can also trigger it
-manually from the **Actions** tab → **Release** workflow → **Run workflow**
-(optionally override the version for a test run).
+publishes a release with the changelog section as release notes. It also
+generates and uploads a signed Sparkle appcast at
+`https://github.com/hongmono/Lathe/releases/latest/download/appcast.xml`. It
+fails early if the `VERSION` value is invalid, the matching changelog section is
+missing, the Sparkle private key is missing, or the `v<VERSION>` tag already
+exists. You can also trigger it manually from the **Actions** tab → **Release**
+workflow → **Run workflow** (optionally override the version for a test run).
 
 ## License
 

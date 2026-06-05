@@ -5,7 +5,9 @@ import Combine
 final class MenuBarController {
     private let statusItem: NSStatusItem
     private var permissionGranted = true
+    private var canCheckForUpdates = false
     private var cancellables = Set<AnyCancellable>()
+    var onCheckForUpdates: () -> Void = {}
     var onShowPermissions: () -> Void = {}
     var onShowPreferences: () -> Void = {}
 
@@ -23,6 +25,12 @@ final class MenuBarController {
         rebuildMenu()
     }
 
+    func setCanCheckForUpdates(_ canCheckForUpdates: Bool) {
+        guard self.canCheckForUpdates != canCheckForUpdates else { return }
+        self.canCheckForUpdates = canCheckForUpdates
+        rebuildMenu()
+    }
+
     private func rebuildMenu() {
         if let button = statusItem.button {
             button.image?.accessibilityDescription = L10n.string("menu.accessibilityDescription")
@@ -36,6 +44,13 @@ final class MenuBarController {
         header.isEnabled = false
         menu.addItem(header)
         menu.addItem(.separator())
+
+        let checkForUpdates = NSMenuItem(title: L10n.string("menu.checkForUpdates"),
+                                         action: #selector(checkForUpdates),
+                                         keyEquivalent: "")
+        checkForUpdates.target = self
+        checkForUpdates.isEnabled = canCheckForUpdates
+        menu.addItem(checkForUpdates)
 
         let prefs = NSMenuItem(title: L10n.string("menu.preferences"),
                                action: #selector(showPreferences),
@@ -71,6 +86,10 @@ final class MenuBarController {
 
     @objc private func showPreferences() {
         onShowPreferences()
+    }
+
+    @objc private func checkForUpdates() {
+        onCheckForUpdates()
     }
 
     private static func makeStatusImage() -> NSImage? {

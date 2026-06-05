@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -7,22 +8,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var appList: AppListProvider!
     private var overlay: OverlayController!
     private let settingsWindow = SettingsWindowController()
-    private var updateCheckTask: Task<Void, Never>?
-
-    private static let updateCheckInterval: Duration = .seconds(86_400)
+    private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
         SettingsStore.shared.applyAppearance()
 
+        let updater = SparkleUpdater.shared
         menuBar = MenuBarController()
+        menuBar.onCheckForUpdates = {
+            updater.checkForUpdates()
+        }
         menuBar.onShowPermissions = { [weak self] in
             self?.settingsWindow.show(pane: .permissions)
         }
         menuBar.onShowPreferences = { [weak self] in
             self?.settingsWindow.show()
         }
+        updater.$canCheckForUpdates
+            .sink { [weak self] canCheckForUpdates in
+                self?.menuBar.setCanCheckForUpdates(canCheckForUpdates)
+            }
+            .store(in: &cancellables)
 
         appList = AppListProvider()
         overlay = OverlayController()
@@ -42,20 +50,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             menuBar.setPermissionStatus(granted: false)
             settingsWindow.show(pane: .permissions)
-        }
-
-        startUpdateCheckLoop()
-    }
-
-    private func startUpdateCheckLoop() {
-        updateCheckTask?.cancel()
-        updateCheckTask = Task { @MainActor in
-            while !Task.isCancelled {
-                if SettingsStore.shared.autoCheckUpdates {
-                    await SettingsStore.shared.checkForUpdates()
-                }
-                try? await Task.sleep(for: Self.updateCheckInterval)
-            }
         }
     }
 }

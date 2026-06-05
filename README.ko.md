@@ -250,7 +250,8 @@ docs/
 GitHub Actions 워크플로가 `release` 브랜치에 push 될 때 서명된 Release
 아카이브를 빌드합니다. 버전은 [`VERSION`](VERSION) 파일에서 읽고,
 `Lathe.app` 이 들어 있는 DMG를 만든 뒤 notarization과 stapling을 거쳐
-해당 `v*` 태그를 생성하고 GitHub Release에 첨부합니다.
+해당 `v*` 태그를 생성하고 DMG와 Sparkle `appcast.xml`을 GitHub Release에
+첨부합니다.
 
 ### 1회성 secret 설정
 
@@ -280,7 +281,16 @@ private key를 import 할 수 있어야 합니다.
    base64 -i ~/Downloads/AuthKey_<KEY_ID>.p8 | pbcopy
    ```
 
-4. GitHub 에서 **Settings → Secrets and variables → Actions → New
+4. Sparkle EdDSA key를 생성하고 CI에서 사용할 private key를 export 합니다.
+   public key만 `SUPublicEDKey`로 커밋하고, private key는 GitHub secret에만
+   보관합니다:
+
+   ```bash
+   generate_keys
+   generate_keys -x /tmp/lathe-sparkle-private-key.txt
+   ```
+
+5. GitHub 에서 **Settings → Secrets and variables → Actions → New
    repository secret** 으로 다음 항목을 등록합니다:
 
    | 이름                          | 값                                                  |
@@ -291,8 +301,13 @@ private key를 import 할 수 있어야 합니다.
    | `APPLE_NOTARY_KEY_P8_BASE64`  | App Store Connect `.p8` 파일의 base64 문자열        |
    | `APPLE_NOTARY_KEY_ID`         | App Store Connect API key ID                        |
    | `APPLE_NOTARY_ISSUER_ID`      | App Store Connect issuer ID                         |
+   | `SPARKLE_PRIVATE_KEY`         | 4단계에서 export 한 Sparkle EdDSA private key       |
 
-5. 로컬 복사본은 지웁니다: `rm /tmp/lathe-cert.p12`
+6. 로컬 secret 복사본은 지웁니다:
+
+   ```bash
+   rm /tmp/lathe-cert.p12 /tmp/lathe-sparkle-private-key.txt
+   ```
 
 ### 릴리스 만들기
 
@@ -300,15 +315,14 @@ private key를 import 할 수 있어야 합니다.
    않습니다:
 
    ```text
-   0.2.11
+   0.3.0
    ```
 
 2. [`CHANGELOG.md`](CHANGELOG.md)에 같은 버전의 섹션을 추가합니다. 워크플로는
-   이 내용을 GitHub Release 본문으로 쓰고, 나중에 Sparkle release notes로도
-   재사용할 수 있습니다:
+   이 내용을 GitHub Release 본문으로 쓰고 Sparkle appcast에도 embed 합니다:
 
    ```markdown
-   ## 0.2.11
+   ## 0.3.0
 
    - 사용자에게 보여줄 업데이트 내역을 적습니다.
    ```
@@ -322,10 +336,13 @@ git push origin release
 ```
 
 워크플로가 빌드·서명·DMG 패키징·notarization·stapling·발행을 자동으로
-처리하고, changelog 섹션을 릴리스 노트로 사용합니다. `VERSION` 값이 잘못됐거나,
-같은 버전의 changelog 섹션이 없거나, `v<VERSION>` 태그가 이미 있으면 초기에
-실패합니다. **Actions** 탭 → **Release** 워크플로 → **Run workflow** 로
-수동 트리거도 가능합니다(테스트용 버전 override 선택 가능).
+처리하고, changelog 섹션을 릴리스 노트로 사용합니다. 또한 서명된 Sparkle
+appcast를 생성해
+`https://github.com/hongmono/Lathe/releases/latest/download/appcast.xml` 로
+올립니다. `VERSION` 값이 잘못됐거나, 같은 버전의 changelog 섹션이 없거나,
+Sparkle private key가 없거나, `v<VERSION>` 태그가 이미 있으면 초기에 실패합니다.
+**Actions** 탭 → **Release** 워크플로 → **Run workflow** 로 수동 트리거도
+가능합니다(테스트용 버전 override 선택 가능).
 
 ## 라이선스
 

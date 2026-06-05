@@ -11,6 +11,7 @@
 "menu.accessibilityDescription" = "Lathe";
 "menu.status.running" = "Lathe - 실행 중";
 "menu.status.needsPermission" = "Lathe - 권한 필요";
+"menu.checkForUpdates" = "업데이트 확인...";
 "menu.preferences" = "환경설정...";
 "menu.permissions" = "권한...";
 "menu.quit" = "Lathe 종료";
@@ -59,9 +60,5 @@
 "settings.about.section" = "정보";
 "settings.about.version" = "버전";
 "settings.about.autoCheckUpdates" = "업데이트 자동 확인";
-"settings.about.downloadFormat" = "%@ 다운로드";
 "settings.about.checkNow" = "지금 확인";
-"settings.about.updateError" = "업데이트 서버에 연결할 수 없습니다.";
-"settings.about.updateAvailable" = "새 버전을 사용할 수 있습니다.";
-"settings.about.upToDateFormat" = "최신 버전 - %@ 확인됨";
-"settings.about.updateDescription" = "Lathe는 GitHub Releases에서 새 버전을 확인합니다.";
+"settings.about.updateDescription" = "Lathe는 Sparkle로 서명된 업데이트를 확인, 다운로드, 설치합니다.";

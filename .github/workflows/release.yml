@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Optional version override (defaults to VERSION file, e.g. 0.2.11)'
+        description: 'Optional version override (defaults to VERSION file, e.g. 0.3.0)'
         required: false
 
 permissions:
@@ -162,6 +162,42 @@ jobs:
           xcrun stapler validate "dist/Lathe-${TAG}.dmg"
           spctl -a -vv -t open --context context:primary-signature "dist/Lathe-${TAG}.dmg"
 
+      - name: Generate Sparkle appcast
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_NOTES_PATH: ${{ steps.release.outputs.release_notes_path }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          : "${SPARKLE_PRIVATE_KEY:?Missing SPARKLE_PRIVATE_KEY secret}"
+
+          GENERATE_APPCAST="$(find "$HOME/Library/Developer/Xcode/DerivedData" \
+            -path '*/SourcePackages/artifacts/sparkle/Sparkle/bin/generate_appcast' \
+            -type f | head -n 1)"
+          if [[ -z "$GENERATE_APPCAST" ]]; then
+            GENERATE_APPCAST="$(find "$HOME/Library/Developer/Xcode/DerivedData" \
+              -path '*/Sparkle/bin/generate_appcast' \
+              -type f | head -n 1)"
+          fi
+          if [[ -z "$GENERATE_APPCAST" ]]; then
+            echo "Could not find Sparkle generate_appcast tool" >&2
+            exit 1
+          fi
+
+          mkdir -p dist/sparkle
+          cp "dist/Lathe-${TAG}.dmg" "dist/sparkle/Lathe-${TAG}.dmg"
+          cp "$RELEASE_NOTES_PATH" "dist/sparkle/Lathe-${TAG}.md"
+
+          echo "$SPARKLE_PRIVATE_KEY" | "$GENERATE_APPCAST" \
+            --ed-key-file - \
+            --download-url-prefix "https://github.com/hongmono/Lathe/releases/download/${TAG}/" \
+            --embed-release-notes \
+            --link "https://github.com/hongmono/Lathe/releases/tag/${TAG}" \
+            --versions "$VERSION" \
+            --maximum-versions 1 \
+            -o "$(pwd)/dist/appcast.xml" \
+            dist/sparkle
+
       - name: Create release tag
         env:
           TAG: ${{ steps.release.outputs.tag }}
@@ -176,7 +212,9 @@ jobs:
         with:
           tag_name: ${{ steps.release.outputs.tag }}
           body_path: ${{ steps.release.outputs.release_notes_path }}
-          files: dist/Lathe-${{ steps.release.outputs.tag }}.dmg
+          files: |
+            dist/Lathe-${{ steps.release.outputs.tag }}.dmg
+            dist/appcast.xml
           fail_on_unmatched_files: true
           generate_release_notes: false
         env:

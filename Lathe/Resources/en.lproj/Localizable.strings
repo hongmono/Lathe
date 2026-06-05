@@ -11,6 +11,7 @@
 "menu.accessibilityDescription" = "Lathe";
 "menu.status.running" = "Lathe - running";
 "menu.status.needsPermission" = "Lathe - needs permission";
+"menu.checkForUpdates" = "Check for Updates...";
 "menu.preferences" = "Preferences...";
 "menu.permissions" = "Permissions...";
 "menu.quit" = "Quit Lathe";
@@ -59,9 +60,5 @@
 "settings.about.section" = "About";
 "settings.about.version" = "Version";
 "settings.about.autoCheckUpdates" = "Automatically check for updates";
-"settings.about.downloadFormat" = "Download %@";
 "settings.about.checkNow" = "Check Now";
-"settings.about.updateError" = "Couldn't reach the update server.";
-"settings.about.updateAvailable" = "A new version is available.";
-"settings.about.upToDateFormat" = "Up to date - checked %@";
-"settings.about.updateDescription" = "Lathe checks GitHub Releases for new versions.";
+"settings.about.updateDescription" = "Lathe uses Sparkle to find, download, and install signed updates.";
