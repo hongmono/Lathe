@@ -111,6 +111,30 @@ jobs:
             -archivePath /tmp/Lathe.xcarchive \
             archive
 
+      - name: Sign Sparkle nested code
+        run: |
+          APP="/tmp/Lathe.xcarchive/Products/Applications/Lathe.app"
+          SPARKLE="$APP/Contents/Frameworks/Sparkle.framework"
+          IDENTITY="Developer ID Application: Jungwook Hong (THG2GV26Z9)"
+
+          codesign --force --sign "$IDENTITY" --timestamp --options runtime \
+            --preserve-metadata=identifier,entitlements \
+            "$SPARKLE/Versions/B/Autoupdate"
+          codesign --force --sign "$IDENTITY" --timestamp --options runtime \
+            --preserve-metadata=identifier,entitlements \
+            "$SPARKLE/Versions/B/XPCServices/Downloader.xpc"
+          codesign --force --sign "$IDENTITY" --timestamp --options runtime \
+            --preserve-metadata=identifier,entitlements \
+            "$SPARKLE/Versions/B/XPCServices/Installer.xpc"
+          codesign --force --sign "$IDENTITY" --timestamp --options runtime \
+            --preserve-metadata=identifier,entitlements \
+            "$SPARKLE/Versions/B/Updater.app"
+          codesign --force --sign "$IDENTITY" --timestamp --options runtime \
+            --preserve-metadata=identifier,entitlements \
+            "$SPARKLE"
+          codesign --force --sign "$IDENTITY" --timestamp --options runtime \
+            "$APP"
+
       - name: Verify app signature
         run: |
           codesign --verify --deep --strict --verbose=2 /tmp/Lathe.xcarchive/Products/Applications/Lathe.app
@@ -152,11 +176,29 @@ jobs:
           trap 'rm -f "$NOTARY_KEY_PATH"' EXIT
           echo "$APPLE_NOTARY_KEY_P8_BASE64" | base64 --decode > "$NOTARY_KEY_PATH"
 
+          SUBMISSION_JSON="/tmp/notary-submit.json"
+          set +e
           xcrun notarytool submit "dist/Lathe-${TAG}.dmg" \
             --key "$NOTARY_KEY_PATH" \
             --key-id "$APPLE_NOTARY_KEY_ID" \
             --issuer "$APPLE_NOTARY_ISSUER_ID" \
-            --wait
+            --wait \
+            --output-format json | tee "$SUBMISSION_JSON"
+          NOTARY_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          SUBMISSION_ID="$(ruby -rjson -e 'print JSON.parse(File.read(ARGV[0]))["id"].to_s' "$SUBMISSION_JSON")"
+          SUBMISSION_STATUS="$(ruby -rjson -e 'print JSON.parse(File.read(ARGV[0]))["status"].to_s' "$SUBMISSION_JSON")"
+          if [[ "$NOTARY_EXIT" -ne 0 || "$SUBMISSION_STATUS" != "Accepted" ]]; then
+            echo "Notarization failed with status: ${SUBMISSION_STATUS:-unknown}" >&2
+            if [[ -n "$SUBMISSION_ID" ]]; then
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --key "$NOTARY_KEY_PATH" \
+                --key-id "$APPLE_NOTARY_KEY_ID" \
+                --issuer "$APPLE_NOTARY_ISSUER_ID" || true
+            fi
+            exit 1
+          fi
 
           xcrun stapler staple "dist/Lathe-${TAG}.dmg"
           xcrun stapler validate "dist/Lathe-${TAG}.dmg"
