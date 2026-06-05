@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0
+
+- Mark Lathe as the first stable release.
+- Include signed and notarized distribution.
+- Include Sparkle automatic updates and signed appcast delivery.
+
 ## 0.3.0
 
 - Add Sparkle automatic updates.
