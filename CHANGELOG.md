@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.6
+
+- Replace the carousel-card icon direction with a distinct keyboard-switcher mark built around Command-Tab.
+- Refresh the menu bar template icon to match the new keycap-and-switch silhouette.
+
 ## 1.0.5
 
 - Replace the app icon with a simpler, higher-contrast carousel mark that stays readable at small sizes.
