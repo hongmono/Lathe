@@ -13,5 +13,14 @@ Package.resolved
 # macOS
 .DS_Store
 
+# Secrets and signing material
+.env
+.env.*
+*.key
+*.mobileprovision
+*.p12
+*.p8
+*.pem
+
 .claude/settings.local.json
 .superpowers/

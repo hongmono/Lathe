@@ -126,7 +126,7 @@ To create the certificate:
    When prompted, enter your macOS login password.
 
 If you'd rather use a different identity (your own Developer ID, a
-team certificate, etc.), edit `Project.yml` and `dev`:
+team certificate, etc.), override the signing build settings locally:
 
 ```yaml
 # Project.yml
@@ -137,12 +137,10 @@ settings:
 ```
 
 ```bash
-# dev
-SIGN_ARGS=(
-  CODE_SIGN_STYLE=Manual
-  CODE_SIGN_IDENTITY="Your Identity Name"
-  DEVELOPMENT_TEAM="YOUR_TEAM_ID"
-)
+xcodebuild -project Lathe.xcodeproj -scheme Lathe \
+  CODE_SIGN_IDENTITY="Your Identity Name" \
+  DEVELOPMENT_TEAM="YOUR_TEAM_ID" \
+  build
 ```
 
 ### Day-to-day
@@ -275,6 +273,8 @@ push. It reads the release version from [`VERSION`](VERSION), packages
 
 The workflow uses a Developer ID Application certificate, so the runner
 needs to import the certificate and private key.
+It discovers the imported Developer ID Application identity at runtime, so
+the certificate subject and Apple Team ID do not need to be committed.
 
 1. Export the Developer ID Application certificate + private key from
    your login keychain to a `.p12`:
@@ -282,7 +282,7 @@ needs to import the certificate and private key.
    ```bash
    security export -k login.keychain -t identities -f pkcs12 \
      -P "<choose-an-export-password>" -o /tmp/lathe-cert.p12
-   # Pick "Developer ID Application: Jungwook Hong (THG2GV26Z9)"
+   # Pick your Developer ID Application certificate
    # in the dialog that follows.
    ```
 
@@ -299,12 +299,15 @@ needs to import the certificate and private key.
    base64 -i ~/Downloads/AuthKey_<KEY_ID>.p8 | pbcopy
    ```
 
-4. Generate a Sparkle EdDSA key and export the private key for CI. Commit only
-   the public key as `SUPublicEDKey`; keep the private key in GitHub secrets:
+4. Generate a Sparkle EdDSA key and copy both keys into GitHub secrets. The
+   public key is not sensitive, but keeping it in a secret keeps signing
+   configuration out of the repository:
 
    ```bash
    generate_keys
+   # Copy the generated public key as SPARKLE_PUBLIC_ED_KEY.
    generate_keys -x /tmp/lathe-sparkle-private-key.txt
+   pbcopy < /tmp/lathe-sparkle-private-key.txt
    ```
 
 5. On GitHub: **Settings → Secrets and variables → Actions → New repository secret**.
@@ -318,6 +321,7 @@ needs to import the certificate and private key.
    | `APPLE_NOTARY_KEY_P8_BASE64`  | Paste the App Store Connect `.p8` base64        |
    | `APPLE_NOTARY_KEY_ID`         | App Store Connect API key ID                    |
    | `APPLE_NOTARY_ISSUER_ID`      | App Store Connect issuer ID                     |
+   | `SPARKLE_PUBLIC_ED_KEY`       | Sparkle EdDSA public key from step 4            |
    | `SPARKLE_PRIVATE_KEY`         | Sparkle EdDSA private key from step 4           |
 
 6. Wipe local secret copies:

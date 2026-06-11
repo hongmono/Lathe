@@ -9,10 +9,8 @@ final class SparkleConfigurationTests: XCTestCase {
             appBundle.object(forInfoDictionaryKey: "SUFeedURL") as? String,
             "https://github.com/hongmono/Lathe/releases/latest/download/appcast.xml"
         )
-        XCTAssertEqual(
-            appBundle.object(forInfoDictionaryKey: "SUPublicEDKey") as? String,
-            "2VzsRT4zVK1HpMKb6p0gOIVNSXHAadl54RQmv29Sxu8="
-        )
+        let sparklePublicKey = try XCTUnwrap(appBundle.object(forInfoDictionaryKey: "SUPublicEDKey") as? String)
+        XCTAssertFalse(sparklePublicKey.contains("$("))
         XCTAssertEqual(appBundle.object(forInfoDictionaryKey: "SUEnableAutomaticChecks") as? Bool, true)
         XCTAssertEqual(appBundle.object(forInfoDictionaryKey: "SUScheduledCheckInterval") as? Int, 86_400)
     }

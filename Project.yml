@@ -12,6 +12,7 @@ settings:
     CODE_SIGN_IDENTITY: "Lathe Local Dev"
     DEVELOPMENT_TEAM: ""
     ENABLE_HARDENED_RUNTIME: NO
+    LATHE_SPARKLE_PUBLIC_ED_KEY: ""
 packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
@@ -39,7 +40,7 @@ targets:
         CFBundleVersion: "0.2.2"
         NSHighResolutionCapable: true
         SUFeedURL: https://github.com/hongmono/Lathe/releases/latest/download/appcast.xml
-        SUPublicEDKey: 2VzsRT4zVK1HpMKb6p0gOIVNSXHAadl54RQmv29Sxu8=
+        SUPublicEDKey: "$(LATHE_SPARKLE_PUBLIC_ED_KEY)"
         SUEnableAutomaticChecks: true
         SUScheduledCheckInterval: 86400
     dependencies:
@@ -53,7 +54,7 @@ targets:
       configs:
         Release:
           CODE_SIGN_IDENTITY: "Developer ID Application"
-          DEVELOPMENT_TEAM: THG2GV26Z9
+          DEVELOPMENT_TEAM: ""
           ENABLE_HARDENED_RUNTIME: YES
           CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
           OTHER_CODE_SIGN_FLAGS: "--timestamp"

@@ -2,8 +2,13 @@ import Foundation
 
 struct SpaceScopedAppOrder {
     private struct SpaceMemory {
-        var processIdentifiers: Set<pid_t>
+        var detectedProcessIdentifiers: Set<pid_t>
+        var inferredProcessIdentifiers: Set<pid_t>
         var order: [pid_t]
+
+        var processIdentifiers: Set<pid_t> {
+            detectedProcessIdentifiers.union(inferredProcessIdentifiers)
+        }
     }
 
     private var globalOrder: [pid_t] = []
@@ -20,7 +25,8 @@ struct SpaceScopedAppOrder {
         globalOrder.removeAll { !liveSet.contains($0) }
 
         for index in spaceMemories.indices {
-            spaceMemories[index].processIdentifiers.formIntersection(liveSet)
+            spaceMemories[index].detectedProcessIdentifiers.formIntersection(liveSet)
+            spaceMemories[index].inferredProcessIdentifiers.formIntersection(liveSet)
             spaceMemories[index].order.removeAll { !liveSet.contains($0) }
         }
         spaceMemories.removeAll { $0.processIdentifiers.isEmpty || $0.order.isEmpty }
@@ -29,9 +35,16 @@ struct SpaceScopedAppOrder {
     mutating func touch(pid: pid_t, currentSpaceProcessIdentifiers: Set<pid_t>) {
         Self.moveToFront(pid, in: &globalOrder)
 
-        guard currentSpaceProcessIdentifiers.contains(pid) else { return }
-        let index = memoryIndex(for: currentSpaceProcessIdentifiers) ?? createMemory(for: currentSpaceProcessIdentifiers)
-        spaceMemories[index].processIdentifiers = currentSpaceProcessIdentifiers
+        let processIdentifiers = currentSpaceProcessIdentifiers.union([pid])
+        let index = memoryIndex(for: processIdentifiers)
+            ?? memoryIndex(for: currentSpaceProcessIdentifiers)
+            ?? createMemory(for: currentSpaceProcessIdentifiers)
+        spaceMemories[index].detectedProcessIdentifiers = currentSpaceProcessIdentifiers
+        if currentSpaceProcessIdentifiers.contains(pid) {
+            spaceMemories[index].inferredProcessIdentifiers.remove(pid)
+        } else {
+            spaceMemories[index].inferredProcessIdentifiers.insert(pid)
+        }
         seedMissingCurrentSpaceProcessIdentifiers(in: index)
         Self.moveToFront(pid, in: &spaceMemories[index].order)
     }
@@ -40,17 +53,22 @@ struct SpaceScopedAppOrder {
         guard !currentSpaceProcessIdentifiers.isEmpty else { return globalOrder }
 
         let index = memoryIndex(for: currentSpaceProcessIdentifiers) ?? createMemory(for: currentSpaceProcessIdentifiers)
-        spaceMemories[index].processIdentifiers = currentSpaceProcessIdentifiers
+        spaceMemories[index].detectedProcessIdentifiers = currentSpaceProcessIdentifiers
         seedMissingCurrentSpaceProcessIdentifiers(in: index)
 
-        let currentSpaceOrder = spaceMemories[index].order.filter { currentSpaceProcessIdentifiers.contains($0) }
-        let otherOrder = globalOrder.filter { !currentSpaceProcessIdentifiers.contains($0) }
+        let processIdentifiers = spaceMemories[index].processIdentifiers
+        let currentSpaceOrder = spaceMemories[index].order.filter { processIdentifiers.contains($0) }
+        let otherOrder = globalOrder.filter { !processIdentifiers.contains($0) }
         return currentSpaceOrder + otherOrder
     }
 
     private mutating func createMemory(for processIdentifiers: Set<pid_t>) -> Int {
         let seededOrder = globalOrder.filter { processIdentifiers.contains($0) }
-        spaceMemories.append(SpaceMemory(processIdentifiers: processIdentifiers, order: seededOrder))
+        spaceMemories.append(SpaceMemory(
+            detectedProcessIdentifiers: processIdentifiers,
+            inferredProcessIdentifiers: [],
+            order: seededOrder
+        ))
         return spaceMemories.index(before: spaceMemories.endIndex)
     }
 

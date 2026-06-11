@@ -37,7 +37,7 @@ final class SpaceScopedAppOrderTests: XCTestCase {
         )
     }
 
-    func test_touchOutsideCurrentSpaceUpdatesOnlyGlobalOrder() {
+    func test_touchingActivatedAppMissingFromWindowListKeepsItInCurrentSpaceMemory() {
         var order = SpaceScopedAppOrder()
         order.reconcileLiveProcessIdentifiers([10, 20, 30])
         order.touch(pid: 20, currentSpaceProcessIdentifiers: [10, 20])
@@ -46,11 +46,23 @@ final class SpaceScopedAppOrderTests: XCTestCase {
 
         XCTAssertEqual(
             order.orderedProcessIdentifiers(currentSpaceProcessIdentifiers: [10, 20]),
-            [10, 20, 30]
+            [30, 10, 20]
         )
         XCTAssertEqual(
             order.orderedProcessIdentifiers(currentSpaceProcessIdentifiers: []),
             [30, 10, 20]
+        )
+    }
+
+    func test_orderedProcessIdentifiersRemovesDetectedAppsThatLeaveCurrentSpace() {
+        var order = SpaceScopedAppOrder()
+        order.reconcileLiveProcessIdentifiers([10, 20, 30])
+        order.touch(pid: 20, currentSpaceProcessIdentifiers: [10, 20, 30])
+        order.touch(pid: 30, currentSpaceProcessIdentifiers: [10, 20, 30])
+
+        XCTAssertEqual(
+            order.orderedProcessIdentifiers(currentSpaceProcessIdentifiers: [10, 20]),
+            [20, 10, 30]
         )
     }
 

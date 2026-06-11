@@ -80,6 +80,10 @@ jobs:
           CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
+          : "${CERT_P12_BASE64:?Missing SIGNING_CERT_P12 secret}"
+          : "${CERT_PASSWORD:?Missing SIGNING_CERT_PASSWORD secret}"
+          : "${KEYCHAIN_PASSWORD:?Missing KEYCHAIN_PASSWORD secret}"
+
           echo "$CERT_P12_BASE64" | base64 --decode > /tmp/cert.p12
           security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
           security default-keychain -s build.keychain
@@ -91,6 +95,21 @@ jobs:
             -S apple-tool:,apple:,codesign: -s \
             -k "$KEYCHAIN_PASSWORD" build.keychain
           rm -f /tmp/cert.p12
+
+      - name: Resolve signing identity
+        id: signing
+        run: |
+          IDENTITY="$(
+            security find-identity -v -p codesigning build.keychain |
+            ruby -ne 'if $_ =~ /"([^"]*Developer ID Application[^"]*)"/; puts $1; exit; end'
+          )"
+          if [[ -z "$IDENTITY" ]]; then
+            echo "Could not find a Developer ID Application identity in build.keychain" >&2
+            exit 1
+          fi
+
+          echo "::add-mask::$IDENTITY"
+          echo "identity=$IDENTITY" >> "$GITHUB_OUTPUT"
 
       - name: Generate Xcode project
         run: xcodegen generate
@@ -104,18 +123,38 @@ jobs:
           /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" Lathe/Resources/Info.plist
 
       - name: Build Release archive
+        env:
+          SIGNING_IDENTITY: ${{ steps.signing.outputs.identity }}
+          SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
         run: |
+          : "${SIGNING_IDENTITY:?Missing signing identity}"
+          : "${SPARKLE_PUBLIC_ED_KEY:?Missing SPARKLE_PUBLIC_ED_KEY secret}"
+
           xcodebuild -project Lathe.xcodeproj \
             -scheme Lathe \
             -configuration Release \
             -archivePath /tmp/Lathe.xcarchive \
+            CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
+            DEVELOPMENT_TEAM="" \
+            LATHE_SPARKLE_PUBLIC_ED_KEY="$SPARKLE_PUBLIC_ED_KEY" \
             archive
 
+          APP_PLIST="/tmp/Lathe.xcarchive/Products/Applications/Lathe.app/Contents/Info.plist"
+          PUBLIC_KEY="$(/usr/libexec/PlistBuddy -c "Print :SUPublicEDKey" "$APP_PLIST")"
+          if [[ -z "$PUBLIC_KEY" || "$PUBLIC_KEY" == *"\$("* ]]; then
+            echo "Lathe.app is missing a resolved SUPublicEDKey" >&2
+            exit 1
+          fi
+
       - name: Sign Sparkle nested code
+        env:
+          SIGNING_IDENTITY: ${{ steps.signing.outputs.identity }}
         run: |
+          : "${SIGNING_IDENTITY:?Missing signing identity}"
+
           APP="/tmp/Lathe.xcarchive/Products/Applications/Lathe.app"
           SPARKLE="$APP/Contents/Frameworks/Sparkle.framework"
-          IDENTITY="Developer ID Application: Jungwook Hong (THG2GV26Z9)"
+          IDENTITY="$SIGNING_IDENTITY"
 
           codesign --force --sign "$IDENTITY" --timestamp --options runtime \
             --preserve-metadata=identifier,entitlements \
@@ -143,7 +182,10 @@ jobs:
       - name: Package
         env:
           TAG: ${{ steps.release.outputs.tag }}
+          SIGNING_IDENTITY: ${{ steps.signing.outputs.identity }}
         run: |
+          : "${SIGNING_IDENTITY:?Missing signing identity}"
+
           rm -rf dist
           mkdir -p dist/dmgroot
           cp -R /tmp/Lathe.xcarchive/Products/Applications/Lathe.app dist/dmgroot/
@@ -156,7 +198,7 @@ jobs:
             "dist/Lathe-${TAG}.dmg"
           hdiutil verify "dist/Lathe-${TAG}.dmg"
           codesign --force \
-            --sign "Developer ID Application: Jungwook Hong (THG2GV26Z9)" \
+            --sign "$SIGNING_IDENTITY" \
             --timestamp \
             "dist/Lathe-${TAG}.dmg"
           codesign --verify --verbose=2 "dist/Lathe-${TAG}.dmg"

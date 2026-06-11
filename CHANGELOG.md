@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1
+
+- Keep apps like KakaoTalk in the current Space switcher order even when macOS does not expose their windows through the normal window list.
+- Bring selected apps forward more reliably by unhiding them, activating all windows, and raising accessible windows when switching.
+- Harden release signing configuration so CI discovers the Developer ID identity and injects Sparkle keys from GitHub secrets.
+
 ## 1.0.0
 
 - Mark Lathe as the first stable release.
