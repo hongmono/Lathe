@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.5
+
+- Replace the app icon with a simpler, higher-contrast carousel mark that stays readable at small sizes.
+- Refresh the menu bar template icon with a cleaner three-card silhouette.
+
 ## 1.0.4
 
 - Remove the Space carousel layout option and restore the layout picker to Fan, Strip, and Stack only.
