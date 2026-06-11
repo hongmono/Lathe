@@ -7,6 +7,7 @@
 "layout.fan" = "부채꼴";
 "layout.strip" = "가로";
 "layout.stack" = "스택";
+"layout.space" = "공간";
 
 "menu.accessibilityDescription" = "Lathe";
 "menu.status.running" = "Lathe - 실행 중";

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2
+
+- Add a Space carousel layout option that separates current Space apps from other running apps.
+- Preserve the existing fan layout fallback when current Space metadata is unavailable for visible apps.
+- Add localized Space layout labels and focused regression coverage for the new layout.
 ## 1.0.1
 
 - Keep apps like KakaoTalk in the current Space switcher order even when macOS does not expose their windows through the normal window list.

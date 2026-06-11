@@ -12,7 +12,7 @@ enum CarouselGeometry {
         switch style {
         case .fan:
             fanMaxVisibleEachSide
-        case .strip, .stack:
+        case .strip, .stack, .space:
             defaultMaxVisibleEachSide
         }
     }
@@ -58,8 +58,25 @@ enum CarouselLayout {
                       angularStep: Double,
                       fanRadius: Double = CarouselGeometry.defaultFanRadius,
                       fanSpacing: Double = CarouselGeometry.defaultFanSpacing,
-                      maxVisibleEachSide: Int = 5) -> [Item] {
+                      maxVisibleEachSide: Int = 5,
+                      currentSpaceIndices: Set<Int> = []) -> [Item] {
         guard appCount > 0 else { return [] }
+
+        if style == .space, !currentSpaceIndices.isEmpty {
+            let hasVisibleCurrentSpaceItem = (0..<appCount).contains { index in
+                currentSpaceIndices.contains(index) && abs(index - selectedIndex) <= maxVisibleEachSide
+            }
+
+            if hasVisibleCurrentSpaceItem {
+                return spaceItems(
+                    appCount: appCount,
+                    selectedIndex: selectedIndex,
+                    angularStep: angularStep,
+                    maxVisibleEachSide: maxVisibleEachSide,
+                    currentSpaceIndices: currentSpaceIndices
+                )
+            }
+        }
 
         return (0..<appCount).compactMap { index -> Item? in
             let relativeIndex = index - selectedIndex
@@ -79,6 +96,59 @@ enum CarouselLayout {
         }
     }
 
+    private static func spaceItems(appCount: Int,
+                                   selectedIndex: Int,
+                                   angularStep: Double,
+                                   maxVisibleEachSide: Int,
+                                   currentSpaceIndices: Set<Int>) -> [Item] {
+        let visibleIndices = (0..<appCount).filter { index in
+            abs(index - selectedIndex) <= maxVisibleEachSide
+        }
+        let currentIndices = visibleIndices.filter { currentSpaceIndices.contains($0) }
+        let otherIndices = visibleIndices.filter { !currentSpaceIndices.contains($0) }
+        let currentRanks = Dictionary(uniqueKeysWithValues: currentIndices.enumerated().map { ($0.element, $0.offset) })
+        let otherRanks = Dictionary(uniqueKeysWithValues: otherIndices.enumerated().map { ($0.element, $0.offset) })
+        let primarySpacing = angularStep * 7.5
+        let secondarySpacing = angularStep * 7.0
+        let focusedZIndex = Double(maxVisibleEachSide * 3 + 20)
+
+        return visibleIndices.map { index in
+            let relativeIndex = index - selectedIndex
+            let distance = abs(relativeIndex)
+            let focused = relativeIndex == 0
+
+            if let rank = currentRanks[index] {
+                return Item(
+                    index: index,
+                    relativeIndex: relativeIndex,
+                    angleDegrees: 0,
+                    offsetX: centeredOffset(rank: rank, count: currentIndices.count, spacing: primarySpacing),
+                    offsetY: focused ? -28 : -18,
+                    scale: focused ? 1.08 : 1.02,
+                    opacity: max(1.0 - Double(distance) * 0.06, 0.68),
+                    zIndex: focused ? focusedZIndex : Double(maxVisibleEachSide * 2 - distance + 10)
+                )
+            }
+
+            let rank = otherRanks[index] ?? 0
+            let direction = relativeIndex.signum()
+            return Item(
+                index: index,
+                relativeIndex: relativeIndex,
+                angleDegrees: Double(direction) * min(Double(distance) * 1.8, 6.0),
+                offsetX: centeredOffset(rank: rank, count: otherIndices.count, spacing: secondarySpacing),
+                offsetY: 74 + Double(distance) * 5,
+                scale: focused ? 1.04 : max(0.92 - Double(distance) * 0.035, 0.68),
+                opacity: max(0.82 - Double(distance) * 0.08, 0.38),
+                zIndex: focused ? focusedZIndex : Double(maxVisibleEachSide - distance)
+            )
+        }
+    }
+
+    private static func centeredOffset(rank: Int, count: Int, spacing: Double) -> Double {
+        (Double(rank) - (Double(count) - 1) / 2) * spacing
+    }
+
     private static func item(index: Int,
                              relativeIndex: Int,
                              distance: Int,
@@ -91,7 +161,7 @@ enum CarouselLayout {
         let direction = relativeIndex.signum()
 
         switch style {
-        case .fan:
+        case .fan, .space:
             let clampedFanRadius = CarouselGeometry.clampedFanRadius(fanRadius)
             let clampedFanSpacing = CarouselGeometry.clampedFanSpacing(fanSpacing)
             let radians = Double(relativeIndex) * clampedFanSpacing / clampedFanRadius

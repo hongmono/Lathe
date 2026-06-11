@@ -7,6 +7,7 @@
 "layout.fan" = "Fan";
 "layout.strip" = "Strip";
 "layout.stack" = "Stack";
+"layout.space" = "Space";
 
 "menu.accessibilityDescription" = "Lathe";
 "menu.status.running" = "Lathe - running";

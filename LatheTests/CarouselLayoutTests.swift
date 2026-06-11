@@ -136,4 +136,101 @@ final class CarouselLayoutTests: XCTestCase {
         XCTAssertEqual(items[0].angleDegrees, -39.67, accuracy: 0.01)
         XCTAssertEqual(items[6].angleDegrees, 39.67, accuracy: 0.01)
     }
+
+    func test_spaceLayoutPlacesCurrentSpaceAppsInPrimaryRegion() {
+        let items = CarouselLayout.items(
+            appCount: 5,
+            selectedIndex: 1,
+            style: .space,
+            angularStep: 12,
+            currentSpaceIndices: [1, 2]
+        )
+
+        let currentSpaceItems = items.filter { [1, 2].contains($0.index) }
+        let otherSpaceItems = items.filter { ![1, 2].contains($0.index) }
+
+        XCTAssertEqual(currentSpaceItems.map(\.index), [1, 2])
+        XCTAssertLessThan(currentSpaceItems[0].offsetY, otherSpaceItems[0].offsetY)
+        XCTAssertLessThan(currentSpaceItems[1].offsetY, otherSpaceItems[0].offsetY)
+        XCTAssertLessThan(currentSpaceItems[0].offsetX, currentSpaceItems[1].offsetX)
+    }
+
+    func test_spaceLayoutCentersSingleCurrentSpaceApp() {
+        let items = CarouselLayout.items(
+            appCount: 4,
+            selectedIndex: 2,
+            style: .space,
+            angularStep: 12,
+            currentSpaceIndices: [2]
+        )
+
+        let currentSpaceItem = try! XCTUnwrap(items.first { $0.index == 2 })
+        let otherSpaceItems = items.filter { $0.index != 2 }
+
+        XCTAssertEqual(currentSpaceItem.offsetX, 0, accuracy: 0.001)
+        XCTAssertTrue(otherSpaceItems.allSatisfy { currentSpaceItem.offsetY < $0.offsetY })
+    }
+
+    func test_spaceLayoutFallsBackToFanGeometryWithoutCurrentSpaceApps() {
+        let spaceItems = CarouselLayout.items(
+            appCount: 5,
+            selectedIndex: 2,
+            style: .space,
+            angularStep: 12,
+            fanRadius: 520,
+            fanSpacing: 120
+        )
+        let fanItems = CarouselLayout.items(
+            appCount: 5,
+            selectedIndex: 2,
+            style: .fan,
+            angularStep: 12,
+            fanRadius: 520,
+            fanSpacing: 120
+        )
+
+        XCTAssertEqual(spaceItems, fanItems)
+    }
+
+    func test_spaceLayoutFallsBackToFanGeometryWhenCurrentSpaceAppsAreNotVisible() {
+        let spaceItems = CarouselLayout.items(
+            appCount: 8,
+            selectedIndex: 6,
+            style: .space,
+            angularStep: 12,
+            fanRadius: 520,
+            fanSpacing: 120,
+            maxVisibleEachSide: 1,
+            currentSpaceIndices: [0, 1]
+        )
+        let fanItems = CarouselLayout.items(
+            appCount: 8,
+            selectedIndex: 6,
+            style: .fan,
+            angularStep: 12,
+            fanRadius: 520,
+            fanSpacing: 120,
+            maxVisibleEachSide: 1
+        )
+
+        XCTAssertEqual(spaceItems, fanItems)
+    }
+
+    func test_spaceLayoutPreservesOrderWithinGroups() {
+        let items = CarouselLayout.items(
+            appCount: 6,
+            selectedIndex: 2,
+            style: .space,
+            angularStep: 12,
+            currentSpaceIndices: [1, 3]
+        )
+
+        let currentSpaceItems = items.filter { [1, 3].contains($0.index) }
+        let otherSpaceItems = items.filter { ![1, 3].contains($0.index) }
+
+        XCTAssertEqual(currentSpaceItems.map(\.index), [1, 3])
+        XCTAssertEqual(otherSpaceItems.map(\.index), [0, 2, 4, 5])
+        XCTAssertLessThan(currentSpaceItems[0].offsetX, currentSpaceItems[1].offsetX)
+        XCTAssertLessThan(otherSpaceItems[0].offsetX, otherSpaceItems[1].offsetX)
+    }
 }

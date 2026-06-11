@@ -58,7 +58,8 @@ struct CarouselView: View {
             angularStep: angularStep,
             fanRadius: settings.fanRadius,
             fanSpacing: settings.fanSpacing,
-            maxVisibleEachSide: maxVisibleEachSide
+            maxVisibleEachSide: maxVisibleEachSide,
+            currentSpaceIndices: currentSpaceIndices
         ).map { layoutItem in
             let entry = viewModel.apps[layoutItem.index]
             return Item(
@@ -72,5 +73,9 @@ struct CarouselView: View {
                 zIndex: layoutItem.zIndex
             )
         }
+    }
+
+    private var currentSpaceIndices: Set<Int> {
+        Set(viewModel.apps.indices.filter { viewModel.apps[$0].isCurrentSpace })
     }
 }
