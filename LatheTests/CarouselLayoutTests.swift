@@ -137,7 +137,7 @@ final class CarouselLayoutTests: XCTestCase {
         XCTAssertEqual(items[6].angleDegrees, 39.67, accuracy: 0.01)
     }
 
-    func test_spaceLayoutPlacesCurrentSpaceAppsInPrimaryRegion() {
+    func test_spaceLayoutKeepsOneDeckWhileDeemphasizingOtherSpaceApps() {
         let items = CarouselLayout.items(
             appCount: 5,
             selectedIndex: 1,
@@ -146,13 +146,15 @@ final class CarouselLayoutTests: XCTestCase {
             currentSpaceIndices: [1, 2]
         )
 
-        let currentSpaceItems = items.filter { [1, 2].contains($0.index) }
-        let otherSpaceItems = items.filter { ![1, 2].contains($0.index) }
+        let focusedCurrentSpaceItem = try! XCTUnwrap(items.first { $0.index == 1 })
+        let nearbyCurrentSpaceItem = try! XCTUnwrap(items.first { $0.index == 2 })
+        let nearbyOtherSpaceItem = try! XCTUnwrap(items.first { $0.index == 0 })
 
-        XCTAssertEqual(currentSpaceItems.map(\.index), [1, 2])
-        XCTAssertLessThan(currentSpaceItems[0].offsetY, otherSpaceItems[0].offsetY)
-        XCTAssertLessThan(currentSpaceItems[1].offsetY, otherSpaceItems[0].offsetY)
-        XCTAssertLessThan(currentSpaceItems[0].offsetX, currentSpaceItems[1].offsetX)
+        XCTAssertLessThan(focusedCurrentSpaceItem.offsetY, nearbyOtherSpaceItem.offsetY)
+        XCTAssertLessThan(nearbyCurrentSpaceItem.offsetY, nearbyOtherSpaceItem.offsetY)
+        XCTAssertLessThan(nearbyOtherSpaceItem.offsetY - nearbyCurrentSpaceItem.offsetY, 36)
+        XCTAssertLessThan(nearbyOtherSpaceItem.scale, nearbyCurrentSpaceItem.scale)
+        XCTAssertLessThan(nearbyOtherSpaceItem.opacity, nearbyCurrentSpaceItem.opacity)
     }
 
     func test_spaceLayoutCentersSingleCurrentSpaceApp() {
