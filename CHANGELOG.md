@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.4
+
+- Remove the Space carousel layout option and restore the layout picker to Fan, Strip, and Stack only.
+- Remove the visual current-Space metadata path added for the experimental layout while keeping the existing current-Space app ordering behavior.
+
 ## 1.0.3
 
 - Soften the Space carousel layout into one continuous fan-like deck instead of a separated two-row layout.

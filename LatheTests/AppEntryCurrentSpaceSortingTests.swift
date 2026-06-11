@@ -20,21 +20,4 @@ final class AppEntryCurrentSpaceSortingTests: XCTestCase {
         XCTAssertEqual(prioritized.map(\.id), [20, 40, 10, 30])
     }
 
-    func test_appEntryCurrentSpaceDefaultsToFalse() {
-        let app = AppEntry(id: 10, bundleIdentifier: "com.example.mail", name: "Mail", icon: NSImage())
-
-        XCTAssertFalse(app.isCurrentSpace)
-    }
-
-    func test_appEntryCanCarryCurrentSpaceSnapshotMetadata() {
-        let app = AppEntry(
-            id: 20,
-            bundleIdentifier: "com.example.browser",
-            name: "Browser",
-            icon: NSImage(),
-            isCurrentSpace: true
-        )
-
-        XCTAssertTrue(app.isCurrentSpace)
-    }
 }

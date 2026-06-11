@@ -150,14 +150,10 @@ private struct SettingsCarouselExampleView: View {
             angularStep: angularStep,
             fanRadius: fanRadius,
             fanSpacing: fanSpacing,
-            maxVisibleEachSide: 2,
-            currentSpaceIndices: currentSpaceIndices
+            maxVisibleEachSide: 2
         )
     }
 
-    private var currentSpaceIndices: Set<Int> {
-        Set(apps.indices.filter { apps[$0].isCurrentSpace })
-    }
 
     private var previewCardWidth: CGFloat {
         min(max(CGFloat(cardSize) * SettingsCarouselExampleLayout.cardScale, SettingsCarouselExampleLayout.minCardWidth),
@@ -180,8 +176,6 @@ private struct SettingsCarouselExampleView: View {
             SettingsCarouselExampleLayout.stripContentOffsetY
         case .stack:
             SettingsCarouselExampleLayout.stackContentOffsetY
-        case .space:
-            SettingsCarouselExampleLayout.spaceContentOffsetY
         }
     }
 }
@@ -236,14 +230,13 @@ private struct SettingsCarouselExampleApp: Identifiable {
     let name: String
     let systemImage: String
     let tint: Color
-    let isCurrentSpace: Bool
 
     static let samples = [
-        SettingsCarouselExampleApp(id: 0, name: "Finder", systemImage: "folder.fill", tint: .blue, isCurrentSpace: false),
-        SettingsCarouselExampleApp(id: 1, name: "Mail", systemImage: "envelope.fill", tint: .indigo, isCurrentSpace: true),
-        SettingsCarouselExampleApp(id: 2, name: "Safari", systemImage: "safari.fill", tint: .cyan, isCurrentSpace: true),
-        SettingsCarouselExampleApp(id: 3, name: "Calendar", systemImage: "calendar", tint: .red, isCurrentSpace: false),
-        SettingsCarouselExampleApp(id: 4, name: "Notes", systemImage: "note.text", tint: .yellow, isCurrentSpace: false)
+        SettingsCarouselExampleApp(id: 0, name: "Finder", systemImage: "folder.fill", tint: .blue),
+        SettingsCarouselExampleApp(id: 1, name: "Mail", systemImage: "envelope.fill", tint: .indigo),
+        SettingsCarouselExampleApp(id: 2, name: "Safari", systemImage: "safari.fill", tint: .cyan),
+        SettingsCarouselExampleApp(id: 3, name: "Calendar", systemImage: "calendar", tint: .red),
+        SettingsCarouselExampleApp(id: 4, name: "Notes", systemImage: "note.text", tint: .yellow)
     ]
 }
 
@@ -262,7 +255,6 @@ private enum SettingsCarouselExampleLayout {
     static let fanContentOffsetY: CGFloat = 14
     static let stripContentOffsetY: CGFloat = 4
     static let stackContentOffsetY: CGFloat = 8
-    static let spaceContentOffsetY: CGFloat = -2
 }
 
 #if DEBUG

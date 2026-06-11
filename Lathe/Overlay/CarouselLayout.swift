@@ -12,7 +12,7 @@ enum CarouselGeometry {
         switch style {
         case .fan:
             fanMaxVisibleEachSide
-        case .strip, .stack, .space:
+        case .strip, .stack:
             defaultMaxVisibleEachSide
         }
     }
@@ -58,25 +58,9 @@ enum CarouselLayout {
                       angularStep: Double,
                       fanRadius: Double = CarouselGeometry.defaultFanRadius,
                       fanSpacing: Double = CarouselGeometry.defaultFanSpacing,
-                      maxVisibleEachSide: Int = 5,
-                      currentSpaceIndices: Set<Int> = []) -> [Item] {
+                      maxVisibleEachSide: Int = 5) -> [Item] {
         guard appCount > 0 else { return [] }
 
-        if style == .space, !currentSpaceIndices.isEmpty {
-            let hasVisibleCurrentSpaceItem = (0..<appCount).contains { index in
-                currentSpaceIndices.contains(index) && abs(index - selectedIndex) <= maxVisibleEachSide
-            }
-
-            if hasVisibleCurrentSpaceItem {
-                return spaceItems(
-                    appCount: appCount,
-                    selectedIndex: selectedIndex,
-                    angularStep: angularStep,
-                    maxVisibleEachSide: maxVisibleEachSide,
-                    currentSpaceIndices: currentSpaceIndices
-                )
-            }
-        }
 
         return (0..<appCount).compactMap { index -> Item? in
             let relativeIndex = index - selectedIndex
@@ -96,42 +80,6 @@ enum CarouselLayout {
         }
     }
 
-    private static func spaceItems(appCount: Int,
-                                   selectedIndex: Int,
-                                   angularStep: Double,
-                                   maxVisibleEachSide: Int,
-                                   currentSpaceIndices: Set<Int>) -> [Item] {
-        let visibleIndices = (0..<appCount).filter { index in
-            abs(index - selectedIndex) <= maxVisibleEachSide
-        }
-        let softFanRadius = 620.0
-        let softFanSpacing = CarouselGeometry.clampedFanSpacing(angularStep * 7.0)
-        let focusedZIndex = Double(maxVisibleEachSide * 3 + 20)
-
-        return visibleIndices.map { index in
-            let relativeIndex = index - selectedIndex
-            let distance = abs(relativeIndex)
-            let focused = relativeIndex == 0
-            let isCurrentSpace = currentSpaceIndices.contains(index)
-            let radians = Double(relativeIndex) * softFanSpacing / softFanRadius
-            let baseAngle = radians * 180 / .pi
-            let baseOffsetX = softFanRadius * sin(radians)
-            let baseOffsetY = softFanRadius * (1 - cos(radians))
-            let depthOffsetY = isCurrentSpace ? -6.0 : 20.0
-            let groupZBoost = isCurrentSpace ? Double(maxVisibleEachSide + 6) : 0
-
-            return Item(
-                index: index,
-                relativeIndex: relativeIndex,
-                angleDegrees: baseAngle,
-                offsetX: baseOffsetX,
-                offsetY: baseOffsetY + (focused ? -4.0 : depthOffsetY),
-                scale: focused ? 1.08 : (isCurrentSpace ? max(1.0 - Double(distance) * 0.03, 0.82) : max(0.92 - Double(distance) * 0.04, 0.66)),
-                opacity: focused ? 1.0 : (isCurrentSpace ? max(0.96 - Double(distance) * 0.07, 0.56) : max(0.72 - Double(distance) * 0.07, 0.34)),
-                zIndex: focused ? focusedZIndex : Double(maxVisibleEachSide - distance) + groupZBoost
-            )
-        }
-    }
 
     private static func item(index: Int,
                              relativeIndex: Int,
@@ -145,7 +93,7 @@ enum CarouselLayout {
         let direction = relativeIndex.signum()
 
         switch style {
-        case .fan, .space:
+        case .fan:
             let clampedFanRadius = CarouselGeometry.clampedFanRadius(fanRadius)
             let clampedFanSpacing = CarouselGeometry.clampedFanSpacing(fanSpacing)
             let radians = Double(relativeIndex) * clampedFanSpacing / clampedFanRadius

@@ -104,8 +104,7 @@ final class AppListProvider {
                 id: pid,
                 bundleIdentifier: app.bundleIdentifier,
                 name: name,
-                icon: icon,
-                isCurrentSpace: currentSpaceProcessIdentifiers.contains(pid)
+                icon: icon
             )
         }
         let visibleEntries = AppEntry.visibleInCarousel(

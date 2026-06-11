@@ -44,7 +44,6 @@ final class AppLanguageTests: XCTestCase {
         XCTAssertEqual(LayoutStyle.fan.label(language: .korean), "부채꼴")
         XCTAssertEqual(LayoutStyle.strip.label(language: .korean), "가로")
         XCTAssertEqual(LayoutStyle.stack.label(language: .korean), "스택")
-        XCTAssertEqual(LayoutStyle.space.label(language: .korean), "공간")
     }
 
     private func makeDefaults() -> UserDefaults {
