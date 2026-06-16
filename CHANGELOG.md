@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- 설정창을 새로 만들어 사이드바 펼치기·접기가 부드럽게 동작합니다.
+- 사이드바 토글 버튼을 사이드바 영역 오른쪽에 두고, ⌘B 단축키로도 접고 펼 수 있습니다.
+- 설정창 사이드바가 macOS 기본 사이드바처럼 표시됩니다.
+
 ## 1.0.13
 
 - Bring the app to the front when checking for updates so the result dialog (including "you're up to date") is actually visible instead of opening behind other windows.
