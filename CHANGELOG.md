@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.9
+
+- Fix the settings window sidebar so it shows the standard translucent material without the content area turning transparent.
+
 ## 1.0.8
 
 - Restore the translucent (vibrant) sidebar material in the settings window so it reads as floating, matching the native macOS look.
