@@ -44,10 +44,9 @@ struct SettingsWindowChromeConfiguration {
         window.titlebarSeparatorStyle = titlebarSeparatorStyle
         window.toolbarStyle = toolbarStyle
         window.collectionBehavior.formUnion(collectionBehavior)
-        // Let the sidebar keep its native vibrant (floating) material: the window
-        // must be non-opaque for the .sidebar visual-effect blending to show.
-        // isOpaque = false (not just a clear color) is what avoids the black-edge
-        // artifacts the earlier clear-only attempt produced.
+        // NavigationSplitView's sidebar uses behind-window vibrancy, which only
+        // renders when the host window is non-opaque. The detail column paints its
+        // own solid background, so only the sidebar shows the translucent material.
         window.isOpaque = false
         window.backgroundColor = .clear
         window.isMovableByWindowBackground = isMovableByWindowBackground

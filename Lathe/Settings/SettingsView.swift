@@ -37,6 +37,7 @@ struct SettingsView: View {
                 .toolbar(removing: .sidebarToggle)
         } detail: {
             SettingsDetailView(store: store, pane: selectedPane)
+                .background(Color(nsColor: .windowBackgroundColor))
                 .navigationTitle(L10n.string(selectedPane.titleKey, language: store.appLanguage))
         }
         .navigationSplitViewStyle(.balanced)
