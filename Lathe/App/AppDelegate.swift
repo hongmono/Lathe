@@ -1,36 +1,19 @@
 import AppKit
-import Combine
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var menuBar: MenuBarController!
     private var hotKey: HotKeyMonitor!
     private var appList: AppListProvider!
     private var overlay: OverlayController!
-    private let settingsWindow = SettingsWindowController()
-    private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 메뉴바 전용 앱: Dock 아이콘을 띄우지 않는다.
         NSApp.setActivationPolicy(.accessory)
 
         SettingsStore.shared.applyAppearance()
 
-        let updater = SparkleUpdater.shared
-        menuBar = MenuBarController()
-        menuBar.onCheckForUpdates = {
-            updater.checkForUpdates()
-        }
-        menuBar.onShowPermissions = { [weak self] in
-            self?.settingsWindow.show(pane: .permissions)
-        }
-        menuBar.onShowPreferences = { [weak self] in
-            self?.settingsWindow.show()
-        }
-        updater.$canCheckForUpdates
-            .sink { [weak self] canCheckForUpdates in
-                self?.menuBar.setCanCheckForUpdates(canCheckForUpdates)
-            }
-            .store(in: &cancellables)
+        // Sparkle 업데이터 기동(메뉴는 SparkleUpdater.shared를 직접 관찰).
+        _ = SparkleUpdater.shared
 
         appList = AppListProvider()
         overlay = OverlayController()
@@ -46,10 +29,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         do {
             try hotKey.start()
-            menuBar.setPermissionStatus(granted: true)
+            AppState.shared.permissionGranted = true
         } catch {
-            menuBar.setPermissionStatus(granted: false)
-            settingsWindow.show(pane: .permissions)
+            AppState.shared.permissionGranted = false
+            SettingsWindowController.shared.show(pane: .permissions)
         }
     }
 }

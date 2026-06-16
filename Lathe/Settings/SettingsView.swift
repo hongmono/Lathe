@@ -13,8 +13,6 @@ struct SettingsView: View {
     @ObservedObject var store: SettingsStore
     @ObservedObject var navigation: SettingsNavigationState
 
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
-
     init(store: SettingsStore,
          navigation: SettingsNavigationState = SettingsNavigationState()) {
         self.store = store
@@ -26,7 +24,7 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
+        NavigationSplitView {
             SettingsSidebarView(store: store, selectedPane: $navigation.selectedPane)
                 .navigationSplitViewColumnWidth(
                     min: SettingsViewLayout.sidebarMinWidth,
@@ -46,20 +44,19 @@ struct SettingsView: View {
         .background(sidebarToggleShortcut)
     }
 
-    // Cmd+B로 사이드바를 접고 펼친다. 화면에는 안 보이는 버튼이지만 창 전역
-    // 단축키로 동작하며, 표준 사이드바 토글 버튼은 그대로 노출된다.
+    // 사이드바 토글은 전적으로 네이티브 경로(NSSplitViewController의 toggleSidebar:)에
+    // 맡긴다. 표준 토글 버튼과 동일한 애니메이션을 타므로 reflow 없이 매끄럽다.
+    // Cmd+B도 같은 셀렉터를 호출해 일관되게 동작한다.
     private var sidebarToggleShortcut: some View {
-        Button(action: toggleSidebar) { Color.clear }
-            .buttonStyle(.plain)
-            .keyboardShortcut("b", modifiers: .command)
-            .opacity(0)
-            .accessibilityHidden(true)
-    }
-
-    private func toggleSidebar() {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            columnVisibility = (columnVisibility == .detailOnly) ? .all : .detailOnly
+        Button {
+            NSApp.sendAction(Selector(("toggleSidebar:")), to: nil, from: nil)
+        } label: {
+            Color.clear
         }
+        .buttonStyle(.plain)
+        .keyboardShortcut("b", modifiers: .command)
+        .opacity(0)
+        .accessibilityHidden(true)
     }
 }
 
@@ -72,6 +69,7 @@ enum SettingsViewLayout {
     static let detailHorizontalPadding: CGFloat = 24
     static let detailTopMargin: CGFloat = 24
     static let detailMaxWidth: CGFloat = 620
+    static let detailMinWidth: CGFloat = 360
     static let sectionSpacing: CGFloat = 16
     static let detailGroupSpacing: CGFloat = 8
     static let detailRowSpacing: CGFloat = 12

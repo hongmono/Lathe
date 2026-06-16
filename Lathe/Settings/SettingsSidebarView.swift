@@ -13,6 +13,9 @@ struct SettingsSidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        // AppKit NSSplitViewItem(sidebar)가 제공하는 vibrancy가 비치도록 List 자체
+        // 배경은 숨긴다.
+        .scrollContentBackground(.hidden)
     }
 }
 
