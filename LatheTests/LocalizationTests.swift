@@ -12,7 +12,6 @@ final class LocalizationTests: XCTestCase {
     func test_koreanLocalizationProvidesCoreUserFacingStrings() throws {
         let bundle = try localizationBundle(for: "ko")
 
-        XCTAssertEqual(bundle.localizedString(forKey: "settings.window.title", value: nil, table: nil), "Lathe - 환경설정")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.appearance.language", value: nil, table: nil), "언어")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.permissions.section", value: nil, table: nil), "권한")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.permissions.status.granted", value: nil, table: nil), "허용됨")
@@ -28,7 +27,6 @@ final class LocalizationTests: XCTestCase {
     func test_englishLocalizationProvidesCoreUserFacingStrings() throws {
         let bundle = try localizationBundle(for: "en")
 
-        XCTAssertEqual(bundle.localizedString(forKey: "settings.window.title", value: nil, table: nil), "Lathe - Preferences")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.appearance.language", value: nil, table: nil), "Language")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.permissions.section", value: nil, table: nil), "Permissions")
         XCTAssertEqual(bundle.localizedString(forKey: "settings.permissions.status.granted", value: nil, table: nil), "Granted")

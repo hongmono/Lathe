@@ -8,7 +8,6 @@
 "layout.strip" = "가로";
 "layout.stack" = "스택";
 
-"menu.accessibilityDescription" = "Lathe";
 "menu.status.running" = "Lathe - 실행 중";
 "menu.status.needsPermission" = "Lathe - 권한 필요";
 "menu.checkForUpdates" = "업데이트 확인...";
@@ -16,7 +15,6 @@
 "menu.permissions" = "권한...";
 "menu.quit" = "Lathe 종료";
 
-"settings.window.title" = "Lathe - 환경설정";
 "settings.appearance.section" = "외관";
 "settings.appearance.language" = "언어";
 "settings.appearance.theme" = "테마";

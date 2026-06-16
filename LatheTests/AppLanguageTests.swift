@@ -23,12 +23,12 @@ final class AppLanguageTests: XCTestCase {
 
     func test_l10nUsesExplicitLanguageBundle() {
         XCTAssertEqual(
-            L10n.string("settings.window.title", language: .english),
-            "Lathe - Preferences"
+            L10n.string("menu.preferences", language: .english),
+            "Preferences..."
         )
         XCTAssertEqual(
-            L10n.string("settings.window.title", language: .korean),
-            "Lathe - 환경설정"
+            L10n.string("menu.preferences", language: .korean),
+            "환경설정..."
         )
     }
 

@@ -8,7 +8,6 @@
 "layout.strip" = "Strip";
 "layout.stack" = "Stack";
 
-"menu.accessibilityDescription" = "Lathe";
 "menu.status.running" = "Lathe - running";
 "menu.status.needsPermission" = "Lathe - needs permission";
 "menu.checkForUpdates" = "Check for Updates...";
@@ -16,7 +15,6 @@
 "menu.permissions" = "Permissions...";
 "menu.quit" = "Quit Lathe";
 
-"settings.window.title" = "Lathe - Preferences";
 "settings.appearance.section" = "Appearance";
 "settings.appearance.language" = "Language";
 "settings.appearance.theme" = "Theme";
