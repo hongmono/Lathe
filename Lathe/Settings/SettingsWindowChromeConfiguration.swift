@@ -44,6 +44,12 @@ struct SettingsWindowChromeConfiguration {
         window.titlebarSeparatorStyle = titlebarSeparatorStyle
         window.toolbarStyle = toolbarStyle
         window.collectionBehavior.formUnion(collectionBehavior)
+        // Let the sidebar keep its native vibrant (floating) material: the window
+        // must be non-opaque for the .sidebar visual-effect blending to show.
+        // isOpaque = false (not just a clear color) is what avoids the black-edge
+        // artifacts the earlier clear-only attempt produced.
+        window.isOpaque = false
+        window.backgroundColor = .clear
         window.isMovableByWindowBackground = isMovableByWindowBackground
         window.minSize = minimumSize
         window.toolbar = makeToolbar()
