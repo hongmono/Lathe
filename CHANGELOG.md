@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.7
+
+- Redesign the settings window with a unified sidebar so the window controls sit on the sidebar, matching the native macOS look.
+- Keep the sidebar always visible and show the selected section name in the title bar.
+- Rebuild the Hidden Apps list to match System Settings, with a short description above the table.
+
 ## 1.0.6
 
 - Replace the carousel-card icon direction with a distinct keyboard-switcher mark built around Command-Tab.
