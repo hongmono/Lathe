@@ -7,7 +7,7 @@ struct SettingsDetailView: View {
     var body: some View {
         ScrollView {
             detailStack
-                .frame(maxWidth: SettingsViewLayout.detailMaxWidth, alignment: .topLeading)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
                 .padding(.leading, SettingsViewLayout.detailHorizontalPadding)
                 .padding(.trailing, SettingsViewLayout.detailHorizontalPadding)
                 .padding(.top, SettingsViewLayout.detailTopMargin)
