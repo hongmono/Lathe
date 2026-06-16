@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.8
+
+- Restore the translucent (vibrant) sidebar material in the settings window so it reads as floating, matching the native macOS look.
+
 ## 1.0.7
 
 - Redesign the settings window with a unified sidebar so the window controls sit on the sidebar, matching the native macOS look.
