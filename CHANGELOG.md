@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.13
+
+- Bring the app to the front when checking for updates so the result dialog (including "you're up to date") is actually visible instead of opening behind other windows.
+
 ## 1.0.12
 
 - Restore the sidebar toggle button and add a Command-B shortcut to show or hide the settings sidebar.
