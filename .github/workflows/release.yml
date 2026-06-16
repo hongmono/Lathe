@@ -14,14 +14,14 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Select latest Xcode
-        run: sudo xcode-select -s "$(ls -1d /Applications/Xcode_16*.app /Applications/Xcode_17*.app 2>/dev/null | sort -V | tail -1)"
+        run: sudo xcode-select -s "$(ls -1d /Applications/Xcode_26*.app /Applications/Xcode_17*.app /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)"
 
       - name: Show toolchain
         run: |

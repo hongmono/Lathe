@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.10
+
+- Build the release with the macOS 26 SDK so the distributed app shows the correct translucent settings sidebar (the previous release was built with an older SDK and rendered it flat).
+
 ## 1.0.9
 
 - Fix the settings window sidebar so it shows the standard translucent material without the content area turning transparent.
