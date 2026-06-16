@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.12
+
+- Restore the sidebar toggle button and add a Command-B shortcut to show or hide the settings sidebar.
+
 ## 1.0.11
 
 - Let the settings detail content span the full window width instead of being capped at a fixed maximum.

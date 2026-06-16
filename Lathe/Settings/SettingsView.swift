@@ -13,7 +13,6 @@ struct SettingsView: View {
     @ObservedObject var store: SettingsStore
     @ObservedObject var navigation: SettingsNavigationState
 
-    // 설정창은 사이드바가 곧 내비게이션이므로 항상 펼친 상태로 잠근다.
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     init(store: SettingsStore,
@@ -34,7 +33,6 @@ struct SettingsView: View {
                     ideal: SettingsViewLayout.sidebarWidth,
                     max: SettingsViewLayout.sidebarMaxWidth
                 )
-                .toolbar(removing: .sidebarToggle)
         } detail: {
             SettingsDetailView(store: store, pane: selectedPane)
                 .background(Color(nsColor: .windowBackgroundColor))
@@ -45,6 +43,23 @@ struct SettingsView: View {
             minWidth: SettingsViewLayout.windowMinWidth,
             minHeight: SettingsViewLayout.windowMinHeight
         )
+        .background(sidebarToggleShortcut)
+    }
+
+    // Cmd+B로 사이드바를 접고 펼친다. 화면에는 안 보이는 버튼이지만 창 전역
+    // 단축키로 동작하며, 표준 사이드바 토글 버튼은 그대로 노출된다.
+    private var sidebarToggleShortcut: some View {
+        Button(action: toggleSidebar) { Color.clear }
+            .buttonStyle(.plain)
+            .keyboardShortcut("b", modifiers: .command)
+            .opacity(0)
+            .accessibilityHidden(true)
+    }
+
+    private func toggleSidebar() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            columnVisibility = (columnVisibility == .detailOnly) ? .all : .detailOnly
+        }
     }
 }
 
