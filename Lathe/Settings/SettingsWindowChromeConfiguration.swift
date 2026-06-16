@@ -44,7 +44,6 @@ struct SettingsWindowChromeConfiguration {
         window.titlebarSeparatorStyle = titlebarSeparatorStyle
         window.toolbarStyle = toolbarStyle
         window.collectionBehavior.formUnion(collectionBehavior)
-        window.backgroundColor = .clear
         window.isMovableByWindowBackground = isMovableByWindowBackground
         window.minSize = minimumSize
         window.toolbar = makeToolbar()

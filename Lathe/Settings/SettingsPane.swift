@@ -1,5 +1,4 @@
 enum SettingsPane: Equatable, Hashable, Identifiable {
-    case main
     case general
     case permissions
     case carousel
@@ -18,8 +17,6 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
 
     var titleKey: String {
         switch self {
-        case .main:
-            return "settings.window.title"
         case .general:
             return "settings.general.section"
         case .permissions:
@@ -35,8 +32,6 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
 
     var systemImage: String {
         switch self {
-        case .main:
-            return "gearshape"
         case .general:
             return "gearshape"
         case .permissions:
@@ -47,15 +42,6 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
             return "eye.slash"
         case .about:
             return "info.circle"
-        }
-    }
-
-    var backDestination: SettingsPane? {
-        switch self {
-        case .main, .general, .permissions, .carousel, .about:
-            return nil
-        case .hiddenApps:
-            return .main
         }
     }
 }

@@ -3,11 +3,6 @@ import XCTest
 
 final class SettingsPaneTests: XCTestCase {
 
-    func test_hiddenAppsPaneReturnsToMainSettingsPane() {
-        XCTAssertEqual(SettingsPane.hiddenApps.backDestination, .main)
-        XCTAssertNil(SettingsPane.main.backDestination)
-    }
-
     func test_sidebarPanesExposeNativeSettingsSectionsInOrder() {
         XCTAssertEqual(SettingsPane.sidebarPanes, [
             .general,

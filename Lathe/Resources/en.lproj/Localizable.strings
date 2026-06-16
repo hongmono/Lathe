@@ -17,7 +17,6 @@
 "menu.quit" = "Quit Lathe";
 
 "settings.window.title" = "Lathe - Preferences";
-"settings.search" = "Search";
 "settings.appearance.section" = "Appearance";
 "settings.appearance.language" = "Language";
 "settings.appearance.theme" = "Theme";
@@ -33,15 +32,11 @@
 "settings.carousel.showAppNames" = "Show app names";
 "settings.carousel.restoreDefaults" = "Restore defaults";
 "settings.hiddenApps.section" = "Hidden Apps";
+"settings.hiddenApps.description" = "Apps turned on here won't appear in the Lathe carousel.";
 "settings.hiddenApps.empty" = "No apps are listed yet.";
-"settings.hiddenApps.app" = "App";
-"settings.hiddenApps.manage" = "Manage Hidden Apps";
-"settings.hiddenApps.bundleIdentifier" = "Bundle ID";
 "settings.hiddenApps.hidden" = "Hidden";
 "settings.hiddenApps.add" = "Add App...";
 "settings.hiddenApps.remove" = "Remove selected apps";
-"settings.hiddenApps.refresh" = "Refresh";
-"settings.back" = "Back";
 "settings.general.section" = "General";
 "settings.general.launchAtLogin" = "Launch Lathe at login";
 "settings.general.launchAtLogin.description" = "Lathe will start automatically when you sign in. You can revoke this from System Settings > General > Login Items.";

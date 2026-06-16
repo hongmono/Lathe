@@ -7,7 +7,14 @@ struct HiddenAppsSettingsView: View {
     @State private var selectedHiddenAppBundleIdentifiers: Set<String> = []
 
     var body: some View {
-        hiddenAppsList
+        VStack(alignment: .leading, spacing: HiddenAppsListLayout.descriptionSpacing) {
+            Text(L10n.string("settings.hiddenApps.description", language: store.appLanguage))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            hiddenAppsList
+        }
             .frame(maxWidth: .infinity, alignment: .leading)
             .onAppear {
                 refreshAppExclusionOptions()
@@ -25,15 +32,11 @@ struct HiddenAppsSettingsView: View {
 
     private var hiddenAppsList: some View {
         VStack(spacing: 0) {
-            hiddenAppsHeader
-
-            Divider()
-
-            ZStack(alignment: .topLeading) {
+            ZStack {
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        ForEach(hiddenAppRows) { row in
-                            HiddenAppRowView(
+                        ForEach(Array(hiddenAppRows.enumerated()), id: \.element.id) { index, row in
+                            HiddenAppRow(
                                 row: row,
                                 isSelected: selectedHiddenAppBundleIdentifiers.contains(row.bundleIdentifier),
                                 isHidden: excludedBinding(for: row.bundleIdentifier),
@@ -42,43 +45,32 @@ struct HiddenAppsSettingsView: View {
                                 toggleSelection(for: row.bundleIdentifier)
                             }
 
-                            Divider()
-                                .padding(.leading, HiddenAppsListLayout.rowHorizontalPadding)
+                            if index < hiddenAppRows.count - 1 {
+                                Divider()
+                                    .padding(.leading, HiddenAppsListLayout.separatorLeadingInset)
+                            }
                         }
                     }
                 }
 
                 if hiddenAppRows.isEmpty {
                     Text(L10n.string("settings.hiddenApps.empty", language: store.appLanguage))
-                        .font(.system(size: 11))
                         .foregroundStyle(.secondary)
-                        .padding(HiddenAppsListLayout.rowHorizontalPadding)
                 }
             }
-            .frame(height: HiddenAppsListLayout.listHeight)
+            .frame(maxHeight: .infinity)
 
             Divider()
 
             hiddenAppsControlBar
         }
-        .settingsGlassSurface(interactive: true)
-    }
-
-    private var hiddenAppsHeader: some View {
-        HStack(spacing: HiddenAppsListLayout.columnSpacing) {
-            Text(L10n.string("settings.hiddenApps.app", language: store.appLanguage))
-                .frame(width: HiddenAppsListLayout.appColumnWidth, alignment: .leading)
-
-            Text(L10n.string("settings.hiddenApps.bundleIdentifier", language: store.appLanguage))
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Text(L10n.string("settings.hiddenApps.hidden", language: store.appLanguage))
-                .frame(width: HiddenAppsListLayout.toggleColumnWidth, alignment: .trailing)
-        }
-        .font(.system(size: 13, weight: .semibold))
-        .padding(.horizontal, HiddenAppsListLayout.rowHorizontalPadding)
-        .frame(height: HiddenAppsListLayout.headerHeight)
-        .background(.regularMaterial)
+        .frame(height: HiddenAppsListLayout.listHeight)
+        .background(Color(nsColor: .textBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: HiddenAppsListLayout.cornerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: HiddenAppsListLayout.cornerRadius, style: .continuous)
+                .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
+        )
     }
 
     private var hiddenAppsControlBar: some View {
@@ -88,24 +80,21 @@ struct HiddenAppsSettingsView: View {
             } label: {
                 Image(systemName: "plus")
                     .frame(
-                        width: HiddenAppsListLayout.controlButtonSize,
-                        height: HiddenAppsListLayout.controlButtonSize
+                        width: HiddenAppsListLayout.controlButtonWidth,
+                        height: HiddenAppsListLayout.controlButtonHeight
                     )
             }
             .buttonStyle(.borderless)
             .help(L10n.string("settings.hiddenApps.add", language: store.appLanguage))
             .accessibilityLabel(L10n.string("settings.hiddenApps.add", language: store.appLanguage))
 
-            Divider()
-                .frame(height: HiddenAppsListLayout.controlDividerHeight)
-
             Button {
                 removeSelectedHiddenApps()
             } label: {
                 Image(systemName: "minus")
                     .frame(
-                        width: HiddenAppsListLayout.controlButtonSize,
-                        height: HiddenAppsListLayout.controlButtonSize
+                        width: HiddenAppsListLayout.controlButtonWidth,
+                        height: HiddenAppsListLayout.controlButtonHeight
                     )
             }
             .buttonStyle(.borderless)
@@ -115,9 +104,8 @@ struct HiddenAppsSettingsView: View {
 
             Spacer()
         }
-        .frame(height: HiddenAppsListLayout.controlBarHeight)
         .padding(.horizontal, HiddenAppsListLayout.controlBarHorizontalPadding)
-        .background(.regularMaterial)
+        .frame(height: HiddenAppsListLayout.controlBarHeight)
     }
 
     private func toggleSelection(for bundleIdentifier: String) {
@@ -198,23 +186,24 @@ struct HiddenAppsSettingsView: View {
 #endif
 
 private enum HiddenAppsListLayout {
-    static let appColumnWidth: CGFloat = 150
-    static let toggleColumnWidth: CGFloat = 58
-    static let headerHeight: CGFloat = 32
-    static let listHeight: CGFloat = 360
-    static let rowHeight: CGFloat = 44
-    static let rowHorizontalPadding: CGFloat = 16
-    static let columnSpacing: CGFloat = 12
-    static let appNameSpacing: CGFloat = 8
-    static let iconSize: CGFloat = 22
-    static let bundleIdentifierFontSize: CGFloat = 12
-    static let controlButtonSize: CGFloat = 22
-    static let controlDividerHeight: CGFloat = 16
-    static let controlBarHeight: CGFloat = 26
+    static let descriptionSpacing: CGFloat = 10
+    static let listHeight: CGFloat = 320
+    static let cornerRadius: CGFloat = 8
+    static let iconSize: CGFloat = 28
+    static let iconTextSpacing: CGFloat = 10
+    static let rowHorizontalPadding: CGFloat = 12
+    static let rowVerticalPadding: CGFloat = 6
+    static let controlBarHeight: CGFloat = 28
     static let controlBarHorizontalPadding: CGFloat = 6
+    static let controlButtonWidth: CGFloat = 24
+    static let controlButtonHeight: CGFloat = 22
+
+    static var separatorLeadingInset: CGFloat {
+        rowHorizontalPadding + iconSize + iconTextSpacing
+    }
 }
 
-private struct HiddenAppRowView: View {
+private struct HiddenAppRow: View {
     let row: HiddenAppRowModel
     let isSelected: Bool
     @Binding var isHidden: Bool
@@ -222,40 +211,34 @@ private struct HiddenAppRowView: View {
     let onSelect: () -> Void
 
     var body: some View {
-        HStack(spacing: HiddenAppsListLayout.columnSpacing) {
-            HStack(spacing: HiddenAppsListLayout.appNameSpacing) {
-                if let icon = row.icon {
-                    Image(nsImage: icon)
-                        .resizable()
-                        .frame(
-                            width: HiddenAppsListLayout.iconSize,
-                            height: HiddenAppsListLayout.iconSize
-                        )
-                }
-
-                Text(row.name)
-                    .lineLimit(1)
+        HStack(spacing: HiddenAppsListLayout.iconTextSpacing) {
+            if let icon = row.icon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(
+                        width: HiddenAppsListLayout.iconSize,
+                        height: HiddenAppsListLayout.iconSize
+                    )
             }
-            .frame(width: HiddenAppsListLayout.appColumnWidth, alignment: .leading)
 
-            Text(row.bundleIdentifier)
-                .font(.system(size: HiddenAppsListLayout.bundleIdentifierFontSize))
-                .foregroundStyle(isSelected ? .white.opacity(0.85) : .secondary)
+            Text(row.name)
                 .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .truncationMode(.tail)
+
+            Spacer()
 
             Toggle(hiddenLabel, isOn: $isHidden)
                 .labelsHidden()
                 .toggleStyle(.switch)
-                .frame(width: HiddenAppsListLayout.toggleColumnWidth, alignment: .trailing)
                 .help(hiddenLabel)
                 .accessibilityLabel(hiddenLabel)
                 .accessibilityIdentifier("hidden-app-toggle-\(row.bundleIdentifier)")
         }
         .padding(.horizontal, HiddenAppsListLayout.rowHorizontalPadding)
-        .frame(height: HiddenAppsListLayout.rowHeight)
-        .foregroundStyle(isSelected ? .white : .primary)
-        .background(isSelected ? Color.accentColor.opacity(0.9) : Color.clear)
+        .padding(.vertical, HiddenAppsListLayout.rowVerticalPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .foregroundStyle(isSelected ? Color.white : Color.primary)
+        .background(isSelected ? Color(nsColor: .selectedContentBackgroundColor) : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture {
             onSelect()

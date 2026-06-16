@@ -21,13 +21,8 @@ struct SettingsDetailView: View {
     @ViewBuilder
     private var detailStack: some View {
         VStack(alignment: .leading, spacing: SettingsViewLayout.sectionSpacing) {
-            Text(L10n.string(pane.titleKey, language: store.appLanguage))
-                .font(.largeTitle)
-                .fontWeight(.semibold)
-                .padding(.bottom, SettingsViewLayout.detailTitleBottomPadding)
-
             switch pane {
-            case .main, .general:
+            case .general:
                 SettingsGeneralDetailView(store: store)
             case .permissions:
                 SettingsPermissionsDetailView(store: store)

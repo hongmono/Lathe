@@ -6,35 +6,34 @@ struct SettingsSidebarView: View {
     @Binding var selectedPane: SettingsPane?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Spacer().frame(height: SettingsViewLayout.sidebarContentTopPadding)
-            
-            List(selection: $selectedPane) {
-                ForEach(SettingsPane.sidebarPanes) { pane in
-                    Label(L10n.string(pane.titleKey, language: store.appLanguage), systemImage: pane.systemImage)
-                        .tag(Optional(pane))
-                    
-                }
+        List(selection: $selectedPane) {
+            ForEach(SettingsPane.sidebarPanes) { pane in
+                Label(L10n.string(pane.titleKey, language: store.appLanguage), systemImage: pane.systemImage)
+                    .tag(Optional(pane))
             }
-            .listStyle(.sidebar)
-            .scrollContentBackground(.hidden)
-
-            Spacer(minLength: 0)
         }
+        .listStyle(.sidebar)
     }
 }
 
 #if DEBUG
 #Preview("Settings Sidebar") {
-    SettingsSidebarView(
-        store: SettingsPreviewStore.makeStore(),
-        selectedPane: .constant(.general)
-    )
-        .frame(
-            width: SettingsViewLayout.sidebarWidth,
-            height: SettingsViewLayout.windowMinHeight
+    NavigationSplitView {
+        SettingsSidebarView(
+            store: SettingsPreviewStore.makeStore(),
+            selectedPane: .constant(.general)
         )
-        .padding(SettingsViewLayout.sidebarOuterPadding)
-        .background(.regularMaterial)
+        .navigationSplitViewColumnWidth(
+            min: SettingsViewLayout.sidebarMinWidth,
+            ideal: SettingsViewLayout.sidebarWidth,
+            max: SettingsViewLayout.sidebarMaxWidth
+        )
+    } detail: {
+        Color.clear
+    }
+    .frame(
+        width: SettingsViewLayout.windowMinWidth,
+        height: SettingsViewLayout.windowMinHeight
+    )
 }
 #endif
