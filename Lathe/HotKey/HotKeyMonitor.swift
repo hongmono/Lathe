@@ -56,6 +56,8 @@ final class HotKeyMonitor {
 
     private var commandIsDown = false
 
+    var isRunning: Bool { keyTap != nil && flagsTap != nil }
+
     func start() throws {
         guard AXIsProcessTrusted() else {
             throw HotKeyMonitorError.accessibilityNotGranted

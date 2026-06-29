@@ -25,6 +25,9 @@ final class AppState: ObservableObject {
     @Published var permissionGranted = true
     let navigation = SettingsNavigationState()
 
+    /// 권한 부여를 감지해 핫키 재설치를 시도하는 훅(AppDelegate가 주입).
+    var onRetryPermission: (() -> Void)?
+
     private init() {}
 }
 
