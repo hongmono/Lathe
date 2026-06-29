@@ -26,10 +26,36 @@ struct AccessibilityWindowRaiser: ApplicationWindowRaising {
             return
         }
 
-        for window in windows {
-            unminimize(window)
-            AXUIElementPerformAction(window, kAXRaiseAction as CFString)
+        let plan = Self.raisePlan(minimized: windows.map(isMinimized))
+
+        if let index = plan.unminimize {
+            unminimize(windows[index])
         }
+        for index in plan.raise {
+            AXUIElementPerformAction(windows[index], kAXRaiseAction as CFString)
+        }
+    }
+
+    /// Mirrors ⌘Tab: if any window is already visible, raise only those and leave
+    /// minimized windows alone. Restore a single window only when every window is
+    /// minimized — the frontmost in z-order, used here as the most-recent heuristic.
+    static func raisePlan(minimized: [Bool]) -> (unminimize: Int?, raise: [Int]) {
+        let visible = minimized.indices.filter { !minimized[$0] }
+        if !visible.isEmpty {
+            return (nil, Array(visible))
+        }
+        guard let mostRecent = minimized.indices.first else {
+            return (nil, [])
+        }
+        return (mostRecent, [mostRecent])
+    }
+
+    private func isMinimized(_ window: AXUIElement) -> Bool {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &value) == .success else {
+            return false
+        }
+        return (value as? Bool) ?? false
     }
 
     private func unminimize(_ window: AXUIElement) {
