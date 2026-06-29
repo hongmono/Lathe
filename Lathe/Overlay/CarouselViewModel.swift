@@ -12,8 +12,14 @@ final class CarouselViewModel: ObservableObject {
     }
 
     func replaceApps(_ newApps: [AppEntry]) {
+        // 인덱스가 아니라 pid로 선택을 추적한다. 목록이 밀려도 같은 앱을 가리키도록.
+        let selectedID = currentEntry?.id
         self.apps = newApps
-        self.selectedIndex = clamp(selectedIndex, count: newApps.count)
+        if let selectedID, let newIndex = newApps.firstIndex(where: { $0.id == selectedID }) {
+            self.selectedIndex = newIndex
+        } else {
+            self.selectedIndex = clamp(selectedIndex, count: newApps.count)
+        }
     }
 
     func next() {
