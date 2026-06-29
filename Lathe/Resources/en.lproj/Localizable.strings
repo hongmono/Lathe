@@ -47,7 +47,7 @@
 "settings.permissions.status.missing" = "Not Granted";
 "settings.permissions.openAccessibility" = "Open Accessibility Settings";
 "settings.permissions.refresh" = "Refresh Status";
-"settings.permissions.restartNote" = "If you just granted permission and switching still does not work, quit and reopen Lathe.";
+"settings.permissions.restartNote" = "Permission applies automatically once granted. If switching does not work right away, click \"Refresh Status\".";
 "settings.permissions.notRequested.title" = "Not requested";
 "settings.permissions.notRequested.description" = "Lathe does not request Input Monitoring, Screen Recording, Full Disk Access, Contacts, or file access.";
 "settings.about.section" = "About";

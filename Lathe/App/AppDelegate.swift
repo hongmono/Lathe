@@ -27,12 +27,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotKey = HotKeyMonitor()
         hotKey.delegate = self
 
+        // 새로고침 버튼이 누를 수 있도록 재시도 경로를 공유한다.
+        AppState.shared.onRetryPermission = { [weak self] in self?.startHotKeyIfNeeded() }
+
+        if !startHotKeyIfNeeded() {
+            SettingsWindowController.shared.show(pane: .permissions)
+        }
+    }
+
+    // 사용자가 시스템 설정에서 권한을 켜고 앱으로 돌아오면 자동으로 재설치한다.
+    func applicationDidBecomeActive(_ notification: Notification) {
+        startHotKeyIfNeeded()
+    }
+
+    /// 핫키가 아직 설치되지 않았다면 한 번 더 시도한다. 멱등이라 반복 호출해도 안전하다.
+    @discardableResult
+    private func startHotKeyIfNeeded() -> Bool {
+        if hotKey.isRunning { return true }
         do {
             try hotKey.start()
             AppState.shared.permissionGranted = true
+            return true
         } catch {
             AppState.shared.permissionGranted = false
-            SettingsWindowController.shared.show(pane: .permissions)
+            return false
         }
     }
 }

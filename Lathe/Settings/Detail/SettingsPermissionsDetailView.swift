@@ -110,6 +110,7 @@ struct SettingsPermissionsDetailView: View {
     }
 
     private func refreshStatus() {
+        AppState.shared.onRetryPermission?()
         isAccessibilityTrusted = accessibilityStatusProvider()
     }
 }
