@@ -33,6 +33,27 @@ final class AppActivatorTests: XCTestCase {
         XCTAssertEqual(windowRaiser.raisedProcessIdentifiers, [123])
     }
 
+    func test_raisePlanRaisesVisibleWindowsAndRestoresNothing() {
+        let plan = AccessibilityWindowRaiser.raisePlan(minimized: [true, false, true, false])
+
+        XCTAssertNil(plan.unminimize)
+        XCTAssertEqual(plan.raise, [1, 3])
+    }
+
+    func test_raisePlanRestoresOnlyMostRecentWhenAllMinimized() {
+        let plan = AccessibilityWindowRaiser.raisePlan(minimized: [true, true, true])
+
+        XCTAssertEqual(plan.unminimize, 0)
+        XCTAssertEqual(plan.raise, [0])
+    }
+
+    func test_raisePlanDoesNothingWhenNoWindows() {
+        let plan = AccessibilityWindowRaiser.raisePlan(minimized: [])
+
+        XCTAssertNil(plan.unminimize)
+        XCTAssertEqual(plan.raise, [])
+    }
+
     private final class SpyRunningApplication: RunningApplicationActivating {
         enum Event: Equatable {
             case unhide
