@@ -51,6 +51,17 @@ final class CarouselViewModelTests: XCTestCase {
     }
 
     @MainActor
+    func test_replaceApps_keepsSelectionByPid_whenOrderShifts() {
+        let vm = CarouselViewModel()
+        let apps = makeApps(3)
+        vm.update(apps: apps, selectedIndex: 0)
+        // 같은 앱들을 순서만 뒤집어 재공급: 인덱스는 바뀌어도 선택은 같은 pid를 가리켜야 한다.
+        vm.replaceApps(apps.reversed())
+        XCTAssertEqual(vm.currentEntry?.id, apps[0].id)
+        XCTAssertEqual(vm.selectedIndex, 2)
+    }
+
+    @MainActor
     func test_currentEntry_returnsSelectedApp() {
         let vm = CarouselViewModel()
         let apps = makeApps(3)
