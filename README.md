@@ -43,10 +43,16 @@ to worry about.
 
 ## Install
 
-Two paths:
+Three paths:
 
 - **Build it yourself** (recommended — that's the point of this
   project; see [Build from source](#build-from-source))
+- **Homebrew**:
+
+  ```bash
+  brew install hongmono/tap/lathe
+  ```
+
 - **Download a signed build** from
   [Releases](https://github.com/hongmono/Lathe/releases) — the release
   DMG is signed with the maintainer's Developer ID certificate and

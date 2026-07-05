@@ -303,3 +303,40 @@ jobs:
           generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Homebrew tap
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          TAG: ${{ steps.release.outputs.tag }}
+          TAP_PUSH_TOKEN: ${{ secrets.TAP_PUSH_TOKEN }}
+        run: |
+          if [[ -z "$TAP_PUSH_TOKEN" ]]; then
+            echo "TAP_PUSH_TOKEN 시크릿이 없어 Homebrew tap 갱신을 건너뜀"
+            exit 0
+          fi
+
+          SHA256="$(shasum -a 256 "dist/Lathe-${TAG}.dmg" | awk '{print $1}')"
+          git clone --depth 1 "https://x-access-token:${TAP_PUSH_TOKEN}@github.com/hongmono/homebrew-tap.git" /tmp/tap
+          mkdir -p /tmp/tap/Casks
+          {
+            echo "cask \"lathe\" do"
+            echo "  version \"${VERSION}\""
+            echo "  sha256 \"${SHA256}\""
+            echo ""
+            echo "  url \"https://github.com/hongmono/Lathe/releases/download/v#{version}/Lathe-v#{version}.dmg\""
+            echo "  name \"Lathe\""
+            echo "  desc \"Safer, self-built Cmd+Tab replacement for macOS\""
+            echo "  homepage \"https://github.com/hongmono/Lathe\""
+            echo ""
+            echo "  auto_updates true"
+            echo "  depends_on macos: :sonoma"
+            echo ""
+            echo "  app \"Lathe.app\""
+            echo "end"
+          } > /tmp/tap/Casks/lathe.rb
+
+          cd /tmp/tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/lathe.rb
+          git diff --cached --quiet || { git commit -m "lathe ${VERSION}"; git push; }

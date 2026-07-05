@@ -41,10 +41,16 @@ Accessibility 외에는 어떤 권한도 요구하지 않습니다.
 
 ## 설치
 
-두 가지 방법이 있습니다:
+세 가지 방법이 있습니다:
 
 - **직접 빌드합니다** (권장 — 이 프로젝트의 본래 취지입니다.
   [소스에서 빌드](#소스에서-빌드) 참고)
+- **Homebrew로 설치합니다**:
+
+  ```bash
+  brew install hongmono/tap/lathe
+  ```
+
 - **서명된 빌드를 다운로드합니다** —
   [Releases](https://github.com/hongmono/Lathe/releases) 에서 받으면
   됩니다. 릴리스 DMG는 메인테이너의 Developer ID 인증서로 서명되고
