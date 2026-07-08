@@ -11,6 +11,7 @@ final class SettingsStore: ObservableObject {
         static let appLanguage = AppLanguage.defaultsKey
         static let appearance = "appearance"
         static let layoutStyle = "layoutStyle"
+        static let layoutMode = "layoutMode"
         static let cardSize = "cardSize"
         static let angularStep = "angularStep"
         static let fanRadius = "fanRadius"
@@ -41,6 +42,10 @@ final class SettingsStore: ObservableObject {
 
     @Published var layoutStyle: LayoutStyle {
         didSet { defaults.set(layoutStyle.rawValue, forKey: Key.layoutStyle) }
+    }
+
+    @Published var layoutMode: LayoutMode {
+        didSet { defaults.set(layoutMode.rawValue, forKey: Key.layoutMode) }
     }
 
     @Published var cardSize: Double {
@@ -90,6 +95,7 @@ final class SettingsStore: ObservableObject {
         self.appLanguage = AppLanguage(rawValue: userDefaults.string(forKey: Key.appLanguage) ?? "") ?? .system
         self.appearance = Appearance(rawValue: userDefaults.string(forKey: Key.appearance) ?? "") ?? .system
         self.layoutStyle = LayoutStyle(rawValue: userDefaults.string(forKey: Key.layoutStyle) ?? "") ?? .fan
+        self.layoutMode = LayoutMode(rawValue: userDefaults.string(forKey: Key.layoutMode) ?? "") ?? .carousel
         self.cardSize = (userDefaults.object(forKey: Key.cardSize) as? Double) ?? Self.defaultCardSize
         self.angularStep = (userDefaults.object(forKey: Key.angularStep) as? Double) ?? Self.defaultAngularStep
         self.fanRadius = CarouselGeometry.storedFanRadius(userDefaults.object(forKey: Key.fanRadius) as? Double)
