@@ -14,11 +14,47 @@ struct MCWindow: Identifiable, Equatable {
     static func == (lhs: MCWindow, rhs: MCWindow) -> Bool { lhs.id == rhs.id }
 }
 
+/// 같은 앱(한 화면)의 창들을 묶은 스택. 맨 앞(frontIndex) 창이 대표.
+struct MCAppStack: Identifiable {
+    let id: Int              // pid*1000+screen — (pid, screen)당 유니크
+    let appEntry: AppEntry
+    let screenIndex: Int
+    let windows: [MCWindow]  // MRU 순 (index 0 = 가장 최근)
+    var frontIndex: Int
+
+    var frontWindow: MCWindow { windows[frontIndex] }
+}
+
 struct MissionControlWindowProvider {
     let windowLister: WindowListing
 
     init(windowLister: WindowListing = WindowListProvider()) {
         self.windowLister = windowLister
+    }
+
+    /// 창 목록을 (pid, 화면)별로 묶어 스택 배열로. 입력 순서(=MRU)를 스택 안에서 보존하고,
+    /// 스택 배열 순서는 각 그룹의 첫 등장 순서를 따른다. frontIndex는 0(가장 최근).
+    static func group(_ windows: [MCWindow]) -> [MCAppStack] {
+        var order: [Int] = []
+        var windowsByStack: [Int: [MCWindow]] = [:]
+        var appByStack: [Int: AppEntry] = [:]
+        var screenByStack: [Int: Int] = [:]
+        for window in windows {
+            let stackID = Int(window.pid) * 1000 + window.screenIndex
+            if windowsByStack[stackID] == nil {
+                order.append(stackID)
+                appByStack[stackID] = window.appEntry
+                screenByStack[stackID] = window.screenIndex
+            }
+            windowsByStack[stackID, default: []].append(window)
+        }
+        return order.map { stackID in
+            MCAppStack(id: stackID,
+                       appEntry: appByStack[stackID]!,
+                       screenIndex: screenByStack[stackID]!,
+                       windows: windowsByStack[stackID]!,
+                       frontIndex: 0)
+        }
     }
 
     /// 창 프레임과 겹치는 면적이 가장 큰 화면 인덱스. 화면이 없으면 nil.
