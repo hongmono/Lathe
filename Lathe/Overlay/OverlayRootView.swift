@@ -1,11 +1,13 @@
 import SwiftUI
 
-struct CarouselView: View {
-    @ObservedObject var viewModel: CarouselViewModel
+struct OverlayRootView: View {
+    @ObservedObject var carouselViewModel: CarouselViewModel
+    @ObservedObject var windowSelectionViewModel: WindowSelectionViewModel
     @ObservedObject var settings: SettingsStore = .shared
 
     private let heightRatio: CGFloat = 1.36
     private let pivotRatio: CGFloat = 2.9
+    private let appToWindowGap: CGFloat = 40
 
     var body: some View {
         let cardWidth = CGFloat(settings.cardSize)
@@ -14,6 +16,7 @@ struct CarouselView: View {
         let maxVisibleEachSide = CarouselGeometry.maxVisibleEachSide(for: settings.layoutStyle)
         let pivotDistance = cardWidth * pivotRatio
         let frameSide = (pivotDistance + cardHeight) * 2
+        let windowListTopOffset = frameSide / 2 + cardHeight / 2 + appToWindowGap
 
         return ZStack {
             ForEach(visibleEntries(angularStep: angularStep, maxVisibleEachSide: maxVisibleEachSide), id: \.entry.id) { item in
@@ -31,12 +34,25 @@ struct CarouselView: View {
             }
         }
         .frame(width: frameSide, height: frameSide)
-        .animation(.spring(response: 0.32, dampingFraction: 0.74), value: viewModel.selectedIndex)
-        .animation(.easeInOut(duration: 0.18), value: viewModel.apps.map(\.id))
+        .animation(.spring(response: 0.32, dampingFraction: 0.74), value: carouselViewModel.selectedIndex)
+        .animation(.easeInOut(duration: 0.18), value: carouselViewModel.apps.map(\.id))
         .animation(.spring(response: 0.28, dampingFraction: 0.78), value: settings.layoutStyle)
         .animation(.easeInOut(duration: 0.14), value: settings.showAppNamesInCarousel)
         .animation(.easeInOut(duration: 0.14), value: settings.fanRadius)
         .animation(.easeInOut(duration: 0.14), value: settings.fanSpacing)
+        .overlay(alignment: .top) {
+            if windowSelectionViewModel.hasMultipleWindows {
+                WindowListView(
+                    windows: windowSelectionViewModel.windows,
+                    selectedIndex: windowSelectionViewModel.selectedIndex
+                )
+                .offset(y: windowListTopOffset)
+                .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
+                .animation(.spring(response: 0.26, dampingFraction: 0.82), value: windowSelectionViewModel.selectedIndex)
+                .animation(.easeInOut(duration: 0.16), value: windowSelectionViewModel.windows.map(\.id))
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.82), value: windowSelectionViewModel.hasMultipleWindows)
     }
 
     private struct Item {
@@ -52,15 +68,15 @@ struct CarouselView: View {
 
     private func visibleEntries(angularStep: Double, maxVisibleEachSide: Int) -> [Item] {
         CarouselLayout.items(
-            appCount: viewModel.apps.count,
-            selectedIndex: viewModel.selectedIndex,
+            appCount: carouselViewModel.apps.count,
+            selectedIndex: carouselViewModel.selectedIndex,
             style: settings.layoutStyle,
             angularStep: angularStep,
             fanRadius: settings.fanRadius,
             fanSpacing: settings.fanSpacing,
             maxVisibleEachSide: maxVisibleEachSide
         ).map { layoutItem in
-            let entry = viewModel.apps[layoutItem.index]
+            let entry = carouselViewModel.apps[layoutItem.index]
             return Item(
                 entry: entry,
                 isFocused: layoutItem.relativeIndex == 0,
@@ -73,5 +89,4 @@ struct CarouselView: View {
             )
         }
     }
-
 }

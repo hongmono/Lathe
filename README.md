@@ -172,12 +172,23 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 | ⌘+Tab                | Open carousel, focus the previous app               |
 | ⌘ held + Tab         | Rotate forward                                      |
 | ⌘ held + ⇧Tab        | Rotate backward                                     |
-| ⌘ released           | Activate the focused (center) app                   |
+| ⌘ released           | Activate the focused (center) app (and window)      |
 | ⌘ held + Esc         | Dismiss without switching                           |
+| ⌘+`                  | Cycle windows of the focused app                    |
+| ⌘ held + ⇧`          | Cycle windows backward                              |
 
 Behavior matches the system ⌘+Tab so the muscle memory still works —
 the only difference is that the focus is fixed at the top of the
 carousel and the cards rotate around it.
+
+**Per-window switching.** When the focused app has more than one window,
+a window list appears above the carousel. ⌘+` (the same key macOS uses
+to move between an app's windows) cycles through them; ⇧ reverses the
+direction. Pressing ⌘+` on its own — without opening the carousel first
+— jumps straight into the frontmost app's windows. Releasing ⌘ raises
+just the selected window, without pulling its sibling windows forward.
+Windows are ordered most-recently-used, and document/URL windows show a
+shortened path next to the title.
 
 ## Preferences
 
@@ -206,7 +217,7 @@ Lathe needs **Accessibility** permission to install the
 `CGEventTap` that intercepts ⌘+Tab globally. There is no other
 permission requested — no Input Monitoring, no Full Disk Access, no
 Screen Recording. The event tap is scoped to keyDown for ⌘ + Tab/⇧Tab
-/Esc only; everything else passes through unmodified.
+/`` ` ``/Esc only; everything else passes through unmodified.
 
 If you ever want to revoke: System Settings → Privacy & Security →
 Accessibility → toggle Lathe off (or remove it entirely).
@@ -231,30 +242,52 @@ tccutil reset Accessibility com.hongmono.Lathe
   gymnastics.
 - **Event tap.** Two `CGEventTap` instances on `cgSessionEventTap` /
   `headInsertEventTap` — one for `flagsChanged` (track ⌘ press/release),
-  one for `keyDown` (intercept Tab / ⇧Tab / Esc and consume them).
+  one for `keyDown` (intercept Tab / ⇧Tab / `` ` `` / Esc and consume them).
 - **App list.** `NSWorkspace.runningApplications` filtered to
   `.regular` activation policy, ordered by an in-process MRU queue
   fed by `didActivateApplication` notifications.
+- **Window list.** Per app, `WindowListProvider` reconciles the
+  Accessibility window list against `CGWindowListCopyWindowInfo`
+  (matching by window id, title, then frame), filters out non-user
+  windows, and orders the result most-recently-used. Titles pick up a
+  short document/URL path summary when the window exposes one.
+- **Single-window raise.** Selecting a window raises *only* that window
+  via SkyLight (`_SLPSSetFrontProcessWithOptions`) instead of activating
+  the whole app — the same approach AltTab and yabai use — so sibling
+  windows stay where they are.
 - **Settings store.** `ObservableObject` backed by `UserDefaults`,
-  observed by `CarouselView` so geometry changes apply live.
-- **No private API.** Everything used here is publicly documented and
-  available since macOS 14.
+  observed by the overlay so geometry changes apply live.
+- **Private API is opt-in and fenced.** The carousel and app switching
+  use only public, documented API. The per-window features additionally
+  rely on two private symbols — `_AXUIElementGetWindow` (to map an AX
+  window to its CoreGraphics window id) and SkyLight's front-process
+  calls (to raise a single window). Both are resolved at runtime via
+  `dlsym`; if either is unavailable the code falls back to the public
+  Accessibility path (`kAXMainAttribute` + `kAXRaiseAction`) and normal
+  app activation, so nothing breaks if Apple removes them.
 
 ### Project layout
 
 ```
 Lathe/
 ├── App/            LatheApp.swift, AppDelegate.swift
-├── HotKey/         HotKeyMonitor.swift          (CGEventTap)
-├── AppList/        AppEntry.swift, AppListProvider.swift
-├── Overlay/        OverlayPanel + Controller, CarouselView/Model, CardView
-├── Activation/     AppActivator.swift           (pid → activate)
+├── HotKey/         HotKeyMonitor.swift          (CGEventTap, key actions)
+├── AppList/        AppEntry.swift, AppListProvider.swift,
+│                   WindowEntry, WindowListProvider, WindowVisibilityFilter,
+│                   WindowOrderTracker, WindowFocusTracker, WindowPathSummary
+├── Overlay/        OverlayPanel + Controller, OverlayRootView,
+│                   CarouselViewModel/Layout, CardView,
+│                   WindowListView, WindowSelectionViewModel
+├── Activation/     AppActivator.swift, SingleWindowFocuser.swift (SkyLight)
 ├── Permissions/    AccessibilityChecker
 ├── MenuBar/        MenuBarController.swift
 ├── Settings/       SettingsStore, SettingsView, SettingsWindowController,
 │                   Appearance, LoginItem
 └── Resources/      Info.plist, Assets.xcassets
-LatheTests/         CarouselViewModelTests.swift
+LatheTests/         CarouselViewModelTests, HotKeyActionTests,
+                    AppEntryFilteringTests, WindowListProviderTests,
+                    WindowOrderTrackerTests, WindowPathSummaryTests,
+                    WindowSelectionViewModelTests
 docs/
 ├── superpowers/    specs/  plans/                (design history)
 └── images/         README screenshots
@@ -266,6 +299,7 @@ The original design spec and implementation plan are checked in:
 
 - [Design spec](docs/superpowers/specs/2026-04-28-lathe-design.md)
 - [Implementation plan](docs/superpowers/plans/2026-04-28-lathe-v1.md)
+- [Per-window switching design](docs/superpowers/specs/2026-07-08-window-switching-design.md)
 
 ## Releases
 

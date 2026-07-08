@@ -46,6 +46,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if hotKey.isRunning { return true }
         do {
             try hotKey.start()
+            // cmd+` 는 오버레이 표시 여부와 무관하게 전역에서 윈도우 전환 진입점으로 사용한다.
+            hotKey.windowCycleEnabled = true
             AppState.shared.permissionGranted = true
             return true
         } catch {
@@ -62,8 +64,9 @@ extension AppDelegate: HotKeyMonitorDelegate {
 
     func hotKeyDidDisarm() {
         guard overlay.isVisible else { return }
-        if let entry = overlay.currentSelection() {
-            AppActivator.activate(entry)
+        if let selection = overlay.currentSelection() {
+            overlay.recordWindowActivation()
+            AppActivator.activate(selection.app, window: selection.window)
         }
         hideOverlay(animated: true)
     }
@@ -77,7 +80,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
             guard !apps.isEmpty else { return }
             let initial = apps.count > 1 ? 1 : 0
             overlay.show(apps: apps, initialIndex: initial)
-            hotKey.arrowsEnabled = overlay.isVisible
+            updateHotKeyModes()
         }
     }
 
@@ -89,7 +92,23 @@ extension AppDelegate: HotKeyMonitorDelegate {
             let apps = appList.apps
             guard !apps.isEmpty else { return }
             overlay.show(apps: apps, initialIndex: apps.count - 1)
-            hotKey.arrowsEnabled = overlay.isVisible
+            updateHotKeyModes()
+        }
+    }
+
+    func hotKeyDidRequestCycleWindow() {
+        if overlay.isVisible {
+            overlay.cycleWindow()
+        } else {
+            beginWindowSwitch(forward: true)
+        }
+    }
+
+    func hotKeyDidRequestCycleWindowPrevious() {
+        if overlay.isVisible {
+            overlay.cycleWindowPrevious()
+        } else {
+            beginWindowSwitch(forward: false)
         }
     }
 
@@ -97,8 +116,30 @@ extension AppDelegate: HotKeyMonitorDelegate {
         hideOverlay(animated: true)
     }
 
+    /// cmd+` 단독 입력 시 최전면 앱을 선택한 채 오버레이를 띄우고 곧바로 윈도우를 한 칸 이동한다.
+    private func beginWindowSwitch(forward: Bool) {
+        appList.refresh()
+        let apps = appList.apps
+        guard !apps.isEmpty else { return }
+
+        let frontPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
+        let initial = frontPID.flatMap { pid in apps.firstIndex(where: { $0.id == pid }) } ?? 0
+        overlay.show(apps: apps, initialIndex: initial)
+        updateHotKeyModes()
+
+        if forward {
+            overlay.cycleWindow()
+        } else {
+            overlay.cycleWindowPrevious()
+        }
+    }
+
     private func hideOverlay(animated: Bool) {
         hotKey.arrowsEnabled = false
         overlay.hide(animated: animated)
+    }
+
+    private func updateHotKeyModes() {
+        hotKey.arrowsEnabled = overlay.isVisible
     }
 }

@@ -26,11 +26,27 @@ final class AppActivatorTests: XCTestCase {
         let app = SpyRunningApplication(processIdentifier: 123)
         let windowRaiser = SpyWindowRaiser()
 
-        AppActivator.activate(app, windowRaiser: windowRaiser)
+        AppActivator.activate(app, window: nil, windowRaiser: windowRaiser)
 
         XCTAssertEqual(app.events, [.unhide, .activate])
         XCTAssertEqual(app.activationOptions, [.activateAllWindows])
         XCTAssertEqual(windowRaiser.raisedProcessIdentifiers, [123])
+        XCTAssertTrue(windowRaiser.raisedWindowRequests.isEmpty)
+    }
+
+    func test_activateSpecificWindowUsesIgnoringOtherAppsAndRaisesWindow() {
+        let app = SpyRunningApplication(processIdentifier: 123)
+        let windowRaiser = SpyWindowRaiser()
+        let window = WindowEntry(id: 555, title: "Doc", pathSummary: nil, isMinimized: false)
+
+        AppActivator.activate(app, window: window, windowRaiser: windowRaiser)
+
+        XCTAssertEqual(app.events, [.unhide, .activate])
+        XCTAssertEqual(app.activationOptions, [.activateIgnoringOtherApps])
+        XCTAssertTrue(windowRaiser.raisedProcessIdentifiers.isEmpty)
+        XCTAssertEqual(windowRaiser.raisedWindowRequests.count, 1)
+        XCTAssertEqual(windowRaiser.raisedWindowRequests[0].0, 555)
+        XCTAssertEqual(windowRaiser.raisedWindowRequests[0].1, 123)
     }
 
     func test_raisePlanRaisesVisibleWindowsAndRestoresNothing() {
@@ -80,11 +96,18 @@ final class AppActivatorTests: XCTestCase {
         }
     }
 
-    private final class SpyWindowRaiser: ApplicationWindowRaising {
+    private final class SpyWindowRaiser: ApplicationWindowRaising, SpecificWindowRaising {
         private(set) var raisedProcessIdentifiers: [pid_t] = []
+        private(set) var raisedWindowRequests: [(Int, pid_t)] = []
 
         func raiseWindows(forProcessIdentifier processIdentifier: pid_t) {
             raisedProcessIdentifiers.append(processIdentifier)
+        }
+
+        @discardableResult
+        func raiseWindow(_ windowID: Int, forProcessIdentifier processIdentifier: pid_t) -> Bool {
+            raisedWindowRequests.append((windowID, processIdentifier))
+            return false
         }
     }
 }
