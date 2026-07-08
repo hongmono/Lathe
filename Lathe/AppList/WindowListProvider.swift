@@ -292,6 +292,11 @@ struct WindowListProvider: WindowListing {
         return size
     }
 
+    /// 창 ID의 전역 프레임(kCGWindowBounds, top-left 원점). 미션 컨트롤 배치용 공개 래퍼.
+    static func frame(forWindowID windowID: Int) -> CGRect? {
+        cgFrame(forWindowID: windowID)
+    }
+
     private static func cgFrame(forWindowID windowID: Int) -> CGRect? {
         guard let raw = CGWindowListCopyWindowInfo([.optionIncludingWindow], CGWindowID(windowID)) as? [[String: Any]],
               let window = raw.first,
