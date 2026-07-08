@@ -14,6 +14,12 @@ struct MissionControlScreenView: View {
         let byID = Dictionary(uniqueKeysWithValues: mine.map { ($0.id, $0) })
 
         ZStack(alignment: .topLeading) {
+            // 실제 창이 비치지 않도록 프로스티드 백드롭으로 화면을 덮는다. (Mission Control 느낌)
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay(Color.black.opacity(0.18))
+                .ignoresSafeArea()
+
             ForEach(tiles, id: \.windowID) { tile in
                 if let window = byID[tile.windowID] {
                     tileView(window: window, isSelected: window.id == viewModel.currentWindow?.id)
