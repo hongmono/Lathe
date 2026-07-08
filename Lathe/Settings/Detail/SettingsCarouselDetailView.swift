@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct SettingsCarouselDetailView: View {
@@ -5,68 +6,124 @@ struct SettingsCarouselDetailView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: SettingsViewLayout.detailGroupSpacing) {
-            Label(L10n.string("settings.carousel.section", language: store.appLanguage),
-                  systemImage: "rectangle.stack")
-                .font(.headline)
-                .foregroundStyle(.primary)
-
-            SettingsCarouselExampleView(
-                layoutStyle: store.layoutStyle,
-                cardSize: store.cardSize,
-                angularStep: store.angularStep,
-                fanRadius: store.fanRadius,
-                fanSpacing: store.fanSpacing,
-                showsAppNames: store.showAppNamesInCarousel
-            )
-            .padding(.vertical, SettingsCarouselDetailLayout.previewVerticalPadding)
-
             HStack(spacing: SettingsViewLayout.detailRowSpacing) {
-                Text(L10n.string("settings.carousel.layout", language: store.appLanguage))
+                Text(L10n.string("settings.layout.mode", language: store.appLanguage))
 
-                Picker("", selection: $store.layoutStyle) {
-                    ForEach(LayoutStyle.allCases) { style in
-                        Text(style.label(language: store.appLanguage)).tag(style)
+                Picker("", selection: $store.layoutMode) {
+                    ForEach(LayoutMode.allCases) { mode in
+                        Text(mode.label(language: store.appLanguage)).tag(mode)
                     }
                 }
                 .labelsHidden()
                 .pickerStyle(.segmented)
             }
 
-            HStack(spacing: SettingsViewLayout.detailRowSpacing) {
-                Text(L10n.string("settings.carousel.cardSize", language: store.appLanguage))
-
-                slider(value: $store.cardSize, range: 80...180, suffix: "pt")
-            }
-
-            if store.layoutStyle != .fan {
-                HStack(spacing: SettingsViewLayout.detailRowSpacing) {
-                    Text(L10n.string("settings.carousel.spacing", language: store.appLanguage))
-
-                    slider(value: $store.angularStep, range: 6...28, suffix: "°")
-                }
-            }
-
-            if store.layoutStyle == .fan {
-                HStack(spacing: SettingsViewLayout.detailRowSpacing) {
-                    Text(L10n.string("settings.carousel.fanRadius", language: store.appLanguage))
-
-                    slider(value: $store.fanRadius, range: CarouselGeometry.fanRadiusRange, suffix: "pt")
-                }
-
-                HStack(spacing: SettingsViewLayout.detailRowSpacing) {
-                    Text(L10n.string("settings.carousel.fanSpacing", language: store.appLanguage))
-
-                    slider(value: $store.fanSpacing, range: CarouselGeometry.fanSpacingRange, suffix: "pt")
-                }
-            }
-
-            Toggle(L10n.string("settings.carousel.showAppNames", language: store.appLanguage),
-                   isOn: $store.showAppNamesInCarousel)
-
-            Button(L10n.string("settings.carousel.restoreDefaults", language: store.appLanguage)) {
-                store.resetCarouselDefaults()
+            if store.layoutMode == .carousel {
+                carouselSection
+            } else {
+                missionControlSection
             }
         }
+    }
+
+    @ViewBuilder
+    private var carouselSection: some View {
+        Label(L10n.string("settings.carousel.section", language: store.appLanguage),
+              systemImage: "rectangle.stack")
+            .font(.headline)
+            .foregroundStyle(.primary)
+
+        SettingsCarouselExampleView(
+            layoutStyle: store.layoutStyle,
+            cardSize: store.cardSize,
+            angularStep: store.angularStep,
+            fanRadius: store.fanRadius,
+            fanSpacing: store.fanSpacing,
+            showsAppNames: store.showAppNamesInCarousel
+        )
+        .padding(.vertical, SettingsCarouselDetailLayout.previewVerticalPadding)
+
+        HStack(spacing: SettingsViewLayout.detailRowSpacing) {
+            Text(L10n.string("settings.carousel.layout", language: store.appLanguage))
+
+            Picker("", selection: $store.layoutStyle) {
+                ForEach(LayoutStyle.allCases) { style in
+                    Text(style.label(language: store.appLanguage)).tag(style)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.segmented)
+        }
+
+        HStack(spacing: SettingsViewLayout.detailRowSpacing) {
+            Text(L10n.string("settings.carousel.cardSize", language: store.appLanguage))
+
+            slider(value: $store.cardSize, range: 80...180, suffix: "pt")
+        }
+
+        if store.layoutStyle != .fan {
+            HStack(spacing: SettingsViewLayout.detailRowSpacing) {
+                Text(L10n.string("settings.carousel.spacing", language: store.appLanguage))
+
+                slider(value: $store.angularStep, range: 6...28, suffix: "°")
+            }
+        }
+
+        if store.layoutStyle == .fan {
+            HStack(spacing: SettingsViewLayout.detailRowSpacing) {
+                Text(L10n.string("settings.carousel.fanRadius", language: store.appLanguage))
+
+                slider(value: $store.fanRadius, range: CarouselGeometry.fanRadiusRange, suffix: "pt")
+            }
+
+            HStack(spacing: SettingsViewLayout.detailRowSpacing) {
+                Text(L10n.string("settings.carousel.fanSpacing", language: store.appLanguage))
+
+                slider(value: $store.fanSpacing, range: CarouselGeometry.fanSpacingRange, suffix: "pt")
+            }
+        }
+
+        Toggle(L10n.string("settings.carousel.showAppNames", language: store.appLanguage),
+               isOn: $store.showAppNamesInCarousel)
+
+        Button(L10n.string("settings.carousel.restoreDefaults", language: store.appLanguage)) {
+            store.resetCarouselDefaults()
+        }
+    }
+
+    @ViewBuilder
+    private var missionControlSection: some View {
+        Label(L10n.string("settings.missionControl.section", language: store.appLanguage),
+              systemImage: "macwindow.on.rectangle")
+            .font(.headline)
+            .foregroundStyle(.primary)
+
+        Text(L10n.string("settings.missionControl.description", language: store.appLanguage))
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+
+        if WindowThumbnailProvider.hasPermission() {
+            Label(L10n.string("settings.missionControl.screenRecording.granted", language: store.appLanguage),
+                  systemImage: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+        } else {
+            VStack(alignment: .leading, spacing: SettingsViewLayout.detailRowSpacing) {
+                Text(L10n.string("settings.missionControl.screenRecording.needed", language: store.appLanguage))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button(L10n.string("settings.missionControl.screenRecording.open", language: store.appLanguage)) {
+                    openScreenRecordingSettings()
+                }
+            }
+        }
+    }
+
+    private func openScreenRecordingSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        }
+        WindowThumbnailProvider.requestPermission()
     }
 
     private func slider(value: Binding<Double>,

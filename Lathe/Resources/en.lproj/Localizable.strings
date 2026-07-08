@@ -9,6 +9,9 @@
 "layout.strip" = "Strip";
 "layout.stack" = "Stack";
 
+"layout.mode.carousel" = "Carousel";
+"layout.mode.missionControl" = "Mission Control";
+
 "menu.status.running" = "Lathe - running";
 "menu.status.needsPermission" = "Lathe - needs permission";
 "menu.checkForUpdates" = "Check for Updates...";
@@ -22,8 +25,14 @@
 "language.system" = "System";
 "language.english" = "English";
 "language.korean" = "Korean";
+"settings.layout.mode" = "Layout";
 "settings.carousel.section" = "Carousel";
-"settings.carousel.layout" = "Layout";
+"settings.carousel.layout" = "Style";
+"settings.missionControl.section" = "Mission Control";
+"settings.missionControl.description" = "Spreads every window from the current Space across your monitors. Hold ⌘ and tap Tab to step through them.";
+"settings.missionControl.screenRecording.needed" = "Screen Recording permission is required for window previews. Without it, windows appear as app icons.";
+"settings.missionControl.screenRecording.open" = "Open Screen Recording Settings";
+"settings.missionControl.screenRecording.granted" = "Screen Recording permission granted.";
 "settings.carousel.cardSize" = "Card size";
 "settings.carousel.spacing" = "Spacing";
 "settings.carousel.fanRadius" = "Fan radius";

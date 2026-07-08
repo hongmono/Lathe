@@ -9,6 +9,9 @@
 "layout.strip" = "가로";
 "layout.stack" = "스택";
 
+"layout.mode.carousel" = "캐러셀";
+"layout.mode.missionControl" = "미션 컨트롤";
+
 "menu.status.running" = "Lathe - 실행 중";
 "menu.status.needsPermission" = "Lathe - 권한 필요";
 "menu.checkForUpdates" = "업데이트 확인...";
@@ -22,8 +25,14 @@
 "language.system" = "시스템";
 "language.english" = "영어";
 "language.korean" = "한국어";
+"settings.layout.mode" = "레이아웃";
 "settings.carousel.section" = "캐러셀";
-"settings.carousel.layout" = "레이아웃";
+"settings.carousel.layout" = "스타일";
+"settings.missionControl.section" = "미션 컨트롤";
+"settings.missionControl.description" = "현재 Space의 모든 창을 각 모니터에 펼쳐 보여줍니다. ⌘을 누른 채 Tab을 눌러 하나씩 넘깁니다.";
+"settings.missionControl.screenRecording.needed" = "창 미리보기에는 화면 기록 권한이 필요합니다. 권한이 없으면 앱 아이콘으로 표시됩니다.";
+"settings.missionControl.screenRecording.open" = "화면 기록 설정 열기";
+"settings.missionControl.screenRecording.granted" = "화면 기록 권한이 허용되었습니다.";
 "settings.carousel.cardSize" = "카드 크기";
 "settings.carousel.spacing" = "간격";
 "settings.carousel.fanRadius" = "부채꼴 반지름";
