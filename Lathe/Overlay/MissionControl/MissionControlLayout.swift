@@ -7,44 +7,72 @@ struct MCTileLayout: Equatable {
 }
 
 enum MissionControlLayout {
-    /// 화면 로컬(top-left 원점) 좌표계에서 창을 겹치지 않게 격자 배치한다.
-    /// - windows: (창 ID, 전역 프레임). 프레임은 종횡비와 정렬 순서 판정에만 쓴다.
-    /// ponytail: 단순 near-square 격자 패킹. 창이 많아 셀이 과도하게 작아지면 셀 세분화로 업그레이드.
+    /// 각 창의 실제 위치·상대 크기를 유지한 채 화면에 맞게 균일 축소하고, 겹친 창만 밀어내 정리한다.
+    /// (Mission Control식 배치 — 격자에 우겨넣지 않는다.)
+    /// - windows: (창 ID, 화면-로컬 프레임(top-left 원점)).
+    /// - area: 화면-로컬 영역 (top-left 원점).
+    /// ponytail: 침투 최소 축 분리를 반복하는 완화(relaxation) 방식. 창이 매우 많아 수렴이 덜 되면
+    ///           comfort를 낮추거나 iterations를 늘려 튜닝.
     static func tiles(windows: [(id: Int, frame: CGRect)],
                       in area: CGRect,
-                      gap: CGFloat = 16,
-                      minTile: CGFloat = 40) -> [MCTileLayout] {
-        let n = windows.count
-        guard n > 0 else { return [] }
+                      margin: CGFloat = 24,
+                      gap: CGFloat = 12,
+                      comfort: CGFloat = 0.85,
+                      iterations: Int = 240) -> [MCTileLayout] {
+        guard !windows.isEmpty else { return [] }
+        let inner = area.insetBy(dx: margin, dy: margin)
 
-        // 원본 위치 순서 보존: (y, x) 오름차순 = 좌상단부터 읽기 순서.
-        let sorted = windows.sorted {
-            if $0.frame.midY != $1.frame.midY { return $0.frame.midY < $1.frame.midY }
-            return $0.frame.midX < $1.frame.midX
+        // 1. 전체 배치를 화면 중심 기준으로 균일 축소 → 실제 위치/상대 크기 유지.
+        let fit = min(inner.width / area.width, inner.height / area.height)
+        let s = max(0.01, fit * comfort)
+        let areaCenter = CGPoint(x: area.midX, y: area.midY)
+        let innerCenter = CGPoint(x: inner.midX, y: inner.midY)
+
+        var rects: [CGRect] = windows.map { w in
+            let cx = innerCenter.x + (w.frame.midX - areaCenter.x) * s
+            let cy = innerCenter.y + (w.frame.midY - areaCenter.y) * s
+            let size = CGSize(width: w.frame.width * s, height: w.frame.height * s)
+            return CGRect(x: cx - size.width / 2, y: cy - size.height / 2,
+                          width: size.width, height: size.height)
         }
 
-        let cols = Int(ceil(Double(n).squareRoot()))
-        let rows = Int(ceil(Double(n) / Double(cols)))
-
-        let cellW = (area.width - gap * CGFloat(cols + 1)) / CGFloat(cols)
-        let cellH = (area.height - gap * CGFloat(rows + 1)) / CGFloat(rows)
-
-        return sorted.enumerated().map { index, window in
-            let row = index / cols
-            let col = index % cols
-            let cellX = area.minX + gap + CGFloat(col) * (cellW + gap)
-            let cellY = area.minY + gap + CGFloat(row) * (cellH + gap)
-            let cell = CGRect(x: cellX, y: cellY, width: max(cellW, minTile), height: max(cellH, minTile))
-            return MCTileLayout(windowID: window.id, rect: aspectFit(window.frame.size, in: cell))
+        // 2. 겹침 해소: 침투가 적은 축으로 서로 밀어낸다. (결정적)
+        for _ in 0..<iterations {
+            var moved = false
+            for i in 0..<rects.count {
+                for j in (i + 1)..<rects.count {
+                    let a = rects[i].insetBy(dx: -gap / 2, dy: -gap / 2)
+                    let b = rects[j].insetBy(dx: -gap / 2, dy: -gap / 2)
+                    let o = a.intersection(b)
+                    guard !o.isNull, o.width > 0.01, o.height > 0.01 else { continue }
+                    if o.width < o.height {
+                        let dir: CGFloat = (rects[i].midX >= rects[j].midX) ? 1 : -1
+                        let push = (o.width / 2) * dir
+                        rects[i].origin.x += push
+                        rects[j].origin.x -= push
+                    } else {
+                        let dir: CGFloat = (rects[i].midY >= rects[j].midY) ? 1 : -1
+                        let push = (o.height / 2) * dir
+                        rects[i].origin.y += push
+                        rects[j].origin.y -= push
+                    }
+                    moved = true
+                }
+            }
+            for i in 0..<rects.count { rects[i] = clamp(rects[i], into: inner) }
+            if !moved { break }
         }
+
+        return zip(windows, rects).map { MCTileLayout(windowID: $0.0.id, rect: $0.1) }
     }
 
-    /// 원본 종횡비를 유지한 채 cell 안에 중앙 정렬로 맞춘다.
-    static func aspectFit(_ size: CGSize, in cell: CGRect) -> CGRect {
-        guard size.width > 0, size.height > 0 else { return cell }
-        let scale = min(cell.width / size.width, cell.height / size.height)
-        let w = size.width * scale
-        let h = size.height * scale
-        return CGRect(x: cell.midX - w / 2, y: cell.midY - h / 2, width: w, height: h)
+    /// rect를 크기 변경 없이 bounds 안으로 이동한다.
+    private static func clamp(_ rect: CGRect, into bounds: CGRect) -> CGRect {
+        var r = rect
+        if r.maxX > bounds.maxX { r.origin.x = bounds.maxX - r.width }
+        if r.minX < bounds.minX { r.origin.x = bounds.minX }
+        if r.maxY > bounds.maxY { r.origin.y = bounds.maxY - r.height }
+        if r.minY < bounds.minY { r.origin.y = bounds.minY }
+        return r
     }
 }

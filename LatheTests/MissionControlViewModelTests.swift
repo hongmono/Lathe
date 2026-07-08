@@ -7,7 +7,7 @@ final class MissionControlViewModelTests: XCTestCase {
         let app = AppEntry(id: pid_t(id), bundleIdentifier: "x.\(id)", name: "App\(id)", icon: NSImage())
         let entry = WindowEntry(id: id, title: "W\(id)", pathSummary: nil, isMinimized: false)
         return MCWindow(id: id, pid: pid_t(id), appEntry: app, windowEntry: entry,
-                        frame: .zero, screenIndex: 0)
+                        frame: .zero, localFrame: .zero, screenIndex: 0)
     }
 
     func test_next_wraps() {

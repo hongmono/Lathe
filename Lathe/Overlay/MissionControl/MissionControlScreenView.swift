@@ -8,7 +8,7 @@ struct MissionControlScreenView: View {
     var body: some View {
         let mine = viewModel.windows.filter { $0.screenIndex == screenIndex }
         let tiles = MissionControlLayout.tiles(
-            windows: mine.map { (id: $0.id, frame: $0.frame) },
+            windows: mine.map { (id: $0.id, frame: $0.localFrame) },
             in: CGRect(origin: .zero, size: areaSize)
         )
         let byID = Dictionary(uniqueKeysWithValues: mine.map { ($0.id, $0) })
