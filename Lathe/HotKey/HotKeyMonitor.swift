@@ -7,6 +7,8 @@ protocol HotKeyMonitorDelegate: AnyObject {
     func hotKeyDidDisarm()
     func hotKeyDidRequestNext()
     func hotKeyDidRequestPrevious()
+    func hotKeyDidRequestCycleWindow()
+    func hotKeyDidRequestCycleWindowPrevious()
     func hotKeyDidCancel()
 }
 
@@ -18,17 +20,22 @@ enum HotKeyMonitorError: Error {
 enum HotKeyAction: Equatable {
     case next
     case previous
+    case cycleWindow
+    case cycleWindowPrevious
     case cancel
 
     private static let tabKeyCode: CGKeyCode = 0x30
     private static let escKeyCode: CGKeyCode = 0x35
     private static let leftArrowKeyCode: CGKeyCode = 0x7B
     private static let rightArrowKeyCode: CGKeyCode = 0x7C
+    private static let graveKeyCode: CGKeyCode = 0x32
+    private static let sectionKeyCode: CGKeyCode = 0x0A
 
     static func resolve(keyCode: CGKeyCode,
                         commandDown: Bool,
                         shiftDown: Bool,
-                        arrowsEnabled: Bool) -> HotKeyAction? {
+                        arrowsEnabled: Bool,
+                        windowCycleEnabled: Bool) -> HotKeyAction? {
         switch keyCode {
         case leftArrowKeyCode where arrowsEnabled:
             return .previous
@@ -36,6 +43,9 @@ enum HotKeyAction: Equatable {
             return .next
         case tabKeyCode where commandDown:
             return shiftDown ? .previous : .next
+        case graveKeyCode where commandDown && windowCycleEnabled,
+             sectionKeyCode where commandDown && windowCycleEnabled:
+            return shiftDown ? .cycleWindowPrevious : .cycleWindow
         case escKeyCode where commandDown:
             return .cancel
         default:
@@ -48,6 +58,7 @@ enum HotKeyAction: Equatable {
 final class HotKeyMonitor {
     weak var delegate: HotKeyMonitorDelegate?
     nonisolated(unsafe) var arrowsEnabled = false
+    nonisolated(unsafe) var windowCycleEnabled = false
 
     private var flagsTap: CFMachPort?
     private var keyTap: CFMachPort?
@@ -160,7 +171,8 @@ final class HotKeyMonitor {
             keyCode: keyCode,
             commandDown: commandDown,
             shiftDown: shift,
-            arrowsEnabled: arrowsEnabled
+            arrowsEnabled: arrowsEnabled,
+            windowCycleEnabled: windowCycleEnabled
         ) else {
             return Unmanaged.passUnretained(event)
         }
@@ -174,6 +186,16 @@ final class HotKeyMonitor {
         case .previous:
             DispatchQueue.main.async { [weak self] in
                 self?.delegate?.hotKeyDidRequestPrevious()
+            }
+            return nil
+        case .cycleWindow:
+            DispatchQueue.main.async { [weak self] in
+                self?.delegate?.hotKeyDidRequestCycleWindow()
+            }
+            return nil
+        case .cycleWindowPrevious:
+            DispatchQueue.main.async { [weak self] in
+                self?.delegate?.hotKeyDidRequestCycleWindowPrevious()
             }
             return nil
         case .cancel:

@@ -1,14 +1,25 @@
 import AppKit
 import SwiftUI
 
+struct OverlaySelection {
+    let app: AppEntry
+    let window: WindowEntry?
+}
+
 @MainActor
 final class OverlayController {
     private let panel = OverlayPanel()
-    private let viewModel = CarouselViewModel()
+    private let carouselViewModel = CarouselViewModel()
+    private let windowFocusTracker = WindowFocusTracker()
+    private lazy var windowSelectionViewModel = WindowSelectionViewModel(focusTracker: windowFocusTracker)
     private(set) var isVisible = false
 
     init() {
-        let host = NSHostingView(rootView: CarouselView(viewModel: viewModel))
+        let rootView = OverlayRootView(
+            carouselViewModel: carouselViewModel,
+            windowSelectionViewModel: windowSelectionViewModel
+        )
+        let host = NSHostingView(rootView: rootView)
         host.translatesAutoresizingMaskIntoConstraints = false
         let container = NSView(frame: panel.contentRect(forFrameRect: panel.frame))
         container.addSubview(host)
@@ -20,7 +31,8 @@ final class OverlayController {
     }
 
     func show(apps: [AppEntry], initialIndex: Int) {
-        viewModel.update(apps: apps, selectedIndex: initialIndex)
+        carouselViewModel.update(apps: apps, selectedIndex: initialIndex)
+        reloadWindowsForCurrentApp()
         guard !apps.isEmpty else { return }
         positionAtActiveScreenCenter()
         panel.alphaValue = 0
@@ -33,14 +45,38 @@ final class OverlayController {
     }
 
     func updateApps(_ apps: [AppEntry]) {
-        viewModel.replaceApps(apps)
+        carouselViewModel.replaceApps(apps)
+        reloadWindowsForCurrentApp()
     }
 
-    func next() { viewModel.next() }
-    func previous() { viewModel.previous() }
+    func next() {
+        carouselViewModel.next()
+        reloadWindowsForCurrentApp()
+    }
 
-    func currentSelection() -> AppEntry? {
-        viewModel.currentEntry
+    func previous() {
+        carouselViewModel.previous()
+        reloadWindowsForCurrentApp()
+    }
+
+    func cycleWindow() {
+        windowSelectionViewModel.next()
+    }
+
+    func cycleWindowPrevious() {
+        windowSelectionViewModel.previous()
+    }
+
+    func currentSelection() -> OverlaySelection? {
+        guard let app = carouselViewModel.currentEntry else { return nil }
+        let window = windowSelectionViewModel.hasMultipleWindows
+            ? windowSelectionViewModel.currentWindow
+            : nil
+        return OverlaySelection(app: app, window: window)
+    }
+
+    func recordWindowActivation() {
+        windowSelectionViewModel.recordActivation()
     }
 
     func hide(animated: Bool) {
@@ -59,6 +95,10 @@ final class OverlayController {
             panel.alphaValue = 0
             panel.orderOut(nil)
         }
+    }
+
+    private func reloadWindowsForCurrentApp() {
+        windowSelectionViewModel.load(forProcessIdentifier: carouselViewModel.currentEntry?.id)
     }
 
     private func positionAtActiveScreenCenter() {

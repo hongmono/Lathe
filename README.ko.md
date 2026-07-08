@@ -165,11 +165,20 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 | ⌘+Tab                 | 캐러셀 표시, 직전 앱이 가운데로                  |
 | ⌘ 유지 + Tab          | 다음 앱으로 회전                                 |
 | ⌘ 유지 + ⇧Tab         | 이전 앱으로 회전                                 |
-| ⌘ 떼기                | 가운데(포커스) 앱 활성화                          |
+| ⌘ 떼기                | 가운데(포커스) 앱·창 활성화                       |
 | ⌘ 유지 + Esc          | 활성화 없이 닫기                                  |
+| ⌘+`                   | 포커스 앱의 창 사이를 순환                        |
+| ⌘ 유지 + ⇧`           | 창을 역방향으로 순환                              |
 
 시스템 ⌘+Tab과 동작 모델이 같아 머슬 메모리를 그대로 쓸 수 있습니다. 차이점은
 포커스가 캐러셀 가운데에 고정되고 카드들이 그 주위로 회전한다는 것뿐입니다.
+
+**창 단위 전환.** 포커스한 앱에 창이 둘 이상이면 캐러셀 위쪽에 창 목록이
+나타납니다. macOS가 한 앱의 창 사이를 이동할 때 쓰는 ⌘+` 키로 창을 순환하고,
+⇧ 를 함께 누르면 역방향으로 이동합니다. 캐러셀을 먼저 열지 않고 ⌘+` 만 눌러도
+최전면 앱의 창으로 바로 진입합니다. ⌘ 를 떼면 형제 창을 함께 끌어올리지 않고
+선택한 창 하나만 전면화합니다. 창은 최근 사용(MRU) 순으로 정렬되며, 문서·URL
+창은 제목 옆에 축약된 경로를 함께 보여줍니다.
 
 ## 환경설정
 
@@ -196,7 +205,7 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 
 Lathe는 ⌘+Tab을 글로벌하게 가로채는 `CGEventTap` 설치를 위해 **Accessibility**
 권한이 필요합니다. 그 외에는 어떤 권한도 요청하지 않습니다 — Input Monitoring 없음,
-Full Disk Access 없음, Screen Recording 없음. event tap은 ⌘ + Tab/⇧Tab/Esc
+Full Disk Access 없음, Screen Recording 없음. event tap은 ⌘ + Tab/⇧Tab/`` ` ``/Esc
 의 keyDown 이벤트로만 한정되며 그 외 모든 입력은 변형 없이 통과합니다.
 
 권한 회수: 시스템 설정 → 개인 정보 보호 및 보안 → 손쉬운 사용 → Lathe 토글을 끕니다
@@ -220,31 +229,50 @@ tccutil reset Accessibility com.hongmono.Lathe
   `GeometryReader` 복잡도 없음.
 - **Event tap.** `CGEventTap` 두 개를 `cgSessionEventTap` /
   `headInsertEventTap` 위에 설치합니다 — 하나는 `flagsChanged` (⌘
-  press/release 추적), 다른 하나는 `keyDown` (Tab / ⇧Tab / Esc를 가로채고
-  소비).
+  press/release 추적), 다른 하나는 `keyDown` (Tab / ⇧Tab / `` ` `` / Esc를
+  가로채고 소비).
 - **앱 목록.** `NSWorkspace.runningApplications`를 `.regular` activation
   policy로 필터링하고, `didActivateApplication` 알림으로 갱신되는 인-프로세스
   MRU 큐로 정렬합니다.
-- **설정 store.** `UserDefaults` 기반 `ObservableObject`. `CarouselView` 가
+- **창 목록.** 앱마다 `WindowListProvider`가 Accessibility 창 목록과
+  `CGWindowListCopyWindowInfo`를 대조(창 id → 제목 → 프레임 순으로 매칭)하고,
+  사용자용이 아닌 창을 걸러낸 뒤 최근 사용(MRU) 순으로 정렬합니다. 창이 문서·URL
+  경로를 노출하면 제목에 축약 경로를 덧붙입니다.
+- **단일 창 전면화.** 창을 선택하면 앱 전체를 활성화하는 대신 SkyLight
+  (`_SLPSSetFrontProcessWithOptions`)로 *그 창 하나만* 전면화합니다 — AltTab·
+  yabai가 쓰는 방식과 같아 형제 창은 자리를 유지합니다.
+- **설정 store.** `UserDefaults` 기반 `ObservableObject`. 오버레이가
   observe 하고 있어 geometry 변경이 즉시 반영됩니다.
-- **비공개 API를 사용하지 않습니다.** 사용된 API는 모두 macOS 14 시점에서
-  공개 문서화된 것입니다.
+- **비공개 API는 선택적이며 격리되어 있습니다.** 캐러셀과 앱 전환은 공개
+  문서화된 API만 씁니다. 창 단위 기능만 두 개의 비공개 심볼을 추가로 사용합니다 —
+  `_AXUIElementGetWindow`(AX 창을 CoreGraphics 창 id로 매핑)와 SkyLight의
+  front-process 호출(단일 창 전면화). 둘 다 런타임에 `dlsym`으로 조회하며,
+  어느 하나라도 없으면 공개 Accessibility 경로(`kAXMainAttribute` +
+  `kAXRaiseAction`)와 일반 앱 활성화로 폴백하므로 Apple이 심볼을 제거해도
+  깨지지 않습니다.
 
 ### 프로젝트 구조
 
 ```
 Lathe/
 ├── App/            LatheApp.swift, AppDelegate.swift
-├── HotKey/         HotKeyMonitor.swift          (CGEventTap)
-├── AppList/        AppEntry.swift, AppListProvider.swift
-├── Overlay/        OverlayPanel + Controller, CarouselView/Model, CardView
-├── Activation/     AppActivator.swift           (pid → activate)
+├── HotKey/         HotKeyMonitor.swift          (CGEventTap, 키 액션)
+├── AppList/        AppEntry.swift, AppListProvider.swift,
+│                   WindowEntry, WindowListProvider, WindowVisibilityFilter,
+│                   WindowOrderTracker, WindowFocusTracker, WindowPathSummary
+├── Overlay/        OverlayPanel + Controller, OverlayRootView,
+│                   CarouselViewModel/Layout, CardView,
+│                   WindowListView, WindowSelectionViewModel
+├── Activation/     AppActivator.swift, SingleWindowFocuser.swift (SkyLight)
 ├── Permissions/    AccessibilityChecker
 ├── MenuBar/        MenuBarController.swift
 ├── Settings/       SettingsStore, SettingsView, SettingsWindowController,
 │                   Appearance, LoginItem
 └── Resources/      Info.plist, Assets.xcassets
-LatheTests/         CarouselViewModelTests.swift
+LatheTests/         CarouselViewModelTests, HotKeyActionTests,
+                    AppEntryFilteringTests, WindowListProviderTests,
+                    WindowOrderTrackerTests, WindowPathSummaryTests,
+                    WindowSelectionViewModelTests
 docs/
 ├── superpowers/    specs/  plans/                (디자인 history)
 └── images/         README 스크린샷
@@ -256,6 +284,7 @@ docs/
 
 - [디자인 spec](docs/superpowers/specs/2026-04-28-lathe-design.md)
 - [구현 plan](docs/superpowers/plans/2026-04-28-lathe-v1.md)
+- [창 단위 전환 디자인](docs/superpowers/specs/2026-07-08-window-switching-design.md)
 
 ## 릴리스
 
