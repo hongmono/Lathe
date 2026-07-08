@@ -15,8 +15,6 @@ protocol OverlayPresenting: AnyObject {
 
 extension OverlayController: OverlayPresenting {}
 
-extension MissionControlController: OverlayPresenting {
-    // MC는 앱 내 창 순환 개념이 없다. ⌘+` 순환은 전체 창 이동과 동일 취급.
-    func cycleWindow() { next() }
-    func cycleWindowPrevious() { previous() }
-}
+// MissionControlController는 cycleWindow/cycleWindowPrevious를 직접 구현한다
+// (선택된 앱 스택 안에서 창 순환).
+extension MissionControlController: OverlayPresenting {}

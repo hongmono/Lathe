@@ -115,7 +115,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
 
     func hotKeyDidRequestCycleWindow() {
         if isMissionControl {
-            if missionControl.isVisible { missionControl.next() }
+            if missionControl.isVisible { missionControl.cycleWindow() }
             else { presentMissionControl(forward: true) }
             return
         }
@@ -128,7 +128,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
 
     func hotKeyDidRequestCycleWindowPrevious() {
         if isMissionControl {
-            if missionControl.isVisible { missionControl.previous() }
+            if missionControl.isVisible { missionControl.cycleWindowPrevious() }
             else { presentMissionControl(forward: false) }
             return
         }

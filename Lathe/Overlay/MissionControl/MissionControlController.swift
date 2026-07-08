@@ -7,16 +7,17 @@ final class MissionControlController {
     private let viewModel = MissionControlViewModel()
     private let provider = MissionControlWindowProvider()
     private let thumbnails = WindowThumbnailProvider()
+    private let focusTracker = WindowFocusTracker()   // 앱별 창 MRU 순서
     private(set) var isVisible = false
     private var didRequestScreenRecording = false
 
-    /// 현재 Space 창을 열거해 각 모니터 패널에 펼친다. forward=true면 활성창 다음을 선택.
+    /// 현재 Space 창을 앱별 스택으로 묶어 각 모니터 패널에 펼친다. forward=true면 활성 앱 다음 스택을 선택.
     func show(appEntries: [AppEntry], forward: Bool) {
-        let windows = provider.windows(appEntries: appEntries)
-        guard !windows.isEmpty else { return }
+        let builtStacks = stacks(appEntries: appEntries)
+        guard !builtStacks.isEmpty else { return }
 
-        let activeWindowID = frontmostWindowID(in: windows)
-        viewModel.set(windows: windows, selectedWindowID: activeWindowID)
+        let activeWindowID = frontmostWindowID(inStacks: builtStacks)
+        viewModel.set(stacks: builtStacks, selectedWindowID: activeWindowID)
         if forward { viewModel.next() } else { viewModel.previous() }
 
         rebuildPanels()
@@ -30,8 +31,8 @@ final class MissionControlController {
         }
         isVisible = true
 
-        // 썸네일 비동기 캡처 → 완료되는 대로 채운다.
-        let ids = windows.map(\.id)
+        // 썸네일 비동기 캡처 → 완료되는 대로 채운다. (모든 스택의 모든 창)
+        let ids = builtStacks.flatMap { $0.windows.map(\.id) }
         Task { [weak self] in
             guard let self else { return }
             // 권한이 아직 없으면 최초 1회 시스템 프롬프트를 띄우고 목록에 등록한다.
@@ -52,12 +53,19 @@ final class MissionControlController {
     func next() { viewModel.next() }
     func previous() { viewModel.previous() }
 
+    /// ⌘+`: 선택된 앱 스택 안에서 창 순환.
+    func cycleWindow() { viewModel.cycleWindow() }
+    func cycleWindowPrevious() { viewModel.cycleWindowPrevious() }
+
     func currentSelection() -> OverlaySelection? {
         guard let window = viewModel.currentWindow else { return nil }
         return OverlaySelection(app: window.appEntry, window: window.windowEntry)
     }
 
-    func recordWindowActivation() { /* MC는 창 단위 MRU 기록 없음. no-op. */ }
+    func recordWindowActivation() {
+        guard let window = viewModel.currentWindow else { return }
+        focusTracker.touchSelectedWindow(window.windowEntry, processIdentifier: window.pid)
+    }
 
     func hide(animated: Bool) {
         guard isVisible else { return }
@@ -98,10 +106,39 @@ final class MissionControlController {
         }
     }
 
-    private func frontmostWindowID(in windows: [MCWindow]) -> Int? {
-        guard let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier else {
-            return windows.first?.id
+    /// 창을 앱별 MRU 순으로 정렬한 뒤 (앱, 화면) 스택으로 묶는다.
+    private func stacks(appEntries: [AppEntry]) -> [MCAppStack] {
+        let raw = provider.windows(appEntries: appEntries)
+
+        // pid별로 모아 등장 순서를 유지.
+        var byPID: [pid_t: [MCWindow]] = [:]
+        var pidOrder: [pid_t] = []
+        for window in raw {
+            if byPID[window.pid] == nil { pidOrder.append(window.pid) }
+            byPID[window.pid, default: []].append(window)
         }
-        return windows.first(where: { $0.pid == pid })?.id ?? windows.first?.id
+
+        // 각 앱의 창을 MRU(포커스 트래커) 순위로 정렬.
+        var ordered: [MCWindow] = []
+        for pid in pidOrder {
+            let mruIDs = focusTracker.windows(forProcessIdentifier: pid).map(\.id)
+            let rank = Dictionary(uniqueKeysWithValues: mruIDs.enumerated().map { ($1, $0) })
+            let sorted = (byPID[pid] ?? []).enumerated().sorted {
+                let a = rank[$0.element.id] ?? Int.max
+                let b = rank[$1.element.id] ?? Int.max
+                return a != b ? a < b : $0.offset < $1.offset
+            }.map(\.element)
+            ordered.append(contentsOf: sorted)
+        }
+
+        return MissionControlWindowProvider.group(ordered)
+    }
+
+    private func frontmostWindowID(inStacks stacks: [MCAppStack]) -> Int? {
+        if let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier,
+           let stack = stacks.first(where: { $0.appEntry.id == pid }) {
+            return stack.frontWindow.id
+        }
+        return stacks.first?.frontWindow.id
     }
 }
