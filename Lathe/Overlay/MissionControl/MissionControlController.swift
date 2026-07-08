@@ -8,6 +8,7 @@ final class MissionControlController {
     private let provider = MissionControlWindowProvider()
     private let thumbnails = WindowThumbnailProvider()
     private(set) var isVisible = false
+    private var didRequestScreenRecording = false
 
     /// 현재 Space 창을 열거해 각 모니터 패널에 펼친다. forward=true면 활성창 다음을 선택.
     func show(appEntries: [AppEntry], forward: Bool) {
@@ -36,7 +37,11 @@ final class MissionControlController {
             // 권한이 아직 없으면 최초 1회 시스템 프롬프트를 띄우고 목록에 등록한다.
             // (허용 후 앱 재시작하면 다음부터 실제 썸네일이 채워진다.)
             guard WindowThumbnailProvider.hasPermission() else {
-                WindowThumbnailProvider.requestPermission()
+                // 권한 없으면 앱 실행 중 최초 1회만 프롬프트(매번 나그 방지). 이후엔 설정에서 처리.
+                if !self.didRequestScreenRecording {
+                    self.didRequestScreenRecording = true
+                    WindowThumbnailProvider.requestPermission()
+                }
                 return
             }
             let images = await self.thumbnails.capture(windowIDs: ids)

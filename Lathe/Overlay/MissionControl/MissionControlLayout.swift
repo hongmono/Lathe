@@ -7,72 +7,64 @@ struct MCTileLayout: Equatable {
 }
 
 enum MissionControlLayout {
-    /// 각 창의 실제 위치·상대 크기를 유지한 채 화면에 맞게 균일 축소하고, 겹친 창만 밀어내 정리한다.
-    /// (Mission Control식 배치 — 격자에 우겨넣지 않는다.)
-    /// - windows: (창 ID, 화면-로컬 프레임(top-left 원점)).
-    /// - area: 화면-로컬 영역 (top-left 원점).
-    /// ponytail: 침투 최소 축 분리를 반복하는 완화(relaxation) 방식. 창이 매우 많아 수렴이 덜 되면
-    ///           comfort를 낮추거나 iterations를 늘려 튜닝.
+    /// 창들을 화면에 겹치지 않게 펼친다. 실제 창들이 서로 크게 겹쳐 있어도(예: 모두 최대화)
+    /// 각자 보이도록 near-square 격자로 배치하고, 원래 위치 순서(위→아래, 왼→오)를 보존한다.
+    /// (Mission Control이 겹친 창들을 펼치는 방식과 동일한 결과.)
+    /// - windows: (창 ID, 화면-로컬 프레임). 프레임은 종횡비와 정렬 순서에 쓴다.
     static func tiles(windows: [(id: Int, frame: CGRect)],
                       in area: CGRect,
-                      margin: CGFloat = 24,
-                      gap: CGFloat = 12,
-                      comfort: CGFloat = 0.85,
-                      iterations: Int = 240) -> [MCTileLayout] {
-        guard !windows.isEmpty else { return [] }
-        let inner = area.insetBy(dx: margin, dy: margin)
+                      gap: CGFloat = 28) -> [MCTileLayout] {
+        let n = windows.count
+        guard n > 0 else { return [] }
 
-        // 1. 전체 배치를 화면 중심 기준으로 균일 축소 → 실제 위치/상대 크기 유지.
-        let fit = min(inner.width / area.width, inner.height / area.height)
-        let s = max(0.01, fit * comfort)
-        let areaCenter = CGPoint(x: area.midX, y: area.midY)
-        let innerCenter = CGPoint(x: inner.midX, y: inner.midY)
-
-        var rects: [CGRect] = windows.map { w in
-            let cx = innerCenter.x + (w.frame.midX - areaCenter.x) * s
-            let cy = innerCenter.y + (w.frame.midY - areaCenter.y) * s
-            let size = CGSize(width: w.frame.width * s, height: w.frame.height * s)
-            return CGRect(x: cx - size.width / 2, y: cy - size.height / 2,
-                          width: size.width, height: size.height)
+        // 원래 위치 순서 보존: (y, x) 오름차순 = 좌상단부터 읽기 순서.
+        let sorted = windows.sorted {
+            if abs($0.frame.midY - $1.frame.midY) > 1 { return $0.frame.midY < $1.frame.midY }
+            return $0.frame.midX < $1.frame.midX
         }
 
-        // 2. 겹침 해소: 침투가 적은 축으로 서로 밀어낸다. (결정적)
-        for _ in 0..<iterations {
-            var moved = false
-            for i in 0..<rects.count {
-                for j in (i + 1)..<rects.count {
-                    let a = rects[i].insetBy(dx: -gap / 2, dy: -gap / 2)
-                    let b = rects[j].insetBy(dx: -gap / 2, dy: -gap / 2)
-                    let o = a.intersection(b)
-                    guard !o.isNull, o.width > 0.01, o.height > 0.01 else { continue }
-                    if o.width < o.height {
-                        let dir: CGFloat = (rects[i].midX >= rects[j].midX) ? 1 : -1
-                        let push = (o.width / 2) * dir
-                        rects[i].origin.x += push
-                        rects[j].origin.x -= push
-                    } else {
-                        let dir: CGFloat = (rects[i].midY >= rects[j].midY) ? 1 : -1
-                        let push = (o.height / 2) * dir
-                        rects[i].origin.y += push
-                        rects[j].origin.y -= push
-                    }
-                    moved = true
-                }
-            }
-            for i in 0..<rects.count { rects[i] = clamp(rects[i], into: inner) }
-            if !moved { break }
-        }
+        let cols = Int(ceil(Double(n).squareRoot()))
+        let rows = Int(ceil(Double(n) / Double(cols)))
+        let cellW = (area.width - gap * CGFloat(cols + 1)) / CGFloat(cols)
+        let cellH = (area.height - gap * CGFloat(rows + 1)) / CGFloat(rows)
 
-        return zip(windows, rects).map { MCTileLayout(windowID: $0.0.id, rect: $0.1) }
+        return sorted.enumerated().map { index, window in
+            let row = index / cols
+            let col = index % cols
+            // 마지막 행이 덜 찼으면 가운데 정렬.
+            let itemsInRow = (row == rows - 1) ? (n - row * cols) : cols
+            let rowWidth = CGFloat(itemsInRow) * cellW + CGFloat(itemsInRow - 1) * gap
+            let rowStartX = area.minX + (area.width - rowWidth) / 2
+            let cellX = rowStartX + CGFloat(col) * (cellW + gap)
+            let cellY = area.minY + gap + CGFloat(row) * (cellH + gap)
+            let cell = CGRect(x: cellX, y: cellY, width: cellW, height: cellH)
+
+            // 셀보다 살짝 작게 맞춘 뒤, 창별로 고정된 미세 크기·위치 변주를 준다.
+            // → 정사각 격자(4개, 9개 등)도 기계적으로 딱 맞지 않고 유기적으로 보이게.
+            let fit = aspectFit(window.frame.size, in: cell.insetBy(dx: cell.width * 0.05, dy: cell.height * 0.05))
+            let scaleJitter = 1.0 - 0.10 * hash01(window.id)            // 0.90 ~ 1.00
+            let w = fit.width * scaleJitter
+            let h = fit.height * scaleJitter
+            let jx = (hash01(window.id &+ 101) - 0.5) * cell.width * 0.10
+            let jy = (hash01(window.id &+ 211) - 0.5) * cell.height * 0.10
+            let rect = CGRect(x: cell.midX - w / 2 + jx, y: cell.midY - h / 2 + jy, width: w, height: h)
+            return MCTileLayout(windowID: window.id, rect: rect)
+        }
     }
 
-    /// rect를 크기 변경 없이 bounds 안으로 이동한다.
-    private static func clamp(_ rect: CGRect, into bounds: CGRect) -> CGRect {
-        var r = rect
-        if r.maxX > bounds.maxX { r.origin.x = bounds.maxX - r.width }
-        if r.minX < bounds.minX { r.origin.x = bounds.minX }
-        if r.maxY > bounds.maxY { r.origin.y = bounds.maxY - r.height }
-        if r.minY < bounds.minY { r.origin.y = bounds.minY }
-        return r
+    /// 원본 종횡비를 유지한 채 cell 안에 중앙 정렬로 맞춘다.
+    static func aspectFit(_ size: CGSize, in cell: CGRect) -> CGRect {
+        guard size.width > 0, size.height > 0 else { return cell }
+        let scale = min(cell.width / size.width, cell.height / size.height)
+        let w = size.width * scale
+        let h = size.height * scale
+        return CGRect(x: cell.midX - w / 2, y: cell.midY - h / 2, width: w, height: h)
+    }
+
+    /// 창 ID로부터 0~1 사이의 결정적 유사난수. 변주를 창마다 고정시킨다.
+    static func hash01(_ n: Int) -> Double {
+        var x = UInt32(truncatingIfNeeded: n &* 0x9E3779B9)
+        x ^= x >> 16; x = x &* 0x7FEB352D; x ^= x >> 15; x = x &* 0x846CA68B; x ^= x >> 16
+        return Double(x) / Double(UInt32.max)
     }
 }

@@ -5,6 +5,9 @@ struct MissionControlScreenView: View {
     let screenIndex: Int
     let areaSize: CGSize
 
+    // 오버레이가 뜰 때마다 뷰가 새로 생성되므로 false로 시작 → onAppear에서 등장 애니메이션.
+    @State private var appeared = false
+
     var body: some View {
         let mine = viewModel.windows.filter { $0.screenIndex == screenIndex }
         let tiles = MissionControlLayout.tiles(
@@ -20,10 +23,14 @@ struct MissionControlScreenView: View {
                 .overlay(Color.black.opacity(0.18))
                 .ignoresSafeArea()
 
-            ForEach(tiles, id: \.windowID) { tile in
+            ForEach(Array(tiles.enumerated()), id: \.element.windowID) { index, tile in
                 if let window = byID[tile.windowID] {
                     tileView(window: window, isSelected: window.id == viewModel.currentWindow?.id)
                         .frame(width: tile.rect.width, height: tile.rect.height)
+                        .scaleEffect(appeared ? 1 : 0.88)
+                        .opacity(appeared ? 1 : 0)
+                        .animation(.spring(response: 0.42, dampingFraction: 0.74)
+                            .delay(Double(index) * 0.045), value: appeared)
                         .offset(x: tile.rect.minX, y: tile.rect.minY)
                 }
             }
@@ -31,37 +38,47 @@ struct MissionControlScreenView: View {
         .frame(width: areaSize.width, height: areaSize.height, alignment: .topLeading)
         .animation(.spring(response: 0.28, dampingFraction: 0.8), value: viewModel.selectedIndex)
         .animation(.easeInOut(duration: 0.15), value: viewModel.windows.map(\.id))
+        .onAppear { appeared = true }
     }
 
     @ViewBuilder
     private func tileView(window: MCWindow, isSelected: Bool) -> some View {
         ZStack {
+            // 폴백(아이콘+제목)을 항상 깔고, 썸네일이 도착하면 그 위로 1초에 걸쳐 서서히 나타난다.
+            fallbackTile(window: window)
+
             if let image = viewModel.thumbnails[window.id] {
                 Image(nsImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-            } else {
-                // 폴백: 아이콘 + 제목
-                VStack(spacing: 8) {
-                    Image(nsImage: window.appEntry.icon)
-                        .resizable()
-                        .frame(width: 64, height: 64)
-                    Text(window.windowEntry.displayTitle)
-                        .font(.caption)
-                        .lineLimit(1)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    .transition(.opacity)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .animation(.easeInOut(duration: 1.0), value: viewModel.thumbnails[window.id] != nil)
         .overlay {
-            RoundedRectangle(cornerRadius: 8)
+            // 선택 안 된 창은 살짝 어둡게(dim). 흐림(blur) 아님.
+            Color.black.opacity(isSelected ? 0 : 0.3)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(Color.accentColor, lineWidth: isSelected ? 3 : 0)
         }
-        .opacity(isSelected ? 1.0 : 0.55)
-        .blur(radius: isSelected ? 0 : 2)
-        .shadow(color: .black.opacity(isSelected ? 0.35 : 0.15), radius: isSelected ? 12 : 4, y: 2)
+        .shadow(color: .black.opacity(isSelected ? 0.4 : 0.18), radius: isSelected ? 14 : 6, y: 3)
+    }
+
+    @ViewBuilder
+    private func fallbackTile(window: MCWindow) -> some View {
+        VStack(spacing: 8) {
+            Image(nsImage: window.appEntry.icon)
+                .resizable()
+                .frame(width: 64, height: 64)
+            Text(window.windowEntry.displayTitle)
+                .font(.caption)
+                .lineLimit(1)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.ultraThinMaterial)
     }
 }
