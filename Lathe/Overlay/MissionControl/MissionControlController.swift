@@ -32,8 +32,15 @@ final class MissionControlController {
         // 썸네일 비동기 캡처 → 완료되는 대로 채운다.
         let ids = windows.map(\.id)
         Task { [weak self] in
-            let images = await self?.thumbnails.capture(windowIDs: ids) ?? [:]
-            for (id, image) in images { self?.viewModel.setThumbnail(image, forWindowID: id) }
+            guard let self else { return }
+            // 권한이 아직 없으면 최초 1회 시스템 프롬프트를 띄우고 목록에 등록한다.
+            // (허용 후 앱 재시작하면 다음부터 실제 썸네일이 채워진다.)
+            guard WindowThumbnailProvider.hasPermission() else {
+                WindowThumbnailProvider.requestPermission()
+                return
+            }
+            let images = await self.thumbnails.capture(windowIDs: ids)
+            for (id, image) in images { self.viewModel.setThumbnail(image, forWindowID: id) }
         }
     }
 
