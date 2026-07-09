@@ -19,19 +19,19 @@ Lathe ships through a **`release`-branch CI pipeline** (`.github/workflows/relea
 
 4. **Commit** VERSION + CHANGELOG together: `release: <version> (<short summary>)`.
 
-5. **Push both branches** (release branch push is what triggers CI):
+5. **Push both branches** (release branch push is what triggers CI). **This is where "released" ends** — the push is the deploy; CI builds/notarizes on its own:
    ```bash
    git push origin main
    git push origin main:release
    ```
+   **Don't watch/block on CI.** Report the release as done once the push succeeds.
 
-6. **Verify CI** (build + **notarize**, ~3 min — don't claim done until it's green):
+6. **(Optional) Check CI later** — only if the user asks, or to confirm it went green. Don't `gh run watch`; a quick status glance is enough:
    ```bash
-   gh run list --branch release --limit 1        # find the run-id
-   gh run watch <run-id> --exit-status           # wait for success
-   gh release view v<version> --json assets --jq '.assets[].name'
+   gh run list --branch release --limit 1
+   gh release view v<version> --json assets --jq '.assets[].name'   # Lathe-v<version>.dmg + appcast.xml
    ```
-   Expect `Lathe-v<version>.dmg` + `appcast.xml`. The installed app then auto-updates via Sparkle.
+   The installed app auto-updates via Sparkle once the release publishes.
 
 ## Notes
 
@@ -46,4 +46,4 @@ Lathe ships through a **`release`-branch CI pipeline** (`.github/workflows/relea
 | Push `main` but forget `main:release` | Nothing builds — CI only fires on the `release` branch. |
 | Skip/empty `## <version>` in CHANGELOG | CI aborts before building. |
 | Commit the generated `.xcodeproj` | Stale project file; CI regenerates it anyway. |
-| Claim "released" without checking `gh run` | Notarization can still fail after push. Verify green + assets. |
+| `gh run watch` blocking on CI after push | Wasted wait — push is the deploy; CI runs on its own. Report done at push. |
