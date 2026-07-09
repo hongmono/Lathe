@@ -75,7 +75,7 @@ struct MissionControlScreenView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 1.0), value: viewModel.thumbnails[window.id] != nil)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.thumbnails[window.id] != nil)
         .overlay {
             // 선택 안 된 스택은 살짝 어둡게(dim). 흐림(blur) 아님.
             Color.black.opacity(isSelected ? 0 : 0.3)

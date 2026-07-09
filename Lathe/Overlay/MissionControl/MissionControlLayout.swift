@@ -53,9 +53,10 @@ enum MissionControlLayout {
     }
 
     /// 원본 종횡비를 유지한 채 cell 안에 중앙 정렬로 맞춘다.
+    /// 원본보다 크게 확대하진 않는다(축소만) — macOS 미션 컨트롤처럼 창이 화면보다 작으면 실제 크기 유지.
     static func aspectFit(_ size: CGSize, in cell: CGRect) -> CGRect {
         guard size.width > 0, size.height > 0 else { return cell }
-        let scale = min(cell.width / size.width, cell.height / size.height)
+        let scale = min(cell.width / size.width, cell.height / size.height, 1)
         let w = size.width * scale
         let h = size.height * scale
         return CGRect(x: cell.midX - w / 2, y: cell.midY - h / 2, width: w, height: h)

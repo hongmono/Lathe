@@ -51,6 +51,23 @@ final class MissionControlLayoutTests: XCTestCase {
         XCTAssertEqual(tiles.first?.windowID, 20)
     }
 
+    func test_aspectFit_doesNotUpscaleSmallWindow() {
+        // 창이 cell보다 작으면 원래 크기 유지(확대 안 함) — macOS처럼 창 1개면 실제 크기.
+        let fit = MissionControlLayout.aspectFit(CGSize(width: 200, height: 400),
+                                                 in: CGRect(x: 0, y: 0, width: 1000, height: 1000))
+        XCTAssertEqual(fit.width, 200)
+        XCTAssertEqual(fit.height, 400)
+        XCTAssertEqual(fit.midX, 500)   // 가운데 정렬은 유지
+        XCTAssertEqual(fit.midY, 500)
+    }
+
+    func test_aspectFit_downscalesLargeWindow() {
+        let fit = MissionControlLayout.aspectFit(CGSize(width: 1000, height: 500),
+                                                 in: CGRect(x: 0, y: 0, width: 500, height: 500))
+        XCTAssertEqual(fit.width, 500)
+        XCTAssertEqual(fit.height, 250)
+    }
+
     func test_deterministic() {
         let ws = (1...5).map {
             (id: $0, frame: CGRect(x: CGFloat($0 * 100), y: CGFloat($0 * 60), width: 400, height: 300))
