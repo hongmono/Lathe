@@ -35,8 +35,10 @@ final class MissionControlViewModel: ObservableObject {
         }
     }
 
-    func setThumbnail(_ image: NSImage, forWindowID id: Int) {
-        thumbnails[id] = image
+    /// 여러 썸네일을 한 번에 반영 → 재렌더 1회. (창별 setThumbnail은 도착마다 전체 재렌더 N회)
+    func setThumbnails(_ images: [Int: NSImage]) {
+        guard !images.isEmpty else { return }
+        thumbnails.merge(images) { _, new in new }
     }
 
     /// ⌘+Tab: 앱(스택) 사이 이동.

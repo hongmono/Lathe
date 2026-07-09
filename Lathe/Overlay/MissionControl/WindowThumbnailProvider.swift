@@ -39,13 +39,23 @@ struct WindowThumbnailProvider {
         }
     }
 
+    /// 캡처 해상도 상한(긴 변 px). 타일은 이보다 작게 표시되므로 원본 통째 캡처는 낭비.
+    /// ponytail: 800 고정. 창이 적어 타일이 아주 클 때만 살짝 soft — 그 경우 캡처 비용도 낮아 무관.
+    private static func captureSize(for size: CGSize) -> (Int, Int) {
+        let maxSide: CGFloat = 800
+        let w = max(size.width, 1), h = max(size.height, 1)
+        let scale = min(1, maxSide / max(w, h))
+        return (max(1, Int(w * scale)), max(1, Int(h * scale)))
+    }
+
     /// 창 하나의 현재 화면을 캡처. 실패 시 nil.
     private static func captureOne(_ window: SCWindow) async -> (Int, NSImage)? {
         guard window.frame.width > 0, window.frame.height > 0 else { return nil }
         let filter = SCContentFilter(desktopIndependentWindow: window)
         let config = SCStreamConfiguration()
-        config.width = Int(window.frame.width)
-        config.height = Int(window.frame.height)
+        let (w, h) = captureSize(for: window.frame.size)
+        config.width = w
+        config.height = h
         config.showsCursor = false
         guard let cgImage = try? await SCScreenshotManager.captureImage(
             contentFilter: filter, configuration: config

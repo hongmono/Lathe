@@ -67,10 +67,10 @@ final class MissionControlViewModelTests: XCTestCase {
         XCTAssertNil(vm.currentWindow)
     }
 
-    func test_setThumbnail_keepsSelection() {
+    func test_setThumbnails_keepsSelection() {
         let vm = MissionControlViewModel()
         vm.set(stacks: stacks([(1, [10]), (2, [20])]), selectedWindowID: 20)
-        vm.setThumbnail(NSImage(), forWindowID: 10)
+        vm.setThumbnails([10: NSImage()])
         XCTAssertEqual(vm.currentStack?.appEntry.id, 2)
         XCTAssertNotNil(vm.thumbnails[10])
     }

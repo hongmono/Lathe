@@ -57,7 +57,7 @@ final class MissionControlController {
                 return
             }
             let images = await self.thumbnails.capture(windowIDs: ids)
-            for (id, image) in images { self.viewModel.setThumbnail(image, forWindowID: id) }
+            self.viewModel.setThumbnails(images)
         }
     }
 
