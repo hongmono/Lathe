@@ -25,13 +25,16 @@ struct MissionControlScreenView: View {
 
             ForEach(Array(tiles.enumerated()), id: \.element.windowID) { index, tile in
                 if let stack = byID[tile.windowID] {
-                    stackView(stack: stack, isSelected: stack.id == viewModel.currentStack?.id)
+                    stackView(stack: stack,
+                              isSelected: stack.id == viewModel.currentStack?.id,
+                              isHovered: stack.id == viewModel.hoveredStackID)
                         .frame(width: tile.rect.width, height: tile.rect.height)
                         .scaleEffect(appeared ? 1 : 0.88)
                         .opacity(appeared ? 1 : 0)
                         .animation(.spring(response: 0.42, dampingFraction: 0.74)
                             .delay(Double(index) * 0.045), value: appeared)
                         .offset(x: tile.rect.minX, y: tile.rect.minY)
+                    // 클릭 선택은 패널 레벨(FirstMouseHostingView + 컨트롤러 히트테스트)에서 처리.
                 }
             }
         }
@@ -39,13 +42,14 @@ struct MissionControlScreenView: View {
         .animation(.spring(response: 0.28, dampingFraction: 0.8), value: viewModel.selectedStackIndex)
         .animation(.spring(response: 0.34, dampingFraction: 0.72), value: viewModel.currentStack?.frontIndex)
         .animation(.easeInOut(duration: 0.15), value: viewModel.stacks.map(\.id))
+        .animation(.easeOut(duration: 0.13), value: viewModel.hoveredStackID)   // hover dim 페이드
         .onAppear { appeared = true }
     }
 
     /// 앱 스택: 스택의 각 창을 실제 카드로 그리고 frontIndex 기준 상대 깊이로 배치한다.
     /// ⌘+`로 frontIndex가 바뀌면 각 카드가 offset/scale을 애니메이션하며 **실제로 자리를 옮긴다**.
     @ViewBuilder
-    private func stackView(stack: MCAppStack, isSelected: Bool) -> some View {
+    private func stackView(stack: MCAppStack, isSelected: Bool, isHovered: Bool) -> some View {
         let count = stack.windows.count
         let maxDepth = 2   // 앞 + 뒤 2장까지 노출
         ZStack {
@@ -53,7 +57,7 @@ struct MissionControlScreenView: View {
                 let idx = stack.windows.firstIndex { $0.id == window.id } ?? 0
                 let depth = (idx - stack.frontIndex + count) % count   // 0 = 맨 앞
                 let d = CGFloat(min(depth, maxDepth))
-                card(window: window, isFront: depth == 0, isSelected: isSelected)
+                card(window: window, isFront: depth == 0, isSelected: isSelected, isHovered: isHovered)
                     .scaleEffect(1 - d * 0.03)
                     .offset(x: d * 16, y: d * 16)
                     .opacity(depth <= maxDepth ? (depth == 0 ? 1 : (isSelected ? 0.9 : 0.5)) : 0)
@@ -63,7 +67,7 @@ struct MissionControlScreenView: View {
     }
 
     @ViewBuilder
-    private func card(window: MCWindow, isFront: Bool, isSelected: Bool) -> some View {
+    private func card(window: MCWindow, isFront: Bool, isSelected: Bool, isHovered: Bool) -> some View {
         ZStack {
             // 폴백(아이콘+제목)을 항상 깔고, 썸네일이 도착하면 그 위로 1초에 걸쳐 서서히 나타난다.
             fallbackTile(window: window)
@@ -77,8 +81,8 @@ struct MissionControlScreenView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: viewModel.thumbnails[window.id] != nil)
         .overlay {
-            // 선택 안 된 스택은 살짝 어둡게(dim). 흐림(blur) 아님.
-            Color.black.opacity(isSelected ? 0 : 0.3)
+            // 선택(Tab) 또는 hover 시 dim 제거. 그 외엔 살짝 어둡게.
+            Color.black.opacity((isSelected || isHovered) ? 0 : 0.3)
         }
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay {

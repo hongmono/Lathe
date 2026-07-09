@@ -5,6 +5,12 @@ import Combine
 final class CarouselViewModel: ObservableObject {
     @Published private(set) var apps: [AppEntry] = []
     @Published private(set) var selectedIndex: Int = 0
+    /// hover 중인 앱 카드. dim(거리 기반 opacity) 제거에만 쓴다.
+    @Published private(set) var hoveredAppID: pid_t?
+
+    func setHovered(_ id: pid_t?) {
+        if hoveredAppID != id { hoveredAppID = id }
+    }
 
     func update(apps: [AppEntry], selectedIndex: Int) {
         self.apps = apps
@@ -20,6 +26,11 @@ final class CarouselViewModel: ObservableObject {
         } else {
             self.selectedIndex = clamp(selectedIndex, count: newApps.count)
         }
+    }
+
+    /// 카드 클릭: 특정 인덱스를 선택한다.
+    func select(_ index: Int) {
+        selectedIndex = clamp(index, count: apps.count)
     }
 
     func next() {

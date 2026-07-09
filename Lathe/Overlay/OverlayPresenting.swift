@@ -4,6 +4,8 @@ import Foundation
 @MainActor
 protocol OverlayPresenting: AnyObject {
     var isVisible: Bool { get }
+    /// 카드/타일 클릭 시 현재 선택을 확정(활성화+닫기)하는 콜백. AppDelegate가 설정한다.
+    var onCommit: (() -> Void)? { get set }
     func next()
     func previous()
     func cycleWindow()

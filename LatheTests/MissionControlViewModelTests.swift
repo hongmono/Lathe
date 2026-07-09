@@ -74,4 +74,24 @@ final class MissionControlViewModelTests: XCTestCase {
         XCTAssertEqual(vm.currentStack?.appEntry.id, 2)
         XCTAssertNotNil(vm.thumbnails[10])
     }
+
+    func test_pick_selectsStackAndFiresCommit() {
+        let vm = MissionControlViewModel()
+        vm.set(stacks: stacks([(1, [10]), (2, [20])]), selectedWindowID: 10)
+        var committed = false
+        vm.onCommit = { committed = true }
+        let target = vm.stacks.first { $0.appEntry.id == 2 }!.id
+        vm.pick(stackID: target)
+        XCTAssertEqual(vm.currentStack?.appEntry.id, 2)   // 클릭한 스택이 선택됨
+        XCTAssertTrue(committed)                          // 확정 콜백 발화
+    }
+
+    func test_pick_unknownStack_noCommit() {
+        let vm = MissionControlViewModel()
+        vm.set(stacks: stacks([(1, [10])]), selectedWindowID: 10)
+        var committed = false
+        vm.onCommit = { committed = true }
+        vm.pick(stackID: 999999)
+        XCTAssertFalse(committed)
+    }
 }

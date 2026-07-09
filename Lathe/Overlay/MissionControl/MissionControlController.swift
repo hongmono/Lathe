@@ -11,6 +11,13 @@ final class MissionControlController {
     private(set) var isVisible = false
     private var didRequestScreenRecording = false
 
+    /// 타일 클릭 시 선택 확정(활성화+닫기). AppDelegate가 설정한다.
+    var onCommit: (() -> Void)?
+
+    init() {
+        viewModel.onCommit = { [weak self] in self?.onCommit?() }
+    }
+
     /// 현재 Space 창을 앱별 스택으로 묶어 각 모니터 패널에 펼친다. forward=true면 활성 앱 다음 스택을 선택.
     func show(appEntries: [AppEntry], forward: Bool) {
         let builtStacks = stacks(appEntries: appEntries)
@@ -25,6 +32,10 @@ final class MissionControlController {
             panel.alphaValue = 0
             panel.orderFrontRegardless()
         }
+        // 마우스가 있는 화면의 패널을 key로 → 클릭 이벤트가 확실히 그 패널로 오도록.
+        let mouse = NSEvent.mouseLocation
+        let keyIdx = NSScreen.screens.firstIndex { NSMouseInRect(mouse, $0.frame, false) } ?? 0
+        if panels.indices.contains(keyIdx) { panels[keyIdx].makeKey() }
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.12
             panels.forEach { $0.animator().alphaValue = 1 }
@@ -70,6 +81,8 @@ final class MissionControlController {
     func hide(animated: Bool) {
         guard isVisible else { return }
         isVisible = false
+        viewModel.setHovered(nil)
+        NSCursor.arrow.set()
         let toClose = panels
         panels = []
         if animated {
@@ -87,6 +100,30 @@ final class MissionControlController {
         }
     }
 
+    /// 화면-로컬 좌표에서 그 위 스택 id를 찾는다. 뷰와 동일한 tiles() 계산 재사용 → 위치 정확히 일치.
+    private func stackID(at point: NSPoint, screenIndex: Int) -> Int? {
+        guard NSScreen.screens.indices.contains(screenIndex) else { return nil }
+        let areaSize = NSScreen.screens[screenIndex].frame.size
+        let mine = viewModel.stacks.filter { $0.screenIndex == screenIndex }
+        let tiles = MissionControlLayout.tiles(
+            windows: mine.map { (id: $0.id, frame: $0.frontWindow.localFrame) },
+            in: CGRect(origin: .zero, size: areaSize)
+        )
+        return tiles.first(where: { $0.rect.contains(point) })?.windowID   // tile.windowID == stack.id
+    }
+
+    /// 타일 클릭: 그 스택으로 전환.
+    private func handleClick(at point: NSPoint, screenIndex: Int) {
+        if let id = stackID(at: point, screenIndex: screenIndex) { viewModel.pick(stackID: id) }
+    }
+
+    /// hover: 그 위 타일의 dim 제거 + 커서를 포인팅 핸드로(패널은 mouseEntered에서 key가 됨).
+    private func handleHover(at point: NSPoint?, screenIndex: Int) {
+        let id = point.flatMap { stackID(at: $0, screenIndex: screenIndex) }
+        viewModel.setHovered(id)
+        (id != nil ? NSCursor.pointingHand : NSCursor.arrow).set()
+    }
+
     /// 화면 수만큼 패널을 만들어 각 화면을 꽉 채운다.
     private func rebuildPanels() {
         panels.forEach { $0.orderOut(nil) }
@@ -96,9 +133,11 @@ final class MissionControlController {
             let root = MissionControlScreenView(viewModel: viewModel,
                                                 screenIndex: index,
                                                 areaSize: screen.frame.size)
-            let host = NSHostingView(rootView: root)
+            let host = FirstMouseHostingView(rootView: root)
             host.frame = NSRect(origin: .zero, size: screen.frame.size)
             host.autoresizingMask = [.width, .height]
+            host.onClick = { [weak self] point in self?.handleClick(at: point, screenIndex: index) }
+            host.onHover = { [weak self] point in self?.handleHover(at: point, screenIndex: index) }
             let container = NSView(frame: NSRect(origin: .zero, size: screen.frame.size))
             container.addSubview(host)
             panel.contentView = container

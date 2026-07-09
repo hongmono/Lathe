@@ -21,6 +21,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appList = AppListProvider()
         overlay = OverlayController()
         missionControl = MissionControlController()
+        // 카드/타일 클릭도 ⌘ 릴리스와 동일한 확정 경로를 쓴다.
+        overlay.onCommit = { [weak self] in self?.commitActiveSelection() }
+        missionControl.onCommit = { [weak self] in self?.commitActiveSelection() }
         appList.didChange = { [weak self] in
             guard let self else { return }
             if self.overlay.isVisible {
@@ -67,7 +70,12 @@ extension AppDelegate: HotKeyMonitorDelegate {
     }
 
     func hotKeyDidDisarm() {
-        // 어느 쪽이 떠 있든 그 컨트롤러의 선택을 활성화한다.
+        // ⌘ 릴리스 → 현재 선택을 확정.
+        commitActiveSelection()
+    }
+
+    /// 떠 있는 오버레이의 현재 선택을 활성화하고 닫는다. ⌘ 릴리스와 카드/타일 클릭이 공유한다.
+    private func commitActiveSelection() {
         let presenter: OverlayPresenting? =
             overlay.isVisible ? overlay : (missionControl.isVisible ? missionControl : nil)
         guard let presenter else { return }

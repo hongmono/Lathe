@@ -29,8 +29,9 @@ struct OverlayRootView: View {
                     .scaleEffect(item.scale)
                     .rotationEffect(.degrees(item.angleDegrees), anchor: .center)
                     .offset(x: item.offsetX, y: item.offsetY)
-                    .opacity(item.opacity)
+                    .opacity(item.entry.id == carouselViewModel.hoveredAppID ? 1.0 : item.opacity)
                     .zIndex(item.zIndex)
+                // 클릭 선택은 패널 레벨(FirstMouseHostingView + 컨트롤러 히트테스트)에서 처리.
             }
         }
         .frame(width: frameSide, height: frameSide)
@@ -40,6 +41,7 @@ struct OverlayRootView: View {
         .animation(.easeInOut(duration: 0.14), value: settings.showAppNamesInCarousel)
         .animation(.easeInOut(duration: 0.14), value: settings.fanRadius)
         .animation(.easeInOut(duration: 0.14), value: settings.fanSpacing)
+        .animation(.easeOut(duration: 0.13), value: carouselViewModel.hoveredAppID)   // hover dim 페이드
         .overlay(alignment: .top) {
             if windowSelectionViewModel.hasMultipleWindows {
                 WindowListView(
