@@ -38,13 +38,11 @@ final class WindowSelectionViewModel: ObservableObject {
     func next() {
         guard windows.count > 1 else { return }
         selectedIndex = (selectedIndex + 1) % windows.count
-        touchCurrentSelection()
     }
 
     func previous() {
         guard windows.count > 1 else { return }
         selectedIndex = (selectedIndex - 1 + windows.count) % windows.count
-        touchCurrentSelection()
     }
 
     func recordActivation() {

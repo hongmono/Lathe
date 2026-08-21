@@ -2,7 +2,7 @@ import SwiftUI
 
 struct OverlayRootView: View {
     @ObservedObject var carouselViewModel: CarouselViewModel
-    @ObservedObject var windowSelectionViewModel: WindowSelectionViewModel
+    let windowSelectionViewModel: WindowSelectionViewModel
     @ObservedObject var settings: SettingsStore = .shared
 
     private let heightRatio: CGFloat = 1.36
@@ -43,18 +43,11 @@ struct OverlayRootView: View {
         .animation(.easeInOut(duration: 0.14), value: settings.fanSpacing)
         .animation(.easeOut(duration: 0.13), value: carouselViewModel.hoveredAppID)   // hover dim 페이드
         .overlay(alignment: .top) {
-            if windowSelectionViewModel.hasMultipleWindows {
-                WindowListView(
-                    windows: windowSelectionViewModel.windows,
-                    selectedIndex: windowSelectionViewModel.selectedIndex
-                )
-                .offset(y: windowListTopOffset)
-                .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
-                .animation(.spring(response: 0.26, dampingFraction: 0.82), value: windowSelectionViewModel.selectedIndex)
-                .animation(.easeInOut(duration: 0.16), value: windowSelectionViewModel.windows.map(\.id))
-            }
+            WindowSelectionOverlay(
+                viewModel: windowSelectionViewModel,
+                topOffset: windowListTopOffset
+            )
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.82), value: windowSelectionViewModel.hasMultipleWindows)
     }
 
     private struct Item {
@@ -89,6 +82,23 @@ struct OverlayRootView: View {
                 opacity: layoutItem.opacity,
                 zIndex: layoutItem.zIndex
             )
+        }
+    }
+}
+
+private struct WindowSelectionOverlay: View {
+    @ObservedObject var viewModel: WindowSelectionViewModel
+    let topOffset: CGFloat
+
+    var body: some View {
+        if viewModel.hasMultipleWindows {
+            WindowListView(
+                windows: viewModel.windows,
+                selectedIndex: viewModel.selectedIndex
+            )
+            .offset(y: topOffset)
+            .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
+            .animation(.easeInOut(duration: 0.16), value: viewModel.windows.map(\.id))
         }
     }
 }

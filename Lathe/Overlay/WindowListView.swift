@@ -44,9 +44,7 @@ struct WindowListView: View {
                 height: WindowListLayout.contentHeight(for: windows.count)
             )
             .onChange(of: selectedIndex) { _, newIndex in
-                withAnimation(.easeInOut(duration: 0.14)) {
-                    proxy.scrollTo(newIndex, anchor: .center)
-                }
+                proxy.scrollTo(newIndex, anchor: .center)
             }
             .onAppear {
                 proxy.scrollTo(selectedIndex, anchor: .center)

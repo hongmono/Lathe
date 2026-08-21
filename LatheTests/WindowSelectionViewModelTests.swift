@@ -63,4 +63,23 @@ final class WindowSelectionViewModelTests: XCTestCase {
         viewModel.previous()
         XCTAssertEqual(viewModel.currentWindow?.id, 2)
     }
+
+    func test_cyclingDoesNotChangePreferredWindowUntilActivation() {
+        let pid: pid_t = 42
+        let entries = [
+            WindowEntry(id: 1, title: "One", pathSummary: nil, isMinimized: false),
+            WindowEntry(id: 2, title: "Two", pathSummary: nil, isMinimized: false),
+        ]
+        let listing = StubWindowListing()
+        listing.windowsByPID[pid] = entries
+        let tracker = WindowFocusTracker(windowListProvider: listing)
+        let viewModel = WindowSelectionViewModel(focusTracker: tracker)
+        viewModel.load(forProcessIdentifier: pid)
+
+        viewModel.next()
+
+        let reloadedViewModel = WindowSelectionViewModel(focusTracker: tracker)
+        reloadedViewModel.load(forProcessIdentifier: pid)
+        XCTAssertEqual(reloadedViewModel.currentWindow?.id, 1)
+    }
 }
