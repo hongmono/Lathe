@@ -4,17 +4,33 @@ import AppKit
 @main
 struct LatheApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @State private var isMenuBarExtraInserted = MenuBarInsertionPolicy.initialValue
 
     var body: some Scene {
         // 설정창은 AppKit NSSplitViewController(SettingsWindowController)로 띄운다.
         // 메뉴바만 SwiftUI 씬으로 둔다.
-        MenuBarExtra {
+        MenuBarExtra(isInserted: menuBarExtraInsertion) {
             MenuBarContent()
         } label: {
             Image("MenuBarIcon")
                 .renderingMode(.template)
         }
         .menuBarExtraStyle(.menu)
+    }
+
+    private var menuBarExtraInsertion: Binding<Bool> {
+        Binding(
+            get: { isMenuBarExtraInserted },
+            set: { isMenuBarExtraInserted = MenuBarInsertionPolicy.resolve($0) }
+        )
+    }
+}
+
+enum MenuBarInsertionPolicy {
+    static let initialValue = true
+
+    static func resolve(_: Bool) -> Bool {
+        true
     }
 }
 
