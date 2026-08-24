@@ -43,6 +43,7 @@ enum CarouselGeometry {
 enum CarouselLayout {
     struct Item: Equatable {
         let index: Int
+        let virtualIndex: Int
         let relativeIndex: Int
         let angleDegrees: Double
         let offsetX: Double
@@ -54,6 +55,7 @@ enum CarouselLayout {
 
     static func items(appCount: Int,
                       selectedIndex: Int,
+                      selectionPosition: Int? = nil,
                       style: LayoutStyle,
                       angularStep: Double,
                       fanRadius: Double = CarouselGeometry.defaultFanRadius,
@@ -62,13 +64,20 @@ enum CarouselLayout {
         guard appCount > 0 else { return [] }
 
 
+        let resolvedSelectionPosition = selectionPosition ?? selectedIndex
         return (0..<appCount).compactMap { index -> Item? in
-            let relativeIndex = index - selectedIndex
+            let virtualIndex = nearestVirtualIndex(
+                for: index,
+                selectionPosition: resolvedSelectionPosition,
+                appCount: appCount
+            )
+            let relativeIndex = virtualIndex - resolvedSelectionPosition
             let distance = abs(relativeIndex)
             guard distance <= maxVisibleEachSide else { return nil }
 
             return item(
                 index: index,
+                virtualIndex: virtualIndex,
                 relativeIndex: relativeIndex,
                 distance: distance,
                 style: style,
@@ -80,8 +89,21 @@ enum CarouselLayout {
         }
     }
 
+    private static func nearestVirtualIndex(for index: Int,
+                                            selectionPosition: Int,
+                                            appCount: Int) -> Int {
+        let baseCycle = (selectionPosition - index) / appCount
+        return ((baseCycle - 1)...(baseCycle + 1))
+            .map { index + $0 * appCount }
+            .min {
+                let lhsDistance = abs($0 - selectionPosition)
+                let rhsDistance = abs($1 - selectionPosition)
+                return lhsDistance == rhsDistance ? $0 > $1 : lhsDistance < rhsDistance
+            }!
+    }
 
     private static func item(index: Int,
+                             virtualIndex: Int,
                              relativeIndex: Int,
                              distance: Int,
                              style: LayoutStyle,
@@ -99,6 +121,7 @@ enum CarouselLayout {
             let radians = Double(relativeIndex) * clampedFanSpacing / clampedFanRadius
             return Item(
                 index: index,
+                virtualIndex: virtualIndex,
                 relativeIndex: relativeIndex,
                 angleDegrees: radians * 180 / .pi,
                 offsetX: clampedFanRadius * sin(radians),
@@ -110,6 +133,7 @@ enum CarouselLayout {
         case .strip:
             return Item(
                 index: index,
+                virtualIndex: virtualIndex,
                 relativeIndex: relativeIndex,
                 angleDegrees: 0,
                 offsetX: Double(relativeIndex) * angularStep * 10,
@@ -121,6 +145,7 @@ enum CarouselLayout {
         case .stack:
             return Item(
                 index: index,
+                virtualIndex: virtualIndex,
                 relativeIndex: relativeIndex,
                 angleDegrees: Double(direction) * min(Double(distance) * 2.5, 7.5),
                 offsetX: Double(relativeIndex) * angularStep * (8.0 / 3.0),

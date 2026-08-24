@@ -24,6 +24,8 @@ final class CarouselViewModelTests: XCTestCase {
         vm.update(apps: makeApps(3), selectedIndex: 2)
         vm.next()
         XCTAssertEqual(vm.selectedIndex, 0)
+        XCTAssertEqual(vm.selectionPosition, 3)
+        XCTAssertEqual(vm.selectionDirection, 1)
     }
 
     @MainActor
@@ -32,6 +34,8 @@ final class CarouselViewModelTests: XCTestCase {
         vm.update(apps: makeApps(3), selectedIndex: 0)
         vm.previous()
         XCTAssertEqual(vm.selectedIndex, 2)
+        XCTAssertEqual(vm.selectionPosition, -1)
+        XCTAssertEqual(vm.selectionDirection, -1)
     }
 
     @MainActor
@@ -40,6 +44,19 @@ final class CarouselViewModelTests: XCTestCase {
         vm.update(apps: [], selectedIndex: 0)
         vm.next()
         XCTAssertEqual(vm.selectedIndex, 0)
+    }
+
+    @MainActor
+    func test_singleApp_navigationKeepsStablePosition() {
+        let vm = CarouselViewModel()
+        vm.update(apps: makeApps(1), selectedIndex: 0)
+
+        vm.next()
+        vm.previous()
+
+        XCTAssertEqual(vm.selectedIndex, 0)
+        XCTAssertEqual(vm.selectionPosition, 0)
+        XCTAssertEqual(vm.selectionDirection, 0)
     }
 
     @MainActor
@@ -59,6 +76,19 @@ final class CarouselViewModelTests: XCTestCase {
         vm.replaceApps(apps.reversed())
         XCTAssertEqual(vm.currentEntry?.id, apps[0].id)
         XCTAssertEqual(vm.selectedIndex, 2)
+    }
+
+    @MainActor
+    func test_replaceApps_preservesContinuousPosition_whenPidOrderIsUnchanged() {
+        let vm = CarouselViewModel()
+        vm.update(apps: makeApps(3), selectedIndex: 2)
+        vm.next()
+
+        vm.replaceApps(makeApps(3))
+
+        XCTAssertEqual(vm.selectedIndex, 0)
+        XCTAssertEqual(vm.selectionPosition, 3)
+        XCTAssertEqual(vm.selectionDirection, 1)
     }
 
     @MainActor

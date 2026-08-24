@@ -86,6 +86,7 @@ final class OverlayController {
         let items = CarouselLayout.items(
             appCount: carouselViewModel.apps.count,
             selectedIndex: carouselViewModel.selectedIndex,
+            selectionPosition: carouselViewModel.selectionPosition,
             style: settings.layoutStyle,
             angularStep: settings.angularStep,
             fanRadius: settings.fanRadius,

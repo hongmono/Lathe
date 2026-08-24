@@ -19,7 +19,7 @@ struct OverlayRootView: View {
         let windowListTopOffset = frameSide / 2 + cardHeight / 2 + appToWindowGap
 
         return ZStack {
-            ForEach(visibleEntries(angularStep: angularStep, maxVisibleEachSide: maxVisibleEachSide), id: \.entry.id) { item in
+            ForEach(visibleEntries(angularStep: angularStep, maxVisibleEachSide: maxVisibleEachSide)) { item in
                 CardView(
                     entry: item.entry,
                     isFocused: item.isFocused,
@@ -31,11 +31,12 @@ struct OverlayRootView: View {
                     .offset(x: item.offsetX, y: item.offsetY)
                     .opacity(item.entry.id == carouselViewModel.hoveredAppID ? 1.0 : item.opacity)
                     .zIndex(item.zIndex)
+                    .transition(cardTransition)
                 // 클릭 선택은 패널 레벨(FirstMouseHostingView + 컨트롤러 히트테스트)에서 처리.
             }
         }
         .frame(width: frameSide, height: frameSide)
-        .animation(.spring(response: 0.32, dampingFraction: 0.74), value: carouselViewModel.selectedIndex)
+        .animation(selectionAnimation, value: carouselViewModel.selectionPosition)
         .animation(.easeInOut(duration: 0.18), value: carouselViewModel.apps.map(\.id))
         .animation(.spring(response: 0.28, dampingFraction: 0.78), value: settings.layoutStyle)
         .animation(.easeInOut(duration: 0.14), value: settings.showAppNamesInCarousel)
@@ -50,7 +51,13 @@ struct OverlayRootView: View {
         }
     }
 
-    private struct Item {
+    private struct Item: Identifiable {
+        struct ID: Hashable {
+            let appID: Int32
+            let virtualIndex: Int
+        }
+
+        let id: ID
         let entry: AppEntry
         let isFocused: Bool
         let angleDegrees: Double
@@ -61,10 +68,34 @@ struct OverlayRootView: View {
         let zIndex: Double
     }
 
+    private var selectionAnimation: Animation? {
+        carouselViewModel.apps.count > 2
+            ? .spring(response: 0.32, dampingFraction: 0.86)
+            : nil
+    }
+
+    private var cardTransition: AnyTransition {
+        switch carouselViewModel.selectionDirection {
+        case 1:
+            .asymmetric(
+                insertion: .move(edge: .trailing).combined(with: .opacity),
+                removal: .move(edge: .leading).combined(with: .opacity)
+            )
+        case -1:
+            .asymmetric(
+                insertion: .move(edge: .leading).combined(with: .opacity),
+                removal: .move(edge: .trailing).combined(with: .opacity)
+            )
+        default:
+            .opacity
+        }
+    }
+
     private func visibleEntries(angularStep: Double, maxVisibleEachSide: Int) -> [Item] {
         CarouselLayout.items(
             appCount: carouselViewModel.apps.count,
             selectedIndex: carouselViewModel.selectedIndex,
+            selectionPosition: carouselViewModel.selectionPosition,
             style: settings.layoutStyle,
             angularStep: angularStep,
             fanRadius: settings.fanRadius,
@@ -73,6 +104,7 @@ struct OverlayRootView: View {
         ).map { layoutItem in
             let entry = carouselViewModel.apps[layoutItem.index]
             return Item(
+                id: Item.ID(appID: entry.id, virtualIndex: layoutItem.virtualIndex),
                 entry: entry,
                 isFocused: layoutItem.relativeIndex == 0,
                 angleDegrees: layoutItem.angleDegrees,

@@ -137,4 +137,33 @@ final class CarouselLayoutTests: XCTestCase {
         XCTAssertEqual(items[6].angleDegrees, 39.67, accuracy: 0.01)
     }
 
+    func test_wrapForwardKeepsCardsMovingOneSlotInSameDirection() {
+        let beforeWrap = CarouselLayout.items(
+            appCount: 5,
+            selectedIndex: 4,
+            selectionPosition: 4,
+            style: .strip,
+            angularStep: 12
+        )
+        let afterWrap = CarouselLayout.items(
+            appCount: 5,
+            selectedIndex: 0,
+            selectionPosition: 5,
+            style: .strip,
+            angularStep: 12
+        )
+
+        let beforeByVirtualIndex = Dictionary(uniqueKeysWithValues: beforeWrap.map { ($0.virtualIndex, $0) })
+        let afterByVirtualIndex = Dictionary(uniqueKeysWithValues: afterWrap.map { ($0.virtualIndex, $0) })
+        let continuingVirtualIndexes = Set(beforeByVirtualIndex.keys).intersection(afterByVirtualIndex.keys)
+
+        XCTAssertEqual(continuingVirtualIndexes, Set([3, 4, 5, 6]))
+        for virtualIndex in continuingVirtualIndexes {
+            XCTAssertEqual(
+                afterByVirtualIndex[virtualIndex]!.relativeIndex,
+                beforeByVirtualIndex[virtualIndex]!.relativeIndex - 1
+            )
+        }
+    }
+
 }
