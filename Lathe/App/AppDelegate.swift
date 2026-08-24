@@ -147,6 +147,11 @@ extension AppDelegate: HotKeyMonitorDelegate {
         }
     }
 
+    func hotKeyDidRequestOpenSettings() {
+        hideOverlay(animated: false)
+        SettingsWindowController.shared.show(pane: .general)
+    }
+
     /// 미션 컨트롤 오버레이를 첫 표시한다.
     private func presentMissionControl(forward: Bool) {
         appList.refresh()

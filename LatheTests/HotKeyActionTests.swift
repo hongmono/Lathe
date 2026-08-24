@@ -131,4 +131,29 @@ final class HotKeyActionTests: XCTestCase {
             )
         )
     }
+
+    func test_commandCommaRequestsSettingsWhenOverlayIsVisible() {
+        XCTAssertEqual(
+            HotKeyAction.resolve(
+                keyCode: 0x2B,
+                commandDown: true,
+                shiftDown: false,
+                arrowsEnabled: true,
+                windowCycleEnabled: true
+            ),
+            .openSettings
+        )
+    }
+
+    func test_commandCommaIsIgnoredWhenOverlayIsHidden() {
+        XCTAssertNil(
+            HotKeyAction.resolve(
+                keyCode: 0x2B,
+                commandDown: true,
+                shiftDown: false,
+                arrowsEnabled: false,
+                windowCycleEnabled: true
+            )
+        )
+    }
 }

@@ -9,6 +9,7 @@ protocol HotKeyMonitorDelegate: AnyObject {
     func hotKeyDidRequestPrevious()
     func hotKeyDidRequestCycleWindow()
     func hotKeyDidRequestCycleWindowPrevious()
+    func hotKeyDidRequestOpenSettings()
     func hotKeyDidCancel()
 }
 
@@ -22,6 +23,7 @@ enum HotKeyAction: Equatable {
     case previous
     case cycleWindow
     case cycleWindowPrevious
+    case openSettings
     case cancel
 
     private static let tabKeyCode: CGKeyCode = 0x30
@@ -30,6 +32,7 @@ enum HotKeyAction: Equatable {
     private static let rightArrowKeyCode: CGKeyCode = 0x7C
     private static let graveKeyCode: CGKeyCode = 0x32
     private static let sectionKeyCode: CGKeyCode = 0x0A
+    private static let commaKeyCode: CGKeyCode = 0x2B
 
     static func resolve(keyCode: CGKeyCode,
                         commandDown: Bool,
@@ -46,6 +49,8 @@ enum HotKeyAction: Equatable {
         case graveKeyCode where commandDown && windowCycleEnabled,
              sectionKeyCode where commandDown && windowCycleEnabled:
             return shiftDown ? .cycleWindowPrevious : .cycleWindow
+        case commaKeyCode where commandDown && !shiftDown && arrowsEnabled:
+            return .openSettings
         case escKeyCode where commandDown:
             return .cancel
         default:
@@ -196,6 +201,11 @@ final class HotKeyMonitor {
         case .cycleWindowPrevious:
             DispatchQueue.main.async { [weak self] in
                 self?.delegate?.hotKeyDidRequestCycleWindowPrevious()
+            }
+            return nil
+        case .openSettings:
+            DispatchQueue.main.async { [weak self] in
+                self?.delegate?.hotKeyDidRequestOpenSettings()
             }
             return nil
         case .cancel:
