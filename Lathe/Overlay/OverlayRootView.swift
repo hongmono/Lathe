@@ -17,9 +17,23 @@ struct OverlayRootView: View {
         let pivotDistance = cardWidth * pivotRatio
         let frameSide = (pivotDistance + cardHeight) * 2
         let windowListTopOffset = frameSide / 2 + cardHeight / 2 + appToWindowGap
+        let layoutItems = CarouselLayout.items(
+            appCount: carouselViewModel.apps.count,
+            selectedIndex: carouselViewModel.selectedIndex,
+            selectionPosition: carouselViewModel.selectionPosition,
+            style: settings.layoutStyle,
+            angularStep: angularStep,
+            fanRadius: settings.fanRadius,
+            fanSpacing: settings.fanSpacing,
+            maxVisibleEachSide: maxVisibleEachSide
+        )
+        let transitionTravel = CGFloat(CarouselTransitionGeometry.directionalTravel(
+            items: layoutItems,
+            cardWidth: Double(cardWidth)
+        ))
 
         return ZStack {
-            ForEach(visibleEntries(angularStep: angularStep, maxVisibleEachSide: maxVisibleEachSide)) { item in
+            ForEach(visibleEntries(layoutItems)) { item in
                 CardView(
                     entry: item.entry,
                     isFocused: item.isFocused,
@@ -31,7 +45,7 @@ struct OverlayRootView: View {
                     .offset(x: item.offsetX, y: item.offsetY)
                     .opacity(item.entry.id == carouselViewModel.hoveredAppID ? 1.0 : item.opacity)
                     .zIndex(item.zIndex)
-                    .transition(cardTransition)
+                    .transition(cardTransition(travel: transitionTravel))
                 // 클릭 선택은 패널 레벨(FirstMouseHostingView + 컨트롤러 히트테스트)에서 처리.
             }
         }
@@ -74,34 +88,20 @@ struct OverlayRootView: View {
             : nil
     }
 
-    private var cardTransition: AnyTransition {
-        switch carouselViewModel.selectionDirection {
-        case 1:
-            .asymmetric(
-                insertion: .move(edge: .trailing).combined(with: .opacity),
-                removal: .move(edge: .leading).combined(with: .opacity)
-            )
-        case -1:
-            .asymmetric(
-                insertion: .move(edge: .leading).combined(with: .opacity),
-                removal: .move(edge: .trailing).combined(with: .opacity)
-            )
-        default:
-            .opacity
-        }
+    private func cardTransition(travel: CGFloat) -> AnyTransition {
+        let spec = CarouselTransitionGeometry.spec(
+            direction: carouselViewModel.selectionDirection,
+            travel: Double(travel)
+        )
+        guard spec.isDirectional else { return .opacity }
+        return .asymmetric(
+            insertion: .offset(x: CGFloat(spec.insertionOffset)).combined(with: .opacity),
+            removal: .offset(x: CGFloat(spec.removalOffset)).combined(with: .opacity)
+        )
     }
 
-    private func visibleEntries(angularStep: Double, maxVisibleEachSide: Int) -> [Item] {
-        CarouselLayout.items(
-            appCount: carouselViewModel.apps.count,
-            selectedIndex: carouselViewModel.selectedIndex,
-            selectionPosition: carouselViewModel.selectionPosition,
-            style: settings.layoutStyle,
-            angularStep: angularStep,
-            fanRadius: settings.fanRadius,
-            fanSpacing: settings.fanSpacing,
-            maxVisibleEachSide: maxVisibleEachSide
-        ).map { layoutItem in
+    private func visibleEntries(_ layoutItems: [CarouselLayout.Item]) -> [Item] {
+        layoutItems.map { layoutItem in
             let entry = carouselViewModel.apps[layoutItem.index]
             return Item(
                 id: Item.ID(appID: entry.id, virtualIndex: layoutItem.virtualIndex),

@@ -166,4 +166,97 @@ final class CarouselLayoutTests: XCTestCase {
         }
     }
 
+    func test_transitionTravelDoesNotPushDefaultFanEdgeCardPastPanel() {
+        let cardWidth = 110.0
+        let items = CarouselLayout.items(
+            appCount: 11,
+            selectedIndex: 5,
+            style: .fan,
+            angularStep: 13,
+            fanRadius: 520,
+            fanSpacing: 120,
+            maxVisibleEachSide: CarouselGeometry.maxVisibleEachSide(for: .fan)
+        )
+
+        let travel = CarouselTransitionGeometry.directionalTravel(
+            items: items,
+            cardWidth: cardWidth
+        )
+        let outerEdge = items
+            .map {
+                CarouselTransitionGeometry.horizontalOuterEdge(
+                    for: $0,
+                    cardWidth: cardWidth
+                )
+            }
+            .max()!
+
+        XCTAssertGreaterThan(travel, 0)
+        XCTAssertLessThanOrEqual(
+            outerEdge + travel + CarouselTransitionGeometry.edgeInset,
+            CarouselTransitionGeometry.panelSide / 2 + 0.001
+        )
+    }
+
+    func test_horizontalOuterEdgeAccountsForRotationScaleAndShadow() {
+        let item = transitionItem(offsetX: 100, angleDegrees: 30, scale: 0.8)
+
+        XCTAssertEqual(
+            CarouselTransitionGeometry.horizontalOuterEdge(for: item, cardWidth: 100),
+            183.841,
+            accuracy: 0.001
+        )
+    }
+
+    func test_directionalTravelCapsAtRemainingPanelSpace() {
+        let item = transitionItem(offsetX: 379)
+
+        XCTAssertEqual(
+            CarouselTransitionGeometry.directionalTravel(items: [item], cardWidth: 110),
+            10,
+            accuracy: 0.001
+        )
+    }
+
+    func test_directionalTravelFallsBackToFadeWhenNoPanelSpaceRemains() {
+        let item = transitionItem(offsetX: 400)
+
+        XCTAssertEqual(
+            CarouselTransitionGeometry.directionalTravel(items: [item], cardWidth: 110),
+            0,
+            accuracy: 0.001
+        )
+    }
+
+    func test_transitionSpecMirrorsOffsetsForForwardAndReverseNavigation() {
+        XCTAssertEqual(
+            CarouselTransitionGeometry.spec(direction: 1, travel: 12),
+            CarouselTransitionSpec(insertionOffset: 12, removalOffset: -12, isDirectional: true)
+        )
+        XCTAssertEqual(
+            CarouselTransitionGeometry.spec(direction: -1, travel: 12),
+            CarouselTransitionSpec(insertionOffset: -12, removalOffset: 12, isDirectional: true)
+        )
+        XCTAssertEqual(
+            CarouselTransitionGeometry.spec(direction: 0, travel: 12),
+            CarouselTransitionSpec(insertionOffset: 0, removalOffset: 0, isDirectional: false)
+        )
+    }
+
+    private func transitionItem(offsetX: Double,
+                                angleDegrees: Double = 0,
+                                scale: Double = 1) -> CarouselLayout.Item {
+        CarouselLayout.Item(
+            index: 0,
+            virtualIndex: 0,
+            relativeIndex: 1,
+            angleDegrees: angleDegrees,
+            offsetX: offsetX,
+            offsetY: 0,
+            scale: scale,
+            opacity: 1,
+            zIndex: 0
+        )
+    }
+
 }

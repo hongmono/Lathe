@@ -157,3 +157,60 @@ enum CarouselLayout {
         }
     }
 }
+
+struct CarouselTransitionSpec: Equatable {
+    let insertionOffset: Double
+    let removalOffset: Double
+    let isDirectional: Bool
+}
+
+enum CarouselTransitionGeometry {
+    static let panelSide = 940.0
+    static let edgeInset = 4.0
+
+    private static let cardHeightRatio = 1.36
+    private static let shadowAllowance = 22.0
+    private static let preferredTravelRatio = 0.18
+
+    static func directionalTravel(items: [CarouselLayout.Item], cardWidth: Double) -> Double {
+        let outerEdge = items
+            .map { horizontalOuterEdge(for: $0, cardWidth: cardWidth) }
+            .max() ?? 0
+        let availableTravel = panelSide / 2 - outerEdge - edgeInset
+        return min(cardWidth * preferredTravelRatio, max(availableTravel, 0))
+    }
+
+    static func horizontalOuterEdge(for item: CarouselLayout.Item, cardWidth: Double) -> Double {
+        let radians = item.angleDegrees * .pi / 180
+        let scaledWidth = cardWidth * item.scale
+        let scaledHeight = cardWidth * cardHeightRatio * item.scale
+        let rotatedHalfWidth = (
+            abs(scaledWidth * cos(radians))
+            + abs(scaledHeight * sin(radians))
+        ) / 2
+        return abs(item.offsetX) + rotatedHalfWidth + shadowAllowance
+    }
+
+    static func spec(direction: Int, travel: Double) -> CarouselTransitionSpec {
+        switch direction {
+        case 1:
+            CarouselTransitionSpec(
+                insertionOffset: travel,
+                removalOffset: -travel,
+                isDirectional: true
+            )
+        case -1:
+            CarouselTransitionSpec(
+                insertionOffset: -travel,
+                removalOffset: travel,
+                isDirectional: true
+            )
+        default:
+            CarouselTransitionSpec(
+                insertionOffset: 0,
+                removalOffset: 0,
+                isDirectional: false
+            )
+        }
+    }
+}
