@@ -58,6 +58,24 @@ final class AppListProvider {
             }
         })
         observers.append(nc.addObserver(
+            forName: NSWorkspace.didHideApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.rebuildSnapshot()
+            }
+        })
+        observers.append(nc.addObserver(
+            forName: NSWorkspace.didUnhideApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.rebuildSnapshot()
+            }
+        })
+        observers.append(nc.addObserver(
             forName: NSWorkspace.activeSpaceDidChangeNotification,
             object: nil,
             queue: .main
@@ -104,7 +122,8 @@ final class AppListProvider {
                 id: pid,
                 bundleIdentifier: app.bundleIdentifier,
                 name: name,
-                icon: icon
+                icon: icon,
+                isHidden: app.isHidden
             )
         }
         let visibleEntries = AppEntry.visibleInCarousel(

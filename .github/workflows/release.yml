@@ -13,7 +13,36 @@ permissions:
   contents: write
 
 jobs:
+  test:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: |
+          XCODE_PATH="$(find /Applications -maxdepth 1 -type d \( \
+            -name 'Xcode_26*.app' -o -name 'Xcode_17*.app' -o -name 'Xcode_16*.app' \
+            \) -print | sort -V | tail -1)"
+          : "${XCODE_PATH:?No supported Xcode installation found}"
+          sudo xcode-select -s "$XCODE_PATH"
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Run unit tests
+        run: |
+          xcodebuild -project Lathe.xcodeproj \
+            -scheme Lathe \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            test
+
   build:
+    needs: test
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +50,12 @@ jobs:
           fetch-depth: 0
 
       - name: Select latest Xcode
-        run: sudo xcode-select -s "$(ls -1d /Applications/Xcode_26*.app /Applications/Xcode_17*.app /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)"
+        run: |
+          XCODE_PATH="$(find /Applications -maxdepth 1 -type d \( \
+            -name 'Xcode_26*.app' -o -name 'Xcode_17*.app' -o -name 'Xcode_16*.app' \
+            \) -print | sort -V | tail -1)"
+          : "${XCODE_PATH:?No supported Xcode installation found}"
+          sudo xcode-select -s "$XCODE_PATH"
 
       - name: Show toolchain
         run: |

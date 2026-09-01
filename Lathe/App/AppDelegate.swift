@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var appList: AppListProvider!
     private var overlay: OverlayController!
     private var missionControl: MissionControlController!
+    private var shouldCommitOnCommandRelease = true
 
     private var isMissionControl: Bool { SettingsStore.shared.layoutMode == .missionControl }
 
@@ -71,14 +72,21 @@ extension AppDelegate: HotKeyMonitorDelegate {
 
     func hotKeyDidDisarm() {
         // ⌘ 릴리스 → 현재 선택을 확정.
-        commitActiveSelection()
+        if shouldCommitOnCommandRelease {
+            commitActiveSelection()
+        } else {
+            hideOverlay(animated: true)
+        }
+        shouldCommitOnCommandRelease = true
+    }
+
+    private var activePresenter: OverlayPresenting? {
+        overlay.isVisible ? overlay : (missionControl.isVisible ? missionControl : nil)
     }
 
     /// 떠 있는 오버레이의 현재 선택을 활성화하고 닫는다. ⌘ 릴리스와 카드/타일 클릭이 공유한다.
     private func commitActiveSelection() {
-        let presenter: OverlayPresenting? =
-            overlay.isVisible ? overlay : (missionControl.isVisible ? missionControl : nil)
-        guard let presenter else { return }
+        guard let presenter = activePresenter else { return }
         if let selection = presenter.currentSelection() {
             presenter.recordWindowActivation()
             AppActivator.activate(selection.app, window: selection.window)
@@ -87,6 +95,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
     }
 
     func hotKeyDidRequestNext() {
+        shouldCommitOnCommandRelease = true
         if isMissionControl {
             if missionControl.isVisible { missionControl.next() }
             else { presentMissionControl(forward: true) }
@@ -105,6 +114,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
     }
 
     func hotKeyDidRequestPrevious() {
+        shouldCommitOnCommandRelease = true
         if isMissionControl {
             if missionControl.isVisible { missionControl.previous() }
             else { presentMissionControl(forward: false) }
@@ -122,6 +132,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
     }
 
     func hotKeyDidRequestCycleWindow() {
+        shouldCommitOnCommandRelease = true
         if isMissionControl {
             if missionControl.isVisible { missionControl.cycleWindow() }
             else { presentMissionControl(forward: true) }
@@ -135,6 +146,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
     }
 
     func hotKeyDidRequestCycleWindowPrevious() {
+        shouldCommitOnCommandRelease = true
         if isMissionControl {
             if missionControl.isVisible { missionControl.cycleWindowPrevious() }
             else { presentMissionControl(forward: false) }
@@ -150,6 +162,42 @@ extension AppDelegate: HotKeyMonitorDelegate {
     func hotKeyDidRequestOpenSettings() {
         hideOverlay(animated: false)
         SettingsWindowController.shared.show(pane: .general)
+    }
+
+    func hotKeyDidRequestToggleSelectedApplicationHidden() {
+        guard let presenter = activePresenter,
+              let selection = presenter.currentSelection(),
+              let application = NSRunningApplication(processIdentifier: selection.app.id) else {
+            return
+        }
+
+        // 앱 관리 명령만 실행하고 ⌘을 놓았을 때 선택 앱으로 전환하지 않는다.
+        shouldCommitOnCommandRelease = false
+        let wasHidden = application.isHidden
+        guard AppSwitcherApplicationController.toggleHidden(application) else { return }
+
+        if missionControl.isVisible && !wasHidden {
+            // 미션 컨트롤은 현재 보이는 창만 표현하므로 숨긴 앱의 스택을 즉시 걷어낸다.
+            presenter.removeApplication(processIdentifier: selection.app.id)
+            hideOverlayIfSelectionIsEmpty(presenter)
+        } else {
+            // 캐러셀에서는 숨긴 앱을 유지하되 상태 아이콘과 흐린 표현을 즉시 갱신한다.
+            appList.refresh()
+        }
+    }
+
+    func hotKeyDidRequestQuitSelectedApplication() {
+        guard let presenter = activePresenter,
+              let selection = presenter.currentSelection(),
+              let application = NSRunningApplication(processIdentifier: selection.app.id) else {
+            return
+        }
+
+        // 정상 종료 요청만 보낸다. 저장 확인을 건너뛰는 강제 종료는 사용하지 않는다.
+        shouldCommitOnCommandRelease = false
+        guard AppSwitcherApplicationController.requestTermination(application) else { return }
+        presenter.removeApplication(processIdentifier: selection.app.id)
+        hideOverlayIfSelectionIsEmpty(presenter)
     }
 
     /// 미션 컨트롤 오버레이를 첫 표시한다.
@@ -184,12 +232,18 @@ extension AppDelegate: HotKeyMonitorDelegate {
     }
 
     private func hideOverlay(animated: Bool) {
-        hotKey.arrowsEnabled = false
+        hotKey.overlayActionsEnabled = false
         if overlay.isVisible { overlay.hide(animated: animated) }
         if missionControl.isVisible { missionControl.hide(animated: animated) }
     }
 
     private func updateHotKeyModes() {
-        hotKey.arrowsEnabled = overlay.isVisible || missionControl.isVisible
+        hotKey.overlayActionsEnabled = overlay.isVisible || missionControl.isVisible
+    }
+
+    private func hideOverlayIfSelectionIsEmpty(_ presenter: OverlayPresenting) {
+        if presenter.currentSelection() == nil {
+            hideOverlay(animated: true)
+        }
     }
 }

@@ -94,4 +94,28 @@ final class MissionControlViewModelTests: XCTestCase {
         vm.pick(stackID: 999999)
         XCTAssertFalse(committed)
     }
+
+    func test_removeApplication_selectsNextStackAndDropsItsThumbnails() {
+        let vm = MissionControlViewModel()
+        vm.set(stacks: stacks([(1, [10, 11]), (2, [20]), (3, [30])]), selectedWindowID: 10)
+        vm.setThumbnails([10: NSImage(), 11: NSImage(), 20: NSImage()])
+
+        vm.removeApplication(processIdentifier: 1)
+
+        XCTAssertEqual(vm.stacks.map { $0.appEntry.id }, [2, 3])
+        XCTAssertEqual(vm.currentStack?.appEntry.id, 2)
+        XCTAssertNil(vm.thumbnails[10])
+        XCTAssertNil(vm.thumbnails[11])
+        XCTAssertNotNil(vm.thumbnails[20])
+    }
+
+    func test_removeOnlyApplication_clearsSelection() {
+        let vm = MissionControlViewModel()
+        vm.set(stacks: stacks([(1, [10])]), selectedWindowID: 10)
+
+        vm.removeApplication(processIdentifier: 1)
+
+        XCTAssertNil(vm.currentStack)
+        XCTAssertNil(vm.currentWindow)
+    }
 }

@@ -41,6 +41,17 @@ final class MissionControlViewModel: ObservableObject {
         thumbnails.merge(images) { _, new in new }
     }
 
+    func removeApplication(processIdentifier: pid_t) {
+        let removedWindowIDs = Set(
+            stacks
+                .filter { $0.appEntry.id == processIdentifier }
+                .flatMap { $0.windows.map(\.id) }
+        )
+        stacks.removeAll { $0.appEntry.id == processIdentifier }
+        thumbnails = thumbnails.filter { !removedWindowIDs.contains($0.key) }
+        selectedStackIndex = stacks.isEmpty ? 0 : min(selectedStackIndex, stacks.count - 1)
+    }
+
     /// ⌘+Tab: 앱(스택) 사이 이동.
     func next() {
         guard !stacks.isEmpty else { return }

@@ -35,6 +35,17 @@ struct CardView: View {
                         .padding(.horizontal, 12)
                 }
             }
+            .saturation(entry.isHidden ? 0.25 : 1)
+            .opacity(entry.isHidden ? 0.55 : 1)
+
+            if entry.isHidden {
+                Image(systemName: "eye.slash.fill")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            }
         }
+        .animation(.easeInOut(duration: 0.14), value: entry.isHidden)
     }
 }

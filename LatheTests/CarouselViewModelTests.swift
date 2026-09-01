@@ -121,4 +121,27 @@ final class CarouselViewModelTests: XCTestCase {
         vm.update(apps: apps, selectedIndex: 1)
         XCTAssertEqual(vm.currentEntry?.id, apps[1].id)
     }
+
+    @MainActor
+    func test_removeApplication_selectsNextAppAtSameIndex() {
+        let vm = CarouselViewModel()
+        let apps = makeApps(4)
+        vm.update(apps: apps, selectedIndex: 1)
+
+        vm.removeApplication(processIdentifier: apps[1].id)
+
+        XCTAssertEqual(vm.apps.map(\.id), [apps[0].id, apps[2].id, apps[3].id])
+        XCTAssertEqual(vm.currentEntry?.id, apps[2].id)
+    }
+
+    @MainActor
+    func test_removeLastApplication_clampsSelectionToPreviousApp() {
+        let vm = CarouselViewModel()
+        let apps = makeApps(3)
+        vm.update(apps: apps, selectedIndex: 2)
+
+        vm.removeApplication(processIdentifier: apps[2].id)
+
+        XCTAssertEqual(vm.currentEntry?.id, apps[1].id)
+    }
 }

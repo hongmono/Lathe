@@ -10,7 +10,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x30,
                 commandDown: true,
                 shiftDown: false,
-                arrowsEnabled: false,
+                overlayActionsEnabled: false,
                 windowCycleEnabled: false
             ),
             .next
@@ -23,7 +23,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x30,
                 commandDown: true,
                 shiftDown: true,
-                arrowsEnabled: false,
+                overlayActionsEnabled: false,
                 windowCycleEnabled: false
             ),
             .previous
@@ -36,7 +36,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x35,
                 commandDown: true,
                 shiftDown: false,
-                arrowsEnabled: false,
+                overlayActionsEnabled: false,
                 windowCycleEnabled: false
             ),
             .cancel
@@ -49,7 +49,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x7C,
                 commandDown: false,
                 shiftDown: false,
-                arrowsEnabled: true,
+                overlayActionsEnabled: true,
                 windowCycleEnabled: false
             ),
             .next
@@ -62,7 +62,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x7B,
                 commandDown: false,
                 shiftDown: false,
-                arrowsEnabled: true,
+                overlayActionsEnabled: true,
                 windowCycleEnabled: false
             ),
             .previous
@@ -75,7 +75,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x7C,
                 commandDown: false,
                 shiftDown: false,
-                arrowsEnabled: false,
+                overlayActionsEnabled: false,
                 windowCycleEnabled: false
             )
         )
@@ -87,7 +87,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x7C,
                 commandDown: true,
                 shiftDown: false,
-                arrowsEnabled: true,
+                overlayActionsEnabled: true,
                 windowCycleEnabled: false
             ),
             .next
@@ -100,7 +100,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x32,
                 commandDown: true,
                 shiftDown: false,
-                arrowsEnabled: false,
+                overlayActionsEnabled: false,
                 windowCycleEnabled: true
             ),
             .cycleWindow
@@ -113,7 +113,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x32,
                 commandDown: true,
                 shiftDown: true,
-                arrowsEnabled: false,
+                overlayActionsEnabled: false,
                 windowCycleEnabled: true
             ),
             .cycleWindowPrevious
@@ -126,7 +126,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x32,
                 commandDown: true,
                 shiftDown: false,
-                arrowsEnabled: false,
+                overlayActionsEnabled: false,
                 windowCycleEnabled: false
             )
         )
@@ -138,7 +138,7 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x2B,
                 commandDown: true,
                 shiftDown: false,
-                arrowsEnabled: true,
+                overlayActionsEnabled: true,
                 windowCycleEnabled: true
             ),
             .openSettings
@@ -151,9 +151,110 @@ final class HotKeyActionTests: XCTestCase {
                 keyCode: 0x2B,
                 commandDown: true,
                 shiftDown: false,
-                arrowsEnabled: false,
+                overlayActionsEnabled: false,
                 windowCycleEnabled: true
             )
         )
+    }
+
+    func test_commandHRequestsToggleHiddenWhenOverlayIsVisible() {
+        XCTAssertEqual(
+            HotKeyAction.resolve(
+                keyCode: 0x04,
+                commandDown: true,
+                shiftDown: false,
+                overlayActionsEnabled: true,
+                windowCycleEnabled: true
+            ),
+            .toggleSelectedApplicationHidden
+        )
+    }
+
+    func test_commandQRequestsQuitWhenOverlayIsVisible() {
+        XCTAssertEqual(
+            HotKeyAction.resolve(
+                keyCode: 0x0C,
+                commandDown: true,
+                shiftDown: false,
+                overlayActionsEnabled: true,
+                windowCycleEnabled: true
+            ),
+            .quitSelectedApplication
+        )
+    }
+
+    func test_applicationManagementKeysAreIgnoredWhenOverlayIsHidden() {
+        XCTAssertNil(
+            HotKeyAction.resolve(
+                keyCode: 0x04,
+                commandDown: true,
+                shiftDown: false,
+                overlayActionsEnabled: false,
+                windowCycleEnabled: true
+            )
+        )
+        XCTAssertNil(
+            HotKeyAction.resolve(
+                keyCode: 0x0C,
+                commandDown: true,
+                shiftDown: false,
+                overlayActionsEnabled: false,
+                windowCycleEnabled: true
+            )
+        )
+    }
+
+    func test_shiftedApplicationManagementKeysAreNotConsumed() {
+        XCTAssertNil(
+            HotKeyAction.resolve(
+                keyCode: 0x04,
+                commandDown: true,
+                shiftDown: true,
+                overlayActionsEnabled: true,
+                windowCycleEnabled: true
+            )
+        )
+        XCTAssertNil(
+            HotKeyAction.resolve(
+                keyCode: 0x0C,
+                commandDown: true,
+                shiftDown: true,
+                overlayActionsEnabled: true,
+                windowCycleEnabled: true
+            )
+        )
+    }
+
+    func test_commandPeriodCancelsOnlyWhenOverlayIsVisible() {
+        XCTAssertEqual(
+            HotKeyAction.resolve(
+                keyCode: 0x2F,
+                commandDown: true,
+                shiftDown: false,
+                overlayActionsEnabled: true,
+                windowCycleEnabled: true
+            ),
+            .cancel
+        )
+        XCTAssertNil(
+            HotKeyAction.resolve(
+                keyCode: 0x2F,
+                commandDown: true,
+                shiftDown: false,
+                overlayActionsEnabled: false,
+                windowCycleEnabled: true
+            )
+        )
+    }
+
+    func test_onlyNavigationActionsAcceptAutoRepeat() {
+        XCTAssertTrue(HotKeyAction.next.acceptsAutoRepeat)
+        XCTAssertTrue(HotKeyAction.previous.acceptsAutoRepeat)
+        XCTAssertTrue(HotKeyAction.cycleWindow.acceptsAutoRepeat)
+        XCTAssertTrue(HotKeyAction.cycleWindowPrevious.acceptsAutoRepeat)
+        XCTAssertFalse(HotKeyAction.toggleSelectedApplicationHidden.acceptsAutoRepeat)
+        XCTAssertFalse(HotKeyAction.quitSelectedApplication.acceptsAutoRepeat)
+        XCTAssertFalse(HotKeyAction.openSettings.acceptsAutoRepeat)
+        XCTAssertFalse(HotKeyAction.cancel.acceptsAutoRepeat)
     }
 }

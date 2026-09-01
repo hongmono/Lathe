@@ -73,6 +73,10 @@ final class MissionControlController {
         return OverlaySelection(app: window.appEntry, window: window.windowEntry)
     }
 
+    func removeApplication(processIdentifier: pid_t) {
+        viewModel.removeApplication(processIdentifier: processIdentifier)
+    }
+
     func recordWindowActivation() {
         guard let window = viewModel.currentWindow else { return }
         focusTracker.touchSelectedWindow(window.windowEntry, processIdentifier: window.pid)

@@ -51,6 +51,10 @@ final class CarouselViewModel: ObservableObject {
         selectedIndex = newIndex
     }
 
+    func removeApplication(processIdentifier: pid_t) {
+        replaceApps(apps.filter { $0.id != processIdentifier })
+    }
+
     /// 카드 클릭: 특정 인덱스를 선택한다.
     func select(_ index: Int) {
         let clampedIndex = clamp(index, count: apps.count)

@@ -9,6 +9,8 @@ protocol HotKeyMonitorDelegate: AnyObject {
     func hotKeyDidRequestPrevious()
     func hotKeyDidRequestCycleWindow()
     func hotKeyDidRequestCycleWindowPrevious()
+    func hotKeyDidRequestToggleSelectedApplicationHidden()
+    func hotKeyDidRequestQuitSelectedApplication()
     func hotKeyDidRequestOpenSettings()
     func hotKeyDidCancel()
 }
@@ -23,8 +25,19 @@ enum HotKeyAction: Equatable {
     case previous
     case cycleWindow
     case cycleWindowPrevious
+    case toggleSelectedApplicationHidden
+    case quitSelectedApplication
     case openSettings
     case cancel
+
+    var acceptsAutoRepeat: Bool {
+        switch self {
+        case .next, .previous, .cycleWindow, .cycleWindowPrevious:
+            true
+        case .toggleSelectedApplicationHidden, .quitSelectedApplication, .openSettings, .cancel:
+            false
+        }
+    }
 
     private static let tabKeyCode: CGKeyCode = 0x30
     private static let escKeyCode: CGKeyCode = 0x35
@@ -33,24 +46,33 @@ enum HotKeyAction: Equatable {
     private static let graveKeyCode: CGKeyCode = 0x32
     private static let sectionKeyCode: CGKeyCode = 0x0A
     private static let commaKeyCode: CGKeyCode = 0x2B
+    private static let periodKeyCode: CGKeyCode = 0x2F
+    private static let hKeyCode: CGKeyCode = 0x04
+    private static let qKeyCode: CGKeyCode = 0x0C
 
     static func resolve(keyCode: CGKeyCode,
                         commandDown: Bool,
                         shiftDown: Bool,
-                        arrowsEnabled: Bool,
+                        overlayActionsEnabled: Bool,
                         windowCycleEnabled: Bool) -> HotKeyAction? {
         switch keyCode {
-        case leftArrowKeyCode where arrowsEnabled:
+        case leftArrowKeyCode where overlayActionsEnabled:
             return .previous
-        case rightArrowKeyCode where arrowsEnabled:
+        case rightArrowKeyCode where overlayActionsEnabled:
             return .next
         case tabKeyCode where commandDown:
             return shiftDown ? .previous : .next
         case graveKeyCode where commandDown && windowCycleEnabled,
              sectionKeyCode where commandDown && windowCycleEnabled:
             return shiftDown ? .cycleWindowPrevious : .cycleWindow
-        case commaKeyCode where commandDown && !shiftDown && arrowsEnabled:
+        case hKeyCode where commandDown && !shiftDown && overlayActionsEnabled:
+            return .toggleSelectedApplicationHidden
+        case qKeyCode where commandDown && !shiftDown && overlayActionsEnabled:
+            return .quitSelectedApplication
+        case commaKeyCode where commandDown && !shiftDown && overlayActionsEnabled:
             return .openSettings
+        case periodKeyCode where commandDown && !shiftDown && overlayActionsEnabled:
+            return .cancel
         case escKeyCode where commandDown:
             return .cancel
         default:
@@ -62,7 +84,7 @@ enum HotKeyAction: Equatable {
 @MainActor
 final class HotKeyMonitor {
     weak var delegate: HotKeyMonitorDelegate?
-    nonisolated(unsafe) var arrowsEnabled = false
+    nonisolated(unsafe) var overlayActionsEnabled = false
     nonisolated(unsafe) var windowCycleEnabled = false
 
     private var flagsTap: CFMachPort?
@@ -176,10 +198,16 @@ final class HotKeyMonitor {
             keyCode: keyCode,
             commandDown: commandDown,
             shiftDown: shift,
-            arrowsEnabled: arrowsEnabled,
+            overlayActionsEnabled: overlayActionsEnabled,
             windowCycleEnabled: windowCycleEnabled
         ) else {
             return Unmanaged.passUnretained(event)
+        }
+
+        let isAutoRepeat = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
+        if isAutoRepeat && !action.acceptsAutoRepeat {
+            // 관리/취소 명령은 키를 길게 눌러도 한 번만 실행하되 이벤트는 원래 앱으로 흘리지 않는다.
+            return nil
         }
 
         switch action {
@@ -201,6 +229,16 @@ final class HotKeyMonitor {
         case .cycleWindowPrevious:
             DispatchQueue.main.async { [weak self] in
                 self?.delegate?.hotKeyDidRequestCycleWindowPrevious()
+            }
+            return nil
+        case .toggleSelectedApplicationHidden:
+            DispatchQueue.main.async { [weak self] in
+                self?.delegate?.hotKeyDidRequestToggleSelectedApplicationHidden()
+            }
+            return nil
+        case .quitSelectedApplication:
+            DispatchQueue.main.async { [weak self] in
+                self?.delegate?.hotKeyDidRequestQuitSelectedApplication()
             }
             return nil
         case .openSettings:

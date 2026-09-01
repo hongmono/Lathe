@@ -5,6 +5,19 @@ struct AppEntry: Identifiable, Equatable {
     let bundleIdentifier: String?
     let name: String
     let icon: NSImage
+    let isHidden: Bool
+
+    init(id: pid_t,
+         bundleIdentifier: String?,
+         name: String,
+         icon: NSImage,
+         isHidden: Bool = false) {
+        self.id = id
+        self.bundleIdentifier = bundleIdentifier
+        self.name = name
+        self.icon = icon
+        self.isHidden = isHidden
+    }
 
     static func == (lhs: AppEntry, rhs: AppEntry) -> Bool {
         lhs.id == rhs.id

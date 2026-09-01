@@ -11,6 +11,7 @@ protocol OverlayPresenting: AnyObject {
     func cycleWindow()
     func cycleWindowPrevious()
     func currentSelection() -> OverlaySelection?
+    func removeApplication(processIdentifier: pid_t)
     func recordWindowActivation()
     func hide(animated: Bool)
 }

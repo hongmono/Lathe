@@ -173,7 +173,9 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 | ⌘ held + Tab         | Rotate forward                                      |
 | ⌘ held + ⇧Tab        | Rotate backward                                     |
 | ⌘ released           | Activate the focused (center) app (and window)      |
-| ⌘ held + Esc         | Dismiss without switching                           |
+| ⌘ held + Esc or .    | Dismiss without switching                           |
+| ⌘ held + H           | Hide or reveal the focused app without switching    |
+| ⌘ held + Q           | Ask the focused app to quit without switching       |
 | ⌘+`                  | Cycle windows of the focused app                    |
 | ⌘ held + ⇧`          | Cycle windows backward                              |
 

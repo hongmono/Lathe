@@ -74,6 +74,11 @@ final class OverlayController {
         reloadWindowsForCurrentApp()
     }
 
+    func removeApplication(processIdentifier: pid_t) {
+        carouselViewModel.removeApplication(processIdentifier: processIdentifier)
+        reloadWindowsForCurrentApp()
+    }
+
     func next() {
         carouselViewModel.next()
         reloadWindowsForCurrentApp()

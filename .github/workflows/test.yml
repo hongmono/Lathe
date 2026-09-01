@@ -1,0 +1,47 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches: ['main']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: |
+          XCODE_PATH="$(find /Applications -maxdepth 1 -type d \( \
+            -name 'Xcode_26*.app' -o -name 'Xcode_17*.app' -o -name 'Xcode_16*.app' \
+            \) -print | sort -V | tail -1)"
+          : "${XCODE_PATH:?No supported Xcode installation found}"
+          sudo xcode-select -s "$XCODE_PATH"
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Run unit tests
+        run: |
+          xcodebuild -project Lathe.xcodeproj \
+            -scheme Lathe \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            test
