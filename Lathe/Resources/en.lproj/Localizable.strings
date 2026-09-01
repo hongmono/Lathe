@@ -38,6 +38,7 @@
 "settings.carousel.fanRadius" = "Fan radius";
 "settings.carousel.fanSpacing" = "Fan spacing";
 "settings.carousel.showAppNames" = "Show app names";
+"settings.carousel.animateOnOpen" = "Animate cards when opening";
 "settings.carousel.restoreDefaults" = "Restore defaults";
 "settings.hiddenApps.section" = "Hidden Apps";
 "settings.hiddenApps.description" = "Apps turned on here won't appear in the Lathe carousel.";

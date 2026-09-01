@@ -5,6 +5,7 @@ import Combine
 final class CarouselViewModel: ObservableObject {
     @Published private(set) var apps: [AppEntry] = []
     @Published private(set) var selectedIndex: Int = 0
+    @Published private(set) var isPresentationExpanded = true
     private(set) var selectionPosition: Int = 0
     private(set) var selectionDirection: Int = 0
     /// hover 중인 앱 카드. dim(거리 기반 opacity) 제거에만 쓴다.
@@ -20,6 +21,15 @@ final class CarouselViewModel: ObservableObject {
         self.selectionPosition = clampedIndex
         self.apps = apps
         self.selectedIndex = clampedIndex
+    }
+
+    func preparePresentation(apps: [AppEntry], selectedIndex: Int, animated: Bool) {
+        isPresentationExpanded = !animated
+        update(apps: apps, selectedIndex: selectedIndex)
+    }
+
+    func completePresentation() {
+        isPresentationExpanded = true
     }
 
     func replaceApps(_ newApps: [AppEntry]) {

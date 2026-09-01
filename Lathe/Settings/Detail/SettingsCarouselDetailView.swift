@@ -86,6 +86,9 @@ struct SettingsCarouselDetailView: View {
         Toggle(L10n.string("settings.carousel.showAppNames", language: store.appLanguage),
                isOn: $store.showAppNamesInCarousel)
 
+        Toggle(L10n.string("settings.carousel.animateOnOpen", language: store.appLanguage),
+               isOn: $store.animateCarouselPresentation)
+
         Button(L10n.string("settings.carousel.restoreDefaults", language: store.appLanguage)) {
             store.resetCarouselDefaults()
         }

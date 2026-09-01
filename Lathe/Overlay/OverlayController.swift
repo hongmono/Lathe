@@ -36,10 +36,16 @@ final class OverlayController {
     }
 
     func show(apps: [AppEntry], initialIndex: Int) {
+        let shouldAnimatePresentation = SettingsStore.shared.animateCarouselPresentation
+            && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         var transaction = Transaction(animation: nil)
         transaction.disablesAnimations = true
         withTransaction(transaction) {
-            carouselViewModel.update(apps: apps, selectedIndex: initialIndex)
+            carouselViewModel.preparePresentation(
+                apps: apps,
+                selectedIndex: initialIndex,
+                animated: shouldAnimatePresentation
+            )
         }
         reloadWindowsForCurrentApp()
         guard !apps.isEmpty else { return }
@@ -47,11 +53,20 @@ final class OverlayController {
         panel.alphaValue = 0
         panel.orderFrontRegardless()
         panel.makeKey()
+        // 패널이 투명할 때 접힌 프레임을 먼저 확정해 다음 런루프의 펼침이 실제 등장 애니메이션이 되게 한다.
+        panel.contentView?.layoutSubtreeIfNeeded()
+        panel.contentView?.displayIfNeeded()
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.12
             panel.animator().alphaValue = 1
         }
         isVisible = true
+        if shouldAnimatePresentation {
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.isVisible else { return }
+                self.carouselViewModel.completePresentation()
+            }
+        }
     }
 
     func updateApps(_ apps: [AppEntry]) {

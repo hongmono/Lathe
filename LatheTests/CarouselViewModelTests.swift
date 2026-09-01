@@ -19,6 +19,29 @@ final class CarouselViewModelTests: XCTestCase {
     }
 
     @MainActor
+    func test_prepareAnimatedPresentationStartsCollapsedThenExpands() {
+        let vm = CarouselViewModel()
+
+        vm.preparePresentation(apps: makeApps(3), selectedIndex: 1, animated: true)
+
+        XCTAssertFalse(vm.isPresentationExpanded)
+        XCTAssertEqual(vm.selectedIndex, 1)
+
+        vm.completePresentation()
+
+        XCTAssertTrue(vm.isPresentationExpanded)
+    }
+
+    @MainActor
+    func test_prepareNonanimatedPresentationStartsExpanded() {
+        let vm = CarouselViewModel()
+
+        vm.preparePresentation(apps: makeApps(3), selectedIndex: 1, animated: false)
+
+        XCTAssertTrue(vm.isPresentationExpanded)
+    }
+
+    @MainActor
     func test_next_wrapsAround() {
         let vm = CarouselViewModel()
         vm.update(apps: makeApps(3), selectedIndex: 2)

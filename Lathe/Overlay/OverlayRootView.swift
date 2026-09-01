@@ -34,18 +34,23 @@ struct OverlayRootView: View {
 
         return ZStack {
             ForEach(visibleEntries(layoutItems)) { item in
+                let isExpanded = carouselViewModel.isPresentationExpanded
                 CardView(
                     entry: item.entry,
                     isFocused: item.isFocused,
                     showsName: settings.showAppNamesInCarousel
                 )
                     .frame(width: cardWidth, height: cardHeight)
-                    .scaleEffect(item.scale)
-                    .rotationEffect(.degrees(item.angleDegrees), anchor: .center)
-                    .offset(x: item.offsetX, y: item.offsetY)
-                    .opacity(item.entry.id == carouselViewModel.hoveredAppID ? 1.0 : item.opacity)
+                    .scaleEffect(isExpanded ? item.scale : CarouselPresentationMotion.collapsedScale)
+                    .rotationEffect(.degrees(isExpanded ? item.angleDegrees : 0), anchor: .center)
+                    .offset(
+                        x: isExpanded ? item.offsetX : 0,
+                        y: isExpanded ? item.offsetY : CarouselPresentationMotion.collapsedOffsetY
+                    )
+                    .opacity(isExpanded ? resolvedOpacity(for: item) : collapsedOpacity(for: item))
                     .zIndex(item.zIndex)
                     .transition(cardTransition(travel: transitionTravel))
+                    .animation(presentationAnimation(for: item), value: isExpanded)
                 // 클릭 선택은 패널 레벨(FirstMouseHostingView + 컨트롤러 히트테스트)에서 처리.
             }
         }
@@ -77,6 +82,7 @@ struct OverlayRootView: View {
         let angleDegrees: Double
         let offsetX: Double
         let offsetY: Double
+        let relativeIndex: Int
         let scale: Double
         let opacity: Double
         let zIndex: Double
@@ -86,6 +92,22 @@ struct OverlayRootView: View {
         carouselViewModel.apps.count > 2
             ? .spring(response: 0.32, dampingFraction: 0.86)
             : nil
+    }
+
+    private func presentationAnimation(for item: Item) -> Animation {
+        .spring(
+            response: CarouselPresentationMotion.response,
+            dampingFraction: CarouselPresentationMotion.dampingFraction
+        )
+        .delay(Double(abs(item.relativeIndex)) * CarouselPresentationMotion.staggerDelay)
+    }
+
+    private func resolvedOpacity(for item: Item) -> Double {
+        item.entry.id == carouselViewModel.hoveredAppID ? 1.0 : item.opacity
+    }
+
+    private func collapsedOpacity(for item: Item) -> Double {
+        item.isFocused ? 1.0 : 0
     }
 
     private func cardTransition(travel: CGFloat) -> AnyTransition {
@@ -110,12 +132,21 @@ struct OverlayRootView: View {
                 angleDegrees: layoutItem.angleDegrees,
                 offsetX: layoutItem.offsetX,
                 offsetY: layoutItem.offsetY,
+                relativeIndex: layoutItem.relativeIndex,
                 scale: layoutItem.scale,
                 opacity: layoutItem.opacity,
                 zIndex: layoutItem.zIndex
             )
         }
     }
+}
+
+private enum CarouselPresentationMotion {
+    static let collapsedScale = 0.94
+    static let collapsedOffsetY = 12.0
+    static let response = 0.34
+    static let dampingFraction = 1.0
+    static let staggerDelay = 0.025
 }
 
 private struct WindowSelectionOverlay: View {

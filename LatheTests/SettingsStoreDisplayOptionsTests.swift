@@ -22,6 +22,24 @@ final class SettingsStoreDisplayOptionsTests: XCTestCase {
     }
 
     @MainActor
+    func test_animateCarouselPresentationDefaultsToTrue() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+
+        XCTAssertTrue(store.animateCarouselPresentation)
+    }
+
+    @MainActor
+    func test_animateCarouselPresentationPersists() {
+        let defaults = makeDefaults()
+        let store = SettingsStore(userDefaults: defaults)
+
+        store.animateCarouselPresentation = false
+
+        let reloaded = SettingsStore(userDefaults: defaults)
+        XCTAssertFalse(reloaded.animateCarouselPresentation)
+    }
+
+    @MainActor
     func test_fanRadiusDefaultsToConfiguredDefault() {
         let store = SettingsStore(userDefaults: makeDefaults())
 
@@ -97,6 +115,16 @@ final class SettingsStoreDisplayOptionsTests: XCTestCase {
         store.resetCarouselDefaults()
 
         XCTAssertTrue(store.showAppNamesInCarousel)
+    }
+
+    @MainActor
+    func test_resetCarouselDefaultsRestoresPresentationAnimation() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+        store.animateCarouselPresentation = false
+
+        store.resetCarouselDefaults()
+
+        XCTAssertTrue(store.animateCarouselPresentation)
     }
 
     @MainActor

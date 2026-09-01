@@ -17,6 +17,7 @@ final class SettingsStore: ObservableObject {
         static let fanRadius = "fanRadius"
         static let fanSpacing = "fanSpacing"
         static let showAppNamesInCarousel = "showAppNamesInCarousel"
+        static let animateCarouselPresentation = "animateCarouselPresentation"
         static let hiddenAppBundleIdentifiers = "hiddenAppBundleIdentifiers"
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
         static let finderHiddenAppSeeded = "finderHiddenAppSeeded"
@@ -68,6 +69,10 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(showAppNamesInCarousel, forKey: Key.showAppNamesInCarousel) }
     }
 
+    @Published var animateCarouselPresentation: Bool {
+        didSet { defaults.set(animateCarouselPresentation, forKey: Key.animateCarouselPresentation) }
+    }
+
     @Published var launchAtLogin: Bool {
         didSet {
             guard launchAtLogin != oldValue else { return }
@@ -101,6 +106,8 @@ final class SettingsStore: ObservableObject {
         self.fanRadius = CarouselGeometry.storedFanRadius(userDefaults.object(forKey: Key.fanRadius) as? Double)
         self.fanSpacing = CarouselGeometry.storedFanSpacing(userDefaults.object(forKey: Key.fanSpacing) as? Double)
         self.showAppNamesInCarousel = (userDefaults.object(forKey: Key.showAppNamesInCarousel) as? Bool) ?? true
+        self.animateCarouselPresentation =
+            (userDefaults.object(forKey: Key.animateCarouselPresentation) as? Bool) ?? true
         self.launchAtLogin = LoginItem.isEnabled
         var excludedBundleIdentifiers = Set(userDefaults.stringArray(forKey: Key.excludedBundleIdentifiers) ?? [])
         self.excludedBundleIdentifiers = excludedBundleIdentifiers
@@ -141,6 +148,7 @@ final class SettingsStore: ObservableObject {
         fanRadius = Self.defaultFanRadius
         fanSpacing = Self.defaultFanSpacing
         showAppNamesInCarousel = true
+        animateCarouselPresentation = true
     }
 
     func isExcluded(bundleIdentifier: String?) -> Bool {
