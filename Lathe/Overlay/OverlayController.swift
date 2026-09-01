@@ -36,7 +36,11 @@ final class OverlayController {
     }
 
     func show(apps: [AppEntry], initialIndex: Int) {
-        carouselViewModel.update(apps: apps, selectedIndex: initialIndex)
+        var transaction = Transaction(animation: nil)
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            carouselViewModel.update(apps: apps, selectedIndex: initialIndex)
+        }
         reloadWindowsForCurrentApp()
         guard !apps.isEmpty else { return }
         positionAtActiveScreenCenter()
