@@ -18,6 +18,23 @@ enum WindowListLayout {
         let rowsHeight = rowHeight * CGFloat(rows) + rowSpacing * CGFloat(max(0, rows - 1))
         return rowsHeight + verticalPadding * 2
     }
+
+    static func presentationOrder(for index: Int, selectedIndex: Int, itemCount: Int) -> Int {
+        guard itemCount > 0 else { return 0 }
+        let visibleCount = visibleRowCount(itemCount)
+        let clampedSelectedIndex = min(max(selectedIndex, 0), itemCount - 1)
+        let maximumStart = max(itemCount - visibleCount, 0)
+        let visibleStart = min(max(clampedSelectedIndex - visibleCount / 2, 0), maximumStart)
+        return min(max(index - visibleStart, 0), visibleCount - 1)
+    }
+}
+
+private enum WindowListPresentationMotion {
+    static let initialOffsetY: CGFloat = -10
+    static let response = 0.30
+    static let dampingFraction = 1.0
+    static let backgroundLeadTime = 0.04
+    static let staggerDelay = 0.025
 }
 
 struct WindowListView: View {
@@ -26,6 +43,7 @@ struct WindowListView: View {
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @Namespace private var highlightNamespace
+    @State private var areRowsPresented = false
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -34,6 +52,9 @@ struct WindowListView: View {
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                         row(for: item, isSelected: index == selectedIndex)
                             .id(index)
+                            .offset(y: rowOffsetY)
+                            .opacity(areRowsPresented ? 1 : 0)
+                            .animation(rowPresentationAnimation(for: index), value: areRowsPresented)
                     }
                 }
                 .padding(.horizontal, WindowListLayout.horizontalPadding)
@@ -51,6 +72,9 @@ struct WindowListView: View {
             }
             .onAppear {
                 proxy.scrollTo(selectedIndex, anchor: .center)
+                DispatchQueue.main.async {
+                    areRowsPresented = true
+                }
             }
         }
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: WindowListLayout.cornerRadius, style: .continuous))
@@ -66,6 +90,29 @@ struct WindowListView: View {
         accessibilityReduceMotion
             ? .easeOut(duration: 0.12)
             : .spring(response: 0.26, dampingFraction: 1.0)
+    }
+
+    private var rowOffsetY: CGFloat {
+        accessibilityReduceMotion || areRowsPresented
+            ? 0
+            : WindowListPresentationMotion.initialOffsetY
+    }
+
+    private func rowPresentationAnimation(for index: Int) -> Animation {
+        guard !accessibilityReduceMotion else {
+            return .easeOut(duration: 0.12)
+        }
+        let delay = WindowListPresentationMotion.backgroundLeadTime
+            + Double(WindowListLayout.presentationOrder(
+                for: index,
+                selectedIndex: selectedIndex,
+                itemCount: items.count
+            )) * WindowListPresentationMotion.staggerDelay
+        return .spring(
+            response: WindowListPresentationMotion.response,
+            dampingFraction: WindowListPresentationMotion.dampingFraction
+        )
+        .delay(delay)
     }
 
     @ViewBuilder
