@@ -49,6 +49,8 @@
 "settings.general.section" = "General";
 "settings.general.launchAtLogin" = "Launch Lathe at login";
 "settings.general.launchAtLogin.description" = "Lathe will start automatically when you sign in. You can revoke this from System Settings > General > Login Items.";
+"settings.general.reopenWindowlessApplications" = "Reopen apps without windows";
+"settings.general.reopenWindowlessApplications.description" = "When an app is still running after all its windows are closed, selecting it opens its main window again.";
 "settings.permissions.section" = "Permissions";
 "settings.permissions.summary" = "Lathe needs one macOS permission to replace Cmd+Tab globally. You can check the current state here.";
 "settings.permissions.accessibility.name" = "Accessibility";

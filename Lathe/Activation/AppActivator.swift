@@ -3,6 +3,7 @@ import ApplicationServices
 
 protocol RunningApplicationActivating {
     var processIdentifier: pid_t { get }
+    var bundleURL: URL? { get }
 
     @discardableResult
     func unhide() -> Bool
@@ -12,6 +13,28 @@ protocol RunningApplicationActivating {
 }
 
 extension NSRunningApplication: RunningApplicationActivating {}
+
+protocol ApplicationReopening {
+    func reopen(applicationURL: URL)
+}
+
+struct WorkspaceApplicationReopener: ApplicationReopening {
+    func reopen(applicationURL: URL) {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        configuration.addsToRecentItems = false
+        configuration.createsNewApplicationInstance = false
+
+        NSWorkspace.shared.openApplication(
+            at: applicationURL,
+            configuration: configuration
+        ) { _, error in
+            if let error {
+                NSLog("Lathe: failed to reopen application: \(error)")
+            }
+        }
+    }
+}
 
 protocol ApplicationWindowRaising {
     func raiseWindows(forProcessIdentifier processIdentifier: pid_t)
@@ -99,14 +122,26 @@ struct AccessibilityWindowRaiser: ApplicationWindowRaising, SpecificWindowRaisin
 }
 
 enum AppActivator {
-    static func activate(_ entry: AppEntry, window: WindowEntry? = nil) {
+    static func activate(_ entry: AppEntry,
+                         window: WindowEntry? = nil,
+                         reopensWindowlessApplications: Bool) {
         guard let app = NSRunningApplication(processIdentifier: entry.id) else { return }
-        activate(app, window: window, windowRaiser: AccessibilityWindowRaiser())
+        activate(
+            app,
+            window: window,
+            hasUserFacingWindows: WindowListProvider.hasUserFacingWindows(forProcessIdentifier: entry.id),
+            reopensWindowlessApplications: reopensWindowlessApplications,
+            windowRaiser: AccessibilityWindowRaiser(),
+            applicationReopener: WorkspaceApplicationReopener()
+        )
     }
 
     static func activate(_ app: any RunningApplicationActivating,
                          window: WindowEntry? = nil,
-                         windowRaiser: any ApplicationWindowRaising & SpecificWindowRaising) {
+                         hasUserFacingWindows: Bool = true,
+                         reopensWindowlessApplications: Bool = true,
+                         windowRaiser: any ApplicationWindowRaising & SpecificWindowRaising,
+                         applicationReopener: any ApplicationReopening = WorkspaceApplicationReopener()) {
         app.unhide()
         if let window {
             let focused = windowRaiser.raiseWindow(window.id, forProcessIdentifier: app.processIdentifier)
@@ -115,7 +150,13 @@ enum AppActivator {
             }
         } else {
             app.activate(options: [.activateAllWindows])
-            windowRaiser.raiseWindows(forProcessIdentifier: app.processIdentifier)
+            if !hasUserFacingWindows,
+               reopensWindowlessApplications,
+               let applicationURL = app.bundleURL {
+                applicationReopener.reopen(applicationURL: applicationURL)
+            } else {
+                windowRaiser.raiseWindows(forProcessIdentifier: app.processIdentifier)
+            }
         }
     }
 }

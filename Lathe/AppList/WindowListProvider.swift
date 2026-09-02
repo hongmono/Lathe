@@ -91,6 +91,19 @@ struct WindowListProvider: WindowListing {
         return axWindows
     }
 
+    /// 창 목록 표시 가능 여부와 별개로, 앱에 사용자가 다시 올릴 수 있는 창이 하나라도 있는지 확인한다.
+    /// AX를 읽을 수 없을 때는 최소화된 창도 놓치지 않도록 전체 CG 창에서 일반 창 크기를 찾는다.
+    static func hasUserFacingWindows(forProcessIdentifier pid: pid_t) -> Bool {
+        if let axWindows = axWindows(forProcessIdentifier: pid) {
+            return axWindows.contains(where: WindowVisibilityFilter.isUserFacingAXWindow)
+        }
+
+        return allLayerZeroCGWindows(forProcessIdentifier: pid).contains { snapshot in
+            snapshot.width >= WindowVisibilityFilter.minWidth
+                && snapshot.height >= WindowVisibilityFilter.minHeight
+        }
+    }
+
     static func metadata(for axWindow: AXUIElement) -> AXWindowMetadata {
         AXWindowMetadata(
             title: axTitle(axWindow),
@@ -167,6 +180,8 @@ struct WindowListProvider: WindowListing {
         let layer: Int
         let boundsArea: Double
         let isOnScreen: Bool
+        let width: Double
+        let height: Double
     }
 
     static func onScreenCGWindows(forProcessIdentifier pid: pid_t) -> [CGWindowSnapshot] {
@@ -205,12 +220,15 @@ struct WindowListProvider: WindowListing {
             guard let layer = (window[layerKey] as? NSNumber)?.intValue else { return nil }
             guard let number = (window[numberKey] as? NSNumber)?.intValue else { return nil }
             let title = window[nameKey] as? String ?? ""
+            let (width, height) = WindowVisibilityFilter.boundsSize(from: window)
             return CGWindowSnapshot(
                 id: number,
                 title: title,
                 layer: layer,
                 boundsArea: WindowVisibilityFilter.boundsArea(from: window),
-                isOnScreen: WindowVisibilityFilter.isOnScreen(window)
+                isOnScreen: WindowVisibilityFilter.isOnScreen(window),
+                width: width,
+                height: height
             )
         }
     }

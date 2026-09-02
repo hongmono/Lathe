@@ -49,6 +49,47 @@ final class AppActivatorTests: XCTestCase {
         XCTAssertEqual(windowRaiser.raisedWindowRequests[0].1, 123)
     }
 
+    func test_activateWindowlessApplicationRequestsReopenInsteadOfRaisingWindows() {
+        let appURL = URL(fileURLWithPath: "/Applications/Chat.app")
+        let app = SpyRunningApplication(processIdentifier: 123, bundleURL: appURL)
+        let windowRaiser = SpyWindowRaiser()
+        let applicationReopener = SpyApplicationReopener()
+
+        AppActivator.activate(
+            app,
+            window: nil,
+            hasUserFacingWindows: false,
+            reopensWindowlessApplications: true,
+            windowRaiser: windowRaiser,
+            applicationReopener: applicationReopener
+        )
+
+        XCTAssertEqual(app.events, [.unhide, .activate])
+        XCTAssertEqual(app.activationOptions, [.activateAllWindows])
+        XCTAssertTrue(windowRaiser.raisedProcessIdentifiers.isEmpty)
+        XCTAssertEqual(applicationReopener.applicationURLs, [appURL])
+    }
+
+    func test_activateWindowlessApplicationDoesNotReopenWhenOptionIsDisabled() {
+        let appURL = URL(fileURLWithPath: "/Applications/Chat.app")
+        let app = SpyRunningApplication(processIdentifier: 123, bundleURL: appURL)
+        let windowRaiser = SpyWindowRaiser()
+        let applicationReopener = SpyApplicationReopener()
+
+        AppActivator.activate(
+            app,
+            window: nil,
+            hasUserFacingWindows: false,
+            reopensWindowlessApplications: false,
+            windowRaiser: windowRaiser,
+            applicationReopener: applicationReopener
+        )
+
+        XCTAssertEqual(app.events, [.unhide, .activate])
+        XCTAssertEqual(windowRaiser.raisedProcessIdentifiers, [123])
+        XCTAssertTrue(applicationReopener.applicationURLs.isEmpty)
+    }
+
     func test_raisePlanRaisesVisibleWindowsAndRestoresNothing() {
         let plan = AccessibilityWindowRaiser.raisePlan(minimized: [true, false, true, false])
 
@@ -77,11 +118,13 @@ final class AppActivatorTests: XCTestCase {
         }
 
         let processIdentifier: pid_t
+        let bundleURL: URL?
         private(set) var events: [Event] = []
         private(set) var activationOptions: NSApplication.ActivationOptions = []
 
-        init(processIdentifier: pid_t) {
+        init(processIdentifier: pid_t, bundleURL: URL? = nil) {
             self.processIdentifier = processIdentifier
+            self.bundleURL = bundleURL
         }
 
         func unhide() -> Bool {
@@ -108,6 +151,14 @@ final class AppActivatorTests: XCTestCase {
         func raiseWindow(_ windowID: Int, forProcessIdentifier processIdentifier: pid_t) -> Bool {
             raisedWindowRequests.append((windowID, processIdentifier))
             return false
+        }
+    }
+
+    private final class SpyApplicationReopener: ApplicationReopening {
+        private(set) var applicationURLs: [URL] = []
+
+        func reopen(applicationURL: URL) {
+            applicationURLs.append(applicationURL)
         }
     }
 }

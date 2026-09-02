@@ -47,6 +47,13 @@ struct SettingsGeneralDetailView: View {
             Text(L10n.string("settings.general.launchAtLogin.description", language: store.appLanguage))
                 .font(.callout)
                 .foregroundStyle(.secondary)
+
+            Toggle(L10n.string("settings.general.reopenWindowlessApplications", language: store.appLanguage),
+                   isOn: $store.reopenWindowlessApplications)
+
+            Text(L10n.string("settings.general.reopenWindowlessApplications.description", language: store.appLanguage))
+                .font(.callout)
+                .foregroundStyle(.secondary)
         }
     }
 }

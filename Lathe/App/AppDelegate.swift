@@ -89,7 +89,11 @@ extension AppDelegate: HotKeyMonitorDelegate {
         guard let presenter = activePresenter else { return }
         if let selection = presenter.currentSelection() {
             presenter.recordWindowActivation()
-            AppActivator.activate(selection.app, window: selection.window)
+            AppActivator.activate(
+                selection.app,
+                window: selection.window,
+                reopensWindowlessApplications: SettingsStore.shared.reopenWindowlessApplications
+            )
         }
         hideOverlay(animated: true)
     }

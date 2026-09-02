@@ -40,6 +40,24 @@ final class SettingsStoreDisplayOptionsTests: XCTestCase {
     }
 
     @MainActor
+    func test_reopenWindowlessApplicationsDefaultsToTrue() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+
+        XCTAssertTrue(store.reopenWindowlessApplications)
+    }
+
+    @MainActor
+    func test_reopenWindowlessApplicationsPersists() {
+        let defaults = makeDefaults()
+        let store = SettingsStore(userDefaults: defaults)
+
+        store.reopenWindowlessApplications = false
+
+        let reloaded = SettingsStore(userDefaults: defaults)
+        XCTAssertFalse(reloaded.reopenWindowlessApplications)
+    }
+
+    @MainActor
     func test_fanRadiusDefaultsToConfiguredDefault() {
         let store = SettingsStore(userDefaults: makeDefaults())
 
