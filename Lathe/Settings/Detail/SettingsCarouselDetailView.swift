@@ -89,6 +89,14 @@ struct SettingsCarouselDetailView: View {
         Toggle(L10n.string("settings.carousel.animateOnOpen", language: store.appLanguage),
                isOn: $store.animateCarouselPresentation)
 
+        Toggle(L10n.string("settings.carousel.showBrowserTabs", language: store.appLanguage),
+               isOn: $store.showBrowserTabsInCarousel)
+
+        Text(L10n.string("settings.carousel.showBrowserTabs.description", language: store.appLanguage))
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+
         Button(L10n.string("settings.carousel.restoreDefaults", language: store.appLanguage)) {
             store.resetCarouselDefaults()
         }

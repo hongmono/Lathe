@@ -40,6 +40,24 @@ final class SettingsStoreDisplayOptionsTests: XCTestCase {
     }
 
     @MainActor
+    func test_showBrowserTabsInCarouselDefaultsToFalse() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+
+        XCTAssertFalse(store.showBrowserTabsInCarousel)
+    }
+
+    @MainActor
+    func test_showBrowserTabsInCarouselPersists() {
+        let defaults = makeDefaults()
+        let store = SettingsStore(userDefaults: defaults)
+
+        store.showBrowserTabsInCarousel = true
+
+        let reloaded = SettingsStore(userDefaults: defaults)
+        XCTAssertTrue(reloaded.showBrowserTabsInCarousel)
+    }
+
+    @MainActor
     func test_reopenWindowlessApplicationsDefaultsToTrue() {
         let store = SettingsStore(userDefaults: makeDefaults())
 
@@ -143,6 +161,16 @@ final class SettingsStoreDisplayOptionsTests: XCTestCase {
         store.resetCarouselDefaults()
 
         XCTAssertTrue(store.animateCarouselPresentation)
+    }
+
+    @MainActor
+    func test_resetCarouselDefaultsHidesBrowserTabs() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+        store.showBrowserTabsInCarousel = true
+
+        store.resetCarouselDefaults()
+
+        XCTAssertFalse(store.showBrowserTabsInCarousel)
     }
 
     @MainActor

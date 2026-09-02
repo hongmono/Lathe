@@ -89,6 +89,7 @@ extension AppDelegate: HotKeyMonitorDelegate {
         guard let presenter = activePresenter else { return }
         if let selection = presenter.currentSelection() {
             presenter.recordWindowActivation()
+            presenter.prepareSelectionForActivation()
             AppActivator.activate(
                 selection.app,
                 window: selection.window,

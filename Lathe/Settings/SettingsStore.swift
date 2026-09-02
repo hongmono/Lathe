@@ -18,6 +18,7 @@ final class SettingsStore: ObservableObject {
         static let fanSpacing = "fanSpacing"
         static let showAppNamesInCarousel = "showAppNamesInCarousel"
         static let animateCarouselPresentation = "animateCarouselPresentation"
+        static let showBrowserTabsInCarousel = "showBrowserTabsInCarousel"
         static let reopenWindowlessApplications = "reopenWindowlessApplications"
         static let hiddenAppBundleIdentifiers = "hiddenAppBundleIdentifiers"
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
@@ -74,6 +75,10 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(animateCarouselPresentation, forKey: Key.animateCarouselPresentation) }
     }
 
+    @Published var showBrowserTabsInCarousel: Bool {
+        didSet { defaults.set(showBrowserTabsInCarousel, forKey: Key.showBrowserTabsInCarousel) }
+    }
+
     @Published var reopenWindowlessApplications: Bool {
         didSet { defaults.set(reopenWindowlessApplications, forKey: Key.reopenWindowlessApplications) }
     }
@@ -113,6 +118,8 @@ final class SettingsStore: ObservableObject {
         self.showAppNamesInCarousel = (userDefaults.object(forKey: Key.showAppNamesInCarousel) as? Bool) ?? true
         self.animateCarouselPresentation =
             (userDefaults.object(forKey: Key.animateCarouselPresentation) as? Bool) ?? true
+        self.showBrowserTabsInCarousel =
+            (userDefaults.object(forKey: Key.showBrowserTabsInCarousel) as? Bool) ?? false
         self.reopenWindowlessApplications =
             (userDefaults.object(forKey: Key.reopenWindowlessApplications) as? Bool) ?? true
         self.launchAtLogin = LoginItem.isEnabled
@@ -156,6 +163,7 @@ final class SettingsStore: ObservableObject {
         fanSpacing = Self.defaultFanSpacing
         showAppNamesInCarousel = true
         animateCarouselPresentation = true
+        showBrowserTabsInCarousel = false
     }
 
     func isExcluded(bundleIdentifier: String?) -> Bool {

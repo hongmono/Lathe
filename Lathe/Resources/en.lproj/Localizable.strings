@@ -1,5 +1,6 @@
 "app.unknown" = "Unknown";
 "window.untitled" = "Untitled Window";
+"browserTabs.window" = "Window %d";
 
 "appearance.matchSystem" = "Match System";
 "appearance.light" = "Light";
@@ -39,6 +40,8 @@
 "settings.carousel.fanSpacing" = "Fan spacing";
 "settings.carousel.showAppNames" = "Show app names";
 "settings.carousel.animateOnOpen" = "Animate cards when opening";
+"settings.carousel.showBrowserTabs" = "Show browser tabs with ⌘`";
+"settings.carousel.showBrowserTabs.description" = "For supported browsers, ⌘` cycles through tabs instead of windows. If tabs aren't available, Lathe keeps using the window list.";
 "settings.carousel.restoreDefaults" = "Restore defaults";
 "settings.hiddenApps.section" = "Hidden Apps";
 "settings.hiddenApps.description" = "Apps turned on here won't appear in the Lathe carousel.";

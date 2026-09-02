@@ -152,10 +152,14 @@ final class OverlayController {
 
     func currentSelection() -> OverlaySelection? {
         guard let app = carouselViewModel.currentEntry else { return nil }
-        let window = windowSelectionViewModel.hasMultipleWindows
+        let window = windowSelectionViewModel.hasMultipleItems
             ? windowSelectionViewModel.currentWindow
             : nil
         return OverlaySelection(app: app, window: window)
+    }
+
+    func prepareSelectionForActivation() {
+        windowSelectionViewModel.prepareSelectionForActivation()
     }
 
     func recordWindowActivation() {

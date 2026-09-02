@@ -1,5 +1,6 @@
 "app.unknown" = "알 수 없음";
 "window.untitled" = "제목 없는 창";
+"browserTabs.window" = "창 %d";
 
 "appearance.matchSystem" = "시스템 설정 따름";
 "appearance.light" = "라이트";
@@ -39,6 +40,8 @@
 "settings.carousel.fanSpacing" = "부채꼴 간격";
 "settings.carousel.showAppNames" = "앱 이름 표시";
 "settings.carousel.animateOnOpen" = "열릴 때 카드 펼치기";
+"settings.carousel.showBrowserTabs" = "⌘`으로 브라우저 탭 표시";
+"settings.carousel.showBrowserTabs.description" = "지원되는 브라우저에서는 ⌘`으로 창 대신 탭을 순환합니다. 탭을 읽을 수 없으면 기존 창 목록을 사용합니다.";
 "settings.carousel.restoreDefaults" = "기본값 복원";
 "settings.hiddenApps.section" = "숨긴 앱";
 "settings.hiddenApps.description" = "여기서 켠 앱은 Lathe 캐러셀에 표시되지 않습니다.";

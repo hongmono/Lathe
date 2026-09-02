@@ -154,14 +154,14 @@ private struct WindowSelectionOverlay: View {
     let topOffset: CGFloat
 
     var body: some View {
-        if viewModel.hasMultipleWindows {
+        if viewModel.hasMultipleItems {
             WindowListView(
-                windows: viewModel.windows,
+                items: viewModel.items,
                 selectedIndex: viewModel.selectedIndex
             )
             .offset(y: topOffset)
             .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
-            .animation(.easeInOut(duration: 0.16), value: viewModel.windows.map(\.id))
+            .animation(.easeInOut(duration: 0.16), value: viewModel.items.map(\.id))
         }
     }
 }

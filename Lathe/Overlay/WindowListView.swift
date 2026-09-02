@@ -2,7 +2,7 @@ import SwiftUI
 
 enum WindowListLayout {
     static let maxVisibleRows = 6
-    static let rowHeight: CGFloat = 32
+    static let rowHeight: CGFloat = 38
     static let rowSpacing: CGFloat = 2
     static let verticalPadding: CGFloat = 8
     static let horizontalPadding: CGFloat = 8
@@ -21,7 +21,7 @@ enum WindowListLayout {
 }
 
 struct WindowListView: View {
-    let windows: [WindowEntry]
+    let items: [WindowSelectionItem]
     let selectedIndex: Int
 
     @Namespace private var highlightNamespace
@@ -30,8 +30,8 @@ struct WindowListView: View {
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: WindowListLayout.rowSpacing) {
-                    ForEach(Array(windows.enumerated()), id: \.element.id) { index, window in
-                        row(for: window, isSelected: index == selectedIndex)
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                        row(for: item, isSelected: index == selectedIndex)
                             .id(index)
                     }
                 }
@@ -41,7 +41,7 @@ struct WindowListView: View {
             }
             .frame(
                 width: WindowListLayout.width,
-                height: WindowListLayout.contentHeight(for: windows.count)
+                height: WindowListLayout.contentHeight(for: items.count)
             )
             .onChange(of: selectedIndex) { _, newIndex in
                 proxy.scrollTo(newIndex, anchor: .center)
@@ -59,18 +59,27 @@ struct WindowListView: View {
     }
 
     @ViewBuilder
-    private func row(for window: WindowEntry, isSelected: Bool) -> some View {
+    private func row(for item: WindowSelectionItem, isSelected: Bool) -> some View {
         HStack(spacing: 9) {
-            Image(systemName: window.isMinimized ? "macwindow.badge.minus" : "macwindow")
+            Image(systemName: systemImage(for: item))
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
                 .frame(width: 16)
 
-            Text(window.displayTitle)
-                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? .primary : .secondary)
-                .lineLimit(1)
-                .truncationMode(.tail)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(displayTitle(for: item))
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(isSelected ? .primary : .secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                if case .browserTab(let tab) = item {
+                    Text(L10n.format("browserTabs.window", tab.windowOrdinal))
+                        .font(.system(size: 10.5))
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
+            }
 
             Spacer(minLength: 0)
         }
@@ -89,5 +98,23 @@ struct WindowListView: View {
             }
         }
         .contentShape(Rectangle())
+    }
+
+    private func systemImage(for item: WindowSelectionItem) -> String {
+        switch item {
+        case .window(let window):
+            return window.isMinimized ? "macwindow.badge.minus" : "macwindow"
+        case .browserTab:
+            return "rectangle.on.rectangle"
+        }
+    }
+
+    private func displayTitle(for item: WindowSelectionItem) -> String {
+        switch item {
+        case .window(let window):
+            return window.displayTitle
+        case .browserTab(let tab):
+            return tab.title
+        }
     }
 }

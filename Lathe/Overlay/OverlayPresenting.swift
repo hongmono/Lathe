@@ -11,9 +11,16 @@ protocol OverlayPresenting: AnyObject {
     func cycleWindow()
     func cycleWindowPrevious()
     func currentSelection() -> OverlaySelection?
+    /// Browser tabs and other nested selections can update their owning app
+    /// before the normal app/window activation path runs.
+    func prepareSelectionForActivation()
     func removeApplication(processIdentifier: pid_t)
     func recordWindowActivation()
     func hide(animated: Bool)
+}
+
+extension OverlayPresenting {
+    func prepareSelectionForActivation() {}
 }
 
 extension OverlayController: OverlayPresenting {}
