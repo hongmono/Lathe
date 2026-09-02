@@ -65,7 +65,8 @@ struct OverlayRootView: View {
         .overlay(alignment: .top) {
             WindowSelectionOverlay(
                 viewModel: windowSelectionViewModel,
-                topOffset: windowListTopOffset
+                topOffset: windowListTopOffset,
+                isPresentationExpanded: carouselViewModel.isPresentationExpanded
             )
         }
     }
@@ -151,17 +152,41 @@ private enum CarouselPresentationMotion {
 
 private struct WindowSelectionOverlay: View {
     @ObservedObject var viewModel: WindowSelectionViewModel
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+
     let topOffset: CGFloat
+    let isPresentationExpanded: Bool
 
     var body: some View {
-        if viewModel.hasMultipleItems {
-            WindowListView(
-                items: viewModel.items,
-                selectedIndex: viewModel.selectedIndex
-            )
-            .offset(y: topOffset)
-            .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .top)))
-            .animation(.easeInOut(duration: 0.16), value: viewModel.items.map(\.id))
+        ZStack(alignment: .top) {
+            if isPresentationExpanded && viewModel.hasMultipleItems {
+                WindowListView(
+                    items: viewModel.items,
+                    selectedIndex: viewModel.selectedIndex
+                )
+                .id(itemIDs)
+                .offset(y: topOffset)
+                .transition(listTransition)
+            }
         }
+        .animation(listAnimation, value: isPresentationExpanded)
+        .animation(listAnimation, value: itemIDs)
+    }
+
+    private var itemIDs: [WindowSelectionItem.ID] {
+        viewModel.items.map(\.id)
+    }
+
+    private var listAnimation: Animation {
+        accessibilityReduceMotion
+            ? .easeOut(duration: 0.12)
+            : .spring(response: 0.32, dampingFraction: 1.0)
+    }
+
+    private var listTransition: AnyTransition {
+        guard !accessibilityReduceMotion else { return .opacity }
+        return .offset(y: -12)
+            .combined(with: .scale(scale: 0.97, anchor: .top))
+            .combined(with: .opacity)
     }
 }

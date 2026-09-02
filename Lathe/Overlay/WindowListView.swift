@@ -24,6 +24,7 @@ struct WindowListView: View {
     let items: [WindowSelectionItem]
     let selectedIndex: Int
 
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @Namespace private var highlightNamespace
 
     var body: some View {
@@ -44,7 +45,9 @@ struct WindowListView: View {
                 height: WindowListLayout.contentHeight(for: items.count)
             )
             .onChange(of: selectedIndex) { _, newIndex in
-                proxy.scrollTo(newIndex, anchor: .center)
+                withAnimation(selectionAnimation) {
+                    proxy.scrollTo(newIndex, anchor: .center)
+                }
             }
             .onAppear {
                 proxy.scrollTo(selectedIndex, anchor: .center)
@@ -56,6 +59,13 @@ struct WindowListView: View {
                 .stroke(.white.opacity(0.16), lineWidth: 0.8)
         }
         .shadow(color: .black.opacity(0.24), radius: 18, x: 0, y: 10)
+        .animation(selectionAnimation, value: selectedIndex)
+    }
+
+    private var selectionAnimation: Animation {
+        accessibilityReduceMotion
+            ? .easeOut(duration: 0.12)
+            : .spring(response: 0.26, dampingFraction: 1.0)
     }
 
     @ViewBuilder
