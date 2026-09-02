@@ -176,8 +176,8 @@ xcodebuild -project Lathe.xcodeproj -scheme Lathe test
 | ⌘ held + Esc or .    | Dismiss without switching                           |
 | ⌘ held + H           | Hide or reveal the focused app without switching    |
 | ⌘ held + Q           | Ask the focused app to quit without switching       |
-| ⌘+`                  | Cycle windows of the focused app                    |
-| ⌘ held + ⇧`          | Cycle windows backward                              |
+| ⌘+`                  | Cycle windows, or browser tabs when enabled         |
+| ⌘ held + ⇧`          | Cycle backward                                      |
 
 Behavior matches the system ⌘+Tab so the muscle memory still works —
 the only difference is that the focus is fixed at the top of the
@@ -191,6 +191,14 @@ direction. Pressing ⌘+` on its own — without opening the carousel first
 just the selected window, without pulling its sibling windows forward.
 Windows are ordered most-recently-used, and document/URL windows show a
 shortened path next to the title.
+
+**Browser-tab switching.** Enable **Preferences → Carousel → Show browser
+tabs with ⌘`** to cycle tabs instead of windows in supported browsers. Lathe
+groups tabs by browser window and activates the selected tab when you release
+⌘. Safari, Chrome, Brave, Edge, Vivaldi, Firefox, Arc, and Aside are supported
+when they expose pressable tab controls through Accessibility. If a browser
+does not expose its tabs, Lathe automatically keeps using the regular window
+list.
 
 ## Preferences
 
@@ -207,6 +215,7 @@ Open from the Lathe menu bar icon → **Preferences…**.
 | Carousel   | Card size                | Card width; height & pivot scale with it     |
 | Carousel   | Spacing                  | Angle (degrees) between adjacent cards       |
 | Carousel   | Show app names           | Toggle labels inside carousel cards          |
+| Carousel   | Show browser tabs with ⌘`| Use tabs instead of windows when available   |
 | Hidden Apps| App toggles              | Hide selected apps from the carousel         |
 | General    | Launch Lathe at login    | Register as a Login Item via `SMAppService`  |
 
@@ -220,6 +229,8 @@ Lathe needs **Accessibility** permission to install the
 permission requested — no Input Monitoring, no Full Disk Access, no
 Screen Recording. The event tap is scoped to keyDown for ⌘ + Tab/⇧Tab
 /`` ` ``/Esc only; everything else passes through unmodified.
+The optional browser-tab switcher uses the same Accessibility permission;
+it does not request browser-specific Automation access.
 
 If you ever want to revoke: System Settings → Privacy & Security →
 Accessibility → toggle Lathe off (or remove it entirely).
@@ -253,6 +264,10 @@ tccutil reset Accessibility com.hongmono.Lathe
   (matching by window id, title, then frame), filters out non-user
   windows, and orders the result most-recently-used. Titles pick up a
   short document/URL path summary when the window exposes one.
+- **Browser tabs.** When enabled, `AccessibilityBrowserTabProvider`
+  discovers pressable browser tab controls in each window, preserves their
+  window grouping, and selects the chosen tab through Accessibility. An empty
+  or unsupported tab hierarchy falls back to the normal window list.
 - **Single-window raise.** Selecting a window raises *only* that window
   via SkyLight (`_SLPSSetFrontProcessWithOptions`) instead of activating
   the whole app — the same approach AltTab and yabai use — so sibling
@@ -275,7 +290,8 @@ Lathe/
 ├── App/            LatheApp.swift, AppDelegate.swift
 ├── HotKey/         HotKeyMonitor.swift          (CGEventTap, key actions)
 ├── AppList/        AppEntry.swift, AppListProvider.swift,
-│                   WindowEntry, WindowListProvider, WindowVisibilityFilter,
+│                   WindowEntry, WindowListProvider, BrowserTabProvider,
+│                   WindowVisibilityFilter,
 │                   WindowOrderTracker, WindowFocusTracker, WindowPathSummary
 ├── Overlay/        OverlayPanel + Controller, OverlayRootView,
 │                   CarouselViewModel/Layout, CardView,
