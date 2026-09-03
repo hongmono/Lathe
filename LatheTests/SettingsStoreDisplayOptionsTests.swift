@@ -40,6 +40,62 @@ final class SettingsStoreDisplayOptionsTests: XCTestCase {
     }
 
     @MainActor
+    func test_windowListAnimationStyleDefaultsToStaggered() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+
+        XCTAssertEqual(store.windowListAnimationStyle, .staggered)
+    }
+
+    @MainActor
+    func test_windowListAnimationStylePersists() {
+        let defaults = makeDefaults()
+        let store = SettingsStore(userDefaults: defaults)
+
+        store.windowListAnimationStyle = .expand
+
+        let reloaded = SettingsStore(userDefaults: defaults)
+        XCTAssertEqual(reloaded.windowListAnimationStyle, .expand)
+    }
+
+    @MainActor
+    func test_windowListAnimationStyleFallsBackForUnknownStoredValue() {
+        let defaults = makeDefaults()
+        defaults.set("unknown", forKey: "windowListAnimationStyle")
+
+        let store = SettingsStore(userDefaults: defaults)
+
+        XCTAssertEqual(store.windowListAnimationStyle, .staggered)
+    }
+
+    @MainActor
+    func test_windowListAnimationSpeedDefaultsToNormal() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+
+        XCTAssertEqual(store.windowListAnimationSpeed, SettingsStore.defaultWindowListAnimationSpeed)
+    }
+
+    @MainActor
+    func test_windowListAnimationSpeedPersists() {
+        let defaults = makeDefaults()
+        let store = SettingsStore(userDefaults: defaults)
+
+        store.windowListAnimationSpeed = 1.6
+
+        let reloaded = SettingsStore(userDefaults: defaults)
+        XCTAssertEqual(reloaded.windowListAnimationSpeed, 1.6)
+    }
+
+    @MainActor
+    func test_windowListAnimationSpeedClampsPersistedOutOfRangeValues() {
+        let defaults = makeDefaults()
+        defaults.set(4.0, forKey: "windowListAnimationSpeed")
+
+        let store = SettingsStore(userDefaults: defaults)
+
+        XCTAssertEqual(store.windowListAnimationSpeed, SettingsStore.windowListAnimationSpeedRange.upperBound)
+    }
+
+    @MainActor
     func test_showBrowserTabsInCarouselDefaultsToFalse() {
         let store = SettingsStore(userDefaults: makeDefaults())
 
@@ -161,6 +217,26 @@ final class SettingsStoreDisplayOptionsTests: XCTestCase {
         store.resetCarouselDefaults()
 
         XCTAssertTrue(store.animateCarouselPresentation)
+    }
+
+    @MainActor
+    func test_resetCarouselDefaultsRestoresWindowListAnimationStyle() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+        store.windowListAnimationStyle = .whole
+
+        store.resetCarouselDefaults()
+
+        XCTAssertEqual(store.windowListAnimationStyle, .staggered)
+    }
+
+    @MainActor
+    func test_resetCarouselDefaultsRestoresWindowListAnimationSpeed() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+        store.windowListAnimationSpeed = 1.8
+
+        store.resetCarouselDefaults()
+
+        XCTAssertEqual(store.windowListAnimationSpeed, SettingsStore.defaultWindowListAnimationSpeed)
     }
 
     @MainActor

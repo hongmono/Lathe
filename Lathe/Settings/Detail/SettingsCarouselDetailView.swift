@@ -89,6 +89,42 @@ struct SettingsCarouselDetailView: View {
         Toggle(L10n.string("settings.carousel.animateOnOpen", language: store.appLanguage),
                isOn: $store.animateCarouselPresentation)
 
+        VStack(alignment: .leading, spacing: SettingsViewLayout.detailRowSpacing) {
+            HStack(spacing: SettingsViewLayout.detailRowSpacing) {
+                Text(L10n.string("settings.carousel.windowListAnimation", language: store.appLanguage))
+
+                Picker("", selection: $store.windowListAnimationStyle) {
+                    ForEach(WindowListAnimationStyle.allCases) { style in
+                        Text(style.label(language: store.appLanguage)).tag(style)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+            }
+
+            SettingsWindowListAnimationPreview(
+                animationStyle: store.windowListAnimationStyle,
+                animationSpeed: store.windowListAnimationSpeed,
+                appLanguage: store.appLanguage
+            )
+
+            HStack(spacing: SettingsViewLayout.detailRowSpacing) {
+                Text(L10n.string("settings.carousel.windowListAnimation.speed", language: store.appLanguage))
+
+                Slider(
+                    value: $store.windowListAnimationSpeed,
+                    in: SettingsStore.windowListAnimationSpeedRange,
+                    step: 0.1
+                )
+
+                Text(store.windowListAnimationSpeed.formatted(.number.precision(.fractionLength(1))) + "×")
+                    .monospacedDigit()
+                    .frame(width: SettingsCarouselDetailLayout.animationSpeedValueWidth, alignment: .trailing)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: SettingsCarouselDetailLayout.sliderMaxWidth, alignment: .leading)
+        }
+
         Toggle(L10n.string("settings.carousel.showBrowserTabs", language: store.appLanguage),
                isOn: $store.showBrowserTabsInCarousel)
 
@@ -155,8 +191,94 @@ private enum SettingsCarouselDetailLayout {
     static let previewHeight: CGFloat = 196
     static let previewVerticalPadding: CGFloat = 4
     static let previewCornerRadius: CGFloat = 16
+    static let windowListPreviewHeight: CGFloat = 152
+    static let windowListPreviewScale: CGFloat = 0.86
+    static let animationSpeedValueWidth: CGFloat = 42
     static let sliderMaxWidth: CGFloat = 360
     static let sliderValueWidth: CGFloat = 56
+}
+
+private struct SettingsWindowListAnimationPreview: View {
+    let animationStyle: WindowListAnimationStyle
+    let animationSpeed: Double
+    let appLanguage: AppLanguage
+
+    @State private var replayID = 0
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            ZStack {
+                RoundedRectangle(
+                    cornerRadius: SettingsCarouselDetailLayout.previewCornerRadius,
+                    style: .continuous
+                )
+                .fill(Color.primary.opacity(0.035))
+                .overlay {
+                    RoundedRectangle(
+                        cornerRadius: SettingsCarouselDetailLayout.previewCornerRadius,
+                        style: .continuous
+                    )
+                    .stroke(.primary.opacity(0.08), lineWidth: 0.8)
+                }
+
+                WindowListView(
+                    items: previewItems,
+                    selectedIndex: 0,
+                    presentationStyle: animationStyle,
+                    presentationSpeed: animationSpeed
+                )
+                .scaleEffect(SettingsCarouselDetailLayout.windowListPreviewScale)
+                .id(PreviewID(
+                    animationStyle: animationStyle,
+                    animationSpeed: animationSpeed,
+                    replayID: replayID
+                ))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: SettingsCarouselDetailLayout.windowListPreviewHeight)
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: SettingsCarouselDetailLayout.previewCornerRadius,
+                    style: .continuous
+                )
+            )
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+
+            Button {
+                replayID += 1
+            } label: {
+                Label(
+                    L10n.string("settings.carousel.windowListAnimation.replay", language: appLanguage),
+                    systemImage: "arrow.clockwise"
+                )
+            }
+            .buttonStyle(.borderless)
+        }
+    }
+
+    private var previewItems: [WindowSelectionItem] {
+        [
+            .window(previewWindow(id: -101, titleKey: "settings.carousel.windowListAnimation.preview.first")),
+            .window(previewWindow(id: -102, titleKey: "settings.carousel.windowListAnimation.preview.second")),
+            .window(previewWindow(id: -103, titleKey: "settings.carousel.windowListAnimation.preview.third")),
+        ]
+    }
+
+    private func previewWindow(id: Int, titleKey: String) -> WindowEntry {
+        WindowEntry(
+            id: id,
+            title: L10n.string(titleKey, language: appLanguage),
+            pathSummary: nil,
+            isMinimized: false
+        )
+    }
+
+    private struct PreviewID: Hashable {
+        let animationStyle: WindowListAnimationStyle
+        let animationSpeed: Double
+        let replayID: Int
+    }
 }
 
 private struct SettingsCarouselExampleView: View {

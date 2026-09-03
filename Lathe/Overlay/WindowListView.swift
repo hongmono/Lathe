@@ -30,16 +30,22 @@ enum WindowListLayout {
 }
 
 private enum WindowListPresentationMotion {
-    static let initialOffsetY: CGFloat = -10
-    static let response = 0.30
+    static let wholeInitialOffsetY: CGFloat = -12
+    static let wholeInitialScale: CGFloat = 0.97
+    static let wholeResponse = 0.32
+    static let staggeredInitialOffsetY: CGFloat = -10
+    static let staggeredResponse = 0.30
     static let dampingFraction = 1.0
     static let backgroundLeadTime = 0.04
     static let staggerDelay = 0.025
+    static let expandResponse = 0.34
 }
 
 struct WindowListView: View {
     let items: [WindowSelectionItem]
     let selectedIndex: Int
+    let presentationStyle: WindowListAnimationStyle
+    let presentationSpeed: Double
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @Namespace private var highlightNamespace
@@ -52,8 +58,9 @@ struct WindowListView: View {
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                         row(for: item, isSelected: index == selectedIndex)
                             .id(index)
-                            .offset(y: rowOffsetY)
-                            .opacity(areRowsPresented ? 1 : 0)
+                            .offset(y: rowOffsetY(for: index))
+                            .opacity(rowOpacity(for: index))
+                            .zIndex(rowZIndex(for: index))
                             .animation(rowPresentationAnimation(for: index), value: areRowsPresented)
                     }
                 }
@@ -77,12 +84,20 @@ struct WindowListView: View {
                 }
             }
         }
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: WindowListLayout.cornerRadius, style: .continuous))
+        .background {
+            containerShape
+                .fill(.ultraThinMaterial)
+        }
         .overlay {
-            RoundedRectangle(cornerRadius: WindowListLayout.cornerRadius, style: .continuous)
+            containerShape
                 .stroke(.white.opacity(0.16), lineWidth: 0.8)
         }
+        .mask { containerShape }
         .shadow(color: .black.opacity(0.24), radius: 18, x: 0, y: 10)
+        .scaleEffect(wholeListScale, anchor: .top)
+        .offset(y: wholeListOffsetY)
+        .opacity(areRowsPresented ? 1 : 0)
+        .animation(containerPresentationAnimation, value: areRowsPresented)
         .animation(selectionAnimation, value: selectedIndex)
     }
 
@@ -92,27 +107,121 @@ struct WindowListView: View {
             : .spring(response: 0.26, dampingFraction: 1.0)
     }
 
-    private var rowOffsetY: CGFloat {
-        accessibilityReduceMotion || areRowsPresented
-            ? 0
-            : WindowListPresentationMotion.initialOffsetY
+    private var containerShape: WindowListContainerShape {
+        WindowListContainerShape(
+            expansionProgress: containerExpansionProgress,
+            collapsedHeight: WindowListLayout.rowHeight + WindowListLayout.verticalPadding * 2,
+            cornerRadius: WindowListLayout.cornerRadius
+        )
     }
 
-    private func rowPresentationAnimation(for index: Int) -> Animation {
-        guard !accessibilityReduceMotion else {
-            return .easeOut(duration: 0.12)
+    private var containerExpansionProgress: CGFloat {
+        guard presentationStyle == .expand, !accessibilityReduceMotion else { return 1 }
+        return areRowsPresented ? 1 : 0
+    }
+
+    private var wholeListScale: CGFloat {
+        guard presentationStyle == .whole, !accessibilityReduceMotion else { return 1 }
+        return areRowsPresented ? 1 : WindowListPresentationMotion.wholeInitialScale
+    }
+
+    private var wholeListOffsetY: CGFloat {
+        guard presentationStyle == .whole, !accessibilityReduceMotion else { return 0 }
+        return areRowsPresented ? 0 : WindowListPresentationMotion.wholeInitialOffsetY
+    }
+
+    private func rowOffsetY(for index: Int) -> CGFloat {
+        guard !accessibilityReduceMotion, !areRowsPresented else { return 0 }
+        switch presentationStyle {
+        case .whole:
+            return 0
+        case .staggered:
+            return WindowListPresentationMotion.staggeredInitialOffsetY
+        case .expand:
+            return -CGFloat(presentationOrder(for: index)) * rowStride
         }
-        let delay = WindowListPresentationMotion.backgroundLeadTime
-            + Double(WindowListLayout.presentationOrder(
-                for: index,
-                selectedIndex: selectedIndex,
-                itemCount: items.count
-            )) * WindowListPresentationMotion.staggerDelay
-        return .spring(
-            response: WindowListPresentationMotion.response,
-            dampingFraction: WindowListPresentationMotion.dampingFraction
+    }
+
+    private func rowOpacity(for index: Int) -> Double {
+        guard !areRowsPresented else { return 1 }
+        switch presentationStyle {
+        case .whole:
+            return 1
+        case .staggered:
+            return 0
+        case .expand:
+            return presentationOrder(for: index) == 0 ? 1 : 0
+        }
+    }
+
+    private func rowZIndex(for index: Int) -> Double {
+        guard presentationStyle == .expand else { return 0 }
+        return Double(WindowListLayout.maxVisibleRows - presentationOrder(for: index))
+    }
+
+    private var rowStride: CGFloat {
+        WindowListLayout.rowHeight + WindowListLayout.rowSpacing
+    }
+
+    private func presentationOrder(for index: Int) -> Int {
+        WindowListLayout.presentationOrder(
+            for: index,
+            selectedIndex: selectedIndex,
+            itemCount: items.count
         )
-        .delay(delay)
+    }
+
+    private var containerPresentationAnimation: Animation {
+        guard !accessibilityReduceMotion else {
+            return .easeOut(duration: 0.12).speed(resolvedPresentationSpeed)
+        }
+        switch presentationStyle {
+        case .whole:
+            return .spring(
+                response: WindowListPresentationMotion.wholeResponse,
+                dampingFraction: WindowListPresentationMotion.dampingFraction
+            )
+            .speed(resolvedPresentationSpeed)
+        case .staggered:
+            return .easeOut(duration: 0.12).speed(resolvedPresentationSpeed)
+        case .expand:
+            return .spring(
+                response: WindowListPresentationMotion.expandResponse,
+                dampingFraction: WindowListPresentationMotion.dampingFraction
+            )
+            .speed(resolvedPresentationSpeed)
+        }
+    }
+
+    private func rowPresentationAnimation(for index: Int) -> Animation? {
+        guard !accessibilityReduceMotion else {
+            return .easeOut(duration: 0.12).speed(resolvedPresentationSpeed)
+        }
+        switch presentationStyle {
+        case .whole:
+            return nil
+        case .staggered:
+            let delay = WindowListPresentationMotion.backgroundLeadTime
+                + Double(presentationOrder(for: index)) * WindowListPresentationMotion.staggerDelay
+            return .spring(
+                response: WindowListPresentationMotion.staggeredResponse,
+                dampingFraction: WindowListPresentationMotion.dampingFraction
+            )
+            .delay(delay)
+            .speed(resolvedPresentationSpeed)
+        case .expand:
+            let delay = Double(presentationOrder(for: index)) * WindowListPresentationMotion.staggerDelay
+            return .spring(
+                response: WindowListPresentationMotion.expandResponse,
+                dampingFraction: WindowListPresentationMotion.dampingFraction
+            )
+            .delay(delay)
+            .speed(resolvedPresentationSpeed)
+        }
+    }
+
+    private var resolvedPresentationSpeed: Double {
+        SettingsStore.clampedWindowListAnimationSpeed(presentationSpeed)
     }
 
     @ViewBuilder
@@ -173,5 +282,25 @@ struct WindowListView: View {
         case .browserTab(let tab):
             return tab.title
         }
+    }
+}
+
+private struct WindowListContainerShape: Shape {
+    var expansionProgress: CGFloat
+    let collapsedHeight: CGFloat
+    let cornerRadius: CGFloat
+
+    var animatableData: CGFloat {
+        get { expansionProgress }
+        set { expansionProgress = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let progress = min(max(expansionProgress, 0), 1)
+        let height = collapsedHeight + (rect.height - collapsedHeight) * progress
+        return Path(
+            roundedRect: CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: height),
+            cornerRadius: cornerRadius
+        )
     }
 }

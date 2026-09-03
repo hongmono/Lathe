@@ -40,6 +40,15 @@
 "settings.carousel.fanSpacing" = "부채꼴 간격";
 "settings.carousel.showAppNames" = "앱 이름 표시";
 "settings.carousel.animateOnOpen" = "열릴 때 카드 펼치기";
+"settings.carousel.windowListAnimation" = "창 목록 애니메이션";
+"settings.carousel.windowListAnimation.speed" = "애니메이션 속도";
+"settings.carousel.windowListAnimation.replay" = "미리보기 다시 재생";
+"settings.carousel.windowListAnimation.preview.first" = "첫 번째 창";
+"settings.carousel.windowListAnimation.preview.second" = "두 번째 창";
+"settings.carousel.windowListAnimation.preview.third" = "세 번째 창";
+"windowListAnimation.whole" = "전체 등장";
+"windowListAnimation.staggered" = "순차 등장";
+"windowListAnimation.expand" = "아래로 펼치기";
 "settings.carousel.showBrowserTabs" = "⌘`으로 브라우저 탭 표시";
 "settings.carousel.showBrowserTabs.description" = "지원되는 브라우저에서는 ⌘`으로 창 대신 탭을 순환합니다. 탭을 읽을 수 없으면 기존 창 목록을 사용합니다.";
 "settings.carousel.restoreDefaults" = "기본값 복원";

@@ -40,6 +40,15 @@
 "settings.carousel.fanSpacing" = "Fan spacing";
 "settings.carousel.showAppNames" = "Show app names";
 "settings.carousel.animateOnOpen" = "Animate cards when opening";
+"settings.carousel.windowListAnimation" = "Window list animation";
+"settings.carousel.windowListAnimation.speed" = "Animation speed";
+"settings.carousel.windowListAnimation.replay" = "Replay preview";
+"settings.carousel.windowListAnimation.preview.first" = "First window";
+"settings.carousel.windowListAnimation.preview.second" = "Second window";
+"settings.carousel.windowListAnimation.preview.third" = "Third window";
+"windowListAnimation.whole" = "Together";
+"windowListAnimation.staggered" = "One by one";
+"windowListAnimation.expand" = "Expand";
 "settings.carousel.showBrowserTabs" = "Show browser tabs with ⌘`";
 "settings.carousel.showBrowserTabs.description" = "For supported browsers, ⌘` cycles through tabs instead of windows. If tabs aren't available, Lathe keeps using the window list.";
 "settings.carousel.restoreDefaults" = "Restore defaults";

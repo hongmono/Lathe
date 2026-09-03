@@ -66,7 +66,9 @@ struct OverlayRootView: View {
             WindowSelectionOverlay(
                 viewModel: windowSelectionViewModel,
                 topOffset: windowListTopOffset,
-                isPresentationExpanded: carouselViewModel.isPresentationExpanded
+                isPresentationExpanded: carouselViewModel.isPresentationExpanded,
+                presentationStyle: settings.windowListAnimationStyle,
+                presentationSpeed: settings.windowListAnimationSpeed
             )
         }
     }
@@ -155,16 +157,20 @@ private struct WindowSelectionOverlay: View {
 
     let topOffset: CGFloat
     let isPresentationExpanded: Bool
+    let presentationStyle: WindowListAnimationStyle
+    let presentationSpeed: Double
 
     var body: some View {
         ZStack(alignment: .top) {
             if isPresentationExpanded && viewModel.hasMultipleItems {
                 WindowListView(
                     items: viewModel.items,
-                    selectedIndex: viewModel.selectedIndex
+                    selectedIndex: viewModel.selectedIndex,
+                    presentationStyle: presentationStyle,
+                    presentationSpeed: presentationSpeed
                 )
                 .offset(y: topOffset)
-                .transition(.opacity)
+                .transition(.asymmetric(insertion: .identity, removal: .opacity))
             }
         }
         .animation(.easeOut(duration: 0.12), value: isPresentationExpanded)

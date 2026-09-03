@@ -18,6 +18,8 @@ final class SettingsStore: ObservableObject {
         static let fanSpacing = "fanSpacing"
         static let showAppNamesInCarousel = "showAppNamesInCarousel"
         static let animateCarouselPresentation = "animateCarouselPresentation"
+        static let windowListAnimationStyle = "windowListAnimationStyle"
+        static let windowListAnimationSpeed = "windowListAnimationSpeed"
         static let showBrowserTabsInCarousel = "showBrowserTabsInCarousel"
         static let reopenWindowlessApplications = "reopenWindowlessApplications"
         static let hiddenAppBundleIdentifiers = "hiddenAppBundleIdentifiers"
@@ -29,6 +31,8 @@ final class SettingsStore: ObservableObject {
     static let defaultAngularStep: Double = 13
     static let defaultFanRadius: Double = CarouselGeometry.defaultFanRadius
     static let defaultFanSpacing: Double = CarouselGeometry.defaultFanSpacing
+    static let defaultWindowListAnimationSpeed = 1.0
+    static let windowListAnimationSpeedRange = 0.5...2.0
 
     private let defaults: UserDefaults
 
@@ -75,6 +79,19 @@ final class SettingsStore: ObservableObject {
         didSet { defaults.set(animateCarouselPresentation, forKey: Key.animateCarouselPresentation) }
     }
 
+    @Published var windowListAnimationStyle: WindowListAnimationStyle {
+        didSet { defaults.set(windowListAnimationStyle.rawValue, forKey: Key.windowListAnimationStyle) }
+    }
+
+    @Published var windowListAnimationSpeed: Double {
+        didSet {
+            defaults.set(
+                Self.clampedWindowListAnimationSpeed(windowListAnimationSpeed),
+                forKey: Key.windowListAnimationSpeed
+            )
+        }
+    }
+
     @Published var showBrowserTabsInCarousel: Bool {
         didSet { defaults.set(showBrowserTabsInCarousel, forKey: Key.showBrowserTabsInCarousel) }
     }
@@ -118,6 +135,13 @@ final class SettingsStore: ObservableObject {
         self.showAppNamesInCarousel = (userDefaults.object(forKey: Key.showAppNamesInCarousel) as? Bool) ?? true
         self.animateCarouselPresentation =
             (userDefaults.object(forKey: Key.animateCarouselPresentation) as? Bool) ?? true
+        self.windowListAnimationStyle = WindowListAnimationStyle(
+            rawValue: userDefaults.string(forKey: Key.windowListAnimationStyle) ?? ""
+        ) ?? .staggered
+        self.windowListAnimationSpeed = Self.clampedWindowListAnimationSpeed(
+            (userDefaults.object(forKey: Key.windowListAnimationSpeed) as? Double)
+                ?? Self.defaultWindowListAnimationSpeed
+        )
         self.showBrowserTabsInCarousel =
             (userDefaults.object(forKey: Key.showBrowserTabsInCarousel) as? Bool) ?? false
         self.reopenWindowlessApplications =
@@ -163,7 +187,13 @@ final class SettingsStore: ObservableObject {
         fanSpacing = Self.defaultFanSpacing
         showAppNamesInCarousel = true
         animateCarouselPresentation = true
+        windowListAnimationStyle = .staggered
+        windowListAnimationSpeed = Self.defaultWindowListAnimationSpeed
         showBrowserTabsInCarousel = false
+    }
+
+    static func clampedWindowListAnimationSpeed(_ speed: Double) -> Double {
+        min(max(speed, windowListAnimationSpeedRange.lowerBound), windowListAnimationSpeedRange.upperBound)
     }
 
     func isExcluded(bundleIdentifier: String?) -> Bool {
