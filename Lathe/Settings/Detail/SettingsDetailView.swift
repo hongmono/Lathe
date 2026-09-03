@@ -28,6 +28,8 @@ struct SettingsDetailView: View {
                 SettingsPermissionsDetailView(store: store)
             case .carousel:
                 SettingsCarouselDetailView(store: store)
+            case .animation:
+                SettingsAnimationDetailView(store: store)
             case .hiddenApps:
                 HiddenAppsSettingsView(store: store)
             case .about:
@@ -65,6 +67,15 @@ struct SettingsDetailView: View {
         SettingsDetailView(
             store: SettingsPreviewStore.makeStore(suiteName: "Lathe.SettingsDetail.PermissionsPreview"),
             pane: .permissions
+        )
+    }
+}
+
+#Preview("Detail - Animation") {
+    SettingsDetailPreviewSurface(paddedContent: false) {
+        SettingsDetailView(
+            store: SettingsPreviewStore.makeStore(suiteName: "Lathe.SettingsDetail.AnimationPreview"),
+            pane: .animation
         )
     }
 }

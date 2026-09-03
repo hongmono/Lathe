@@ -83,6 +83,7 @@ struct WindowListView: View {
     let selectedIndex: Int
     let presentationStyle: WindowListAnimationStyle
     let presentationSpeed: Double
+    let presentationDelay: Double
 
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @Namespace private var highlightNamespace
@@ -121,9 +122,14 @@ struct WindowListView: View {
             }
             .onAppear {
                 proxy.scrollTo(selectedIndex, anchor: .center)
-                DispatchQueue.main.async {
-                    areRowsPresented = true
+            }
+            .task {
+                await Task.yield()
+                if resolvedPresentationDelay > 0 {
+                    try? await Task.sleep(for: .seconds(resolvedPresentationDelay))
                 }
+                guard !Task.isCancelled else { return }
+                areRowsPresented = true
             }
         }
         .background {
@@ -140,7 +146,6 @@ struct WindowListView: View {
         .offset(y: wholeListOffsetY)
         .opacity(areRowsPresented ? 1 : 0)
         .animation(containerPresentationAnimation, value: areRowsPresented)
-        .animation(selectionAnimation, value: selectedIndex)
     }
 
     private var selectionAnimation: Animation {
@@ -256,6 +261,10 @@ struct WindowListView: View {
         SettingsStore.clampedWindowListAnimationSpeed(presentationSpeed)
     }
 
+    private var resolvedPresentationDelay: Double {
+        SettingsStore.clampedWindowListAnimationDelay(presentationDelay)
+    }
+
     @ViewBuilder
     private func row(for item: WindowSelectionItem, isSelected: Bool) -> some View {
         HStack(spacing: 9) {
@@ -285,15 +294,20 @@ struct WindowListView: View {
         .frame(height: WindowListLayout.rowHeight)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background {
-            if isSelected {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .fill(Color.accentColor.opacity(0.22))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
-                            .stroke(Color.accentColor.opacity(0.35), lineWidth: 0.8)
-                    }
-                    .matchedGeometryEffect(id: "selection", in: highlightNamespace)
+            ZStack {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(Color.accentColor.opacity(0.22))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                                .stroke(Color.accentColor.opacity(0.35), lineWidth: 0.8)
+                        }
+                        .matchedGeometryEffect(id: "selection", in: highlightNamespace)
+                }
             }
+            // Keep the moving highlight animated without cross-fading row text
+            // when its selection-dependent font weight and color change.
+            .animation(selectionAnimation, value: selectedIndex)
         }
         .contentShape(Rectangle())
     }

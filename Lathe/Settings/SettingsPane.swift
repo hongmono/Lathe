@@ -2,6 +2,7 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
     case general
     case permissions
     case carousel
+    case animation
     case hiddenApps
     case about
 
@@ -11,6 +12,7 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
         .general,
         .permissions,
         .carousel,
+        .animation,
         .hiddenApps,
         .about,
     ]
@@ -23,6 +25,8 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
             return "settings.permissions.section"
         case .carousel:
             return "settings.carousel.section"
+        case .animation:
+            return "settings.animation.section"
         case .hiddenApps:
             return "settings.hiddenApps.section"
         case .about:
@@ -38,6 +42,8 @@ enum SettingsPane: Equatable, Hashable, Identifiable {
             return "hand.raised"
         case .carousel:
             return "rectangle.stack"
+        case .animation:
+            return "play.circle"
         case .hiddenApps:
             return "eye.slash"
         case .about:

@@ -14,6 +14,7 @@ final class SettingsSidebarVisibilityTests: XCTestCase {
             .general,
             .permissions,
             .carousel,
+            .animation,
             .hiddenApps,
             .about,
         ])

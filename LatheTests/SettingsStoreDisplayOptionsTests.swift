@@ -96,6 +96,34 @@ final class SettingsStoreDisplayOptionsTests: XCTestCase {
     }
 
     @MainActor
+    func test_windowListAnimationDelayDefaultsToPointThreeSeconds() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+
+        XCTAssertEqual(store.windowListAnimationDelay, 0.3)
+    }
+
+    @MainActor
+    func test_windowListAnimationDelayPersists() {
+        let defaults = makeDefaults()
+        let store = SettingsStore(userDefaults: defaults)
+
+        store.windowListAnimationDelay = 0.7
+
+        let reloaded = SettingsStore(userDefaults: defaults)
+        XCTAssertEqual(reloaded.windowListAnimationDelay, 0.7)
+    }
+
+    @MainActor
+    func test_windowListAnimationDelayClampsPersistedOutOfRangeValues() {
+        let defaults = makeDefaults()
+        defaults.set(2.0, forKey: "windowListAnimationDelay")
+
+        let store = SettingsStore(userDefaults: defaults)
+
+        XCTAssertEqual(store.windowListAnimationDelay, SettingsStore.windowListAnimationDelayRange.upperBound)
+    }
+
+    @MainActor
     func test_showBrowserTabsInCarouselDefaultsToFalse() {
         let store = SettingsStore(userDefaults: makeDefaults())
 
@@ -210,33 +238,59 @@ final class SettingsStoreDisplayOptionsTests: XCTestCase {
     }
 
     @MainActor
-    func test_resetCarouselDefaultsRestoresPresentationAnimation() {
+    func test_resetAnimationDefaultsRestoresPresentationAnimation() {
         let store = SettingsStore(userDefaults: makeDefaults())
         store.animateCarouselPresentation = false
 
-        store.resetCarouselDefaults()
+        store.resetAnimationDefaults()
 
         XCTAssertTrue(store.animateCarouselPresentation)
     }
 
     @MainActor
-    func test_resetCarouselDefaultsRestoresWindowListAnimationStyle() {
+    func test_resetAnimationDefaultsRestoresWindowListAnimationStyle() {
         let store = SettingsStore(userDefaults: makeDefaults())
         store.windowListAnimationStyle = .whole
 
-        store.resetCarouselDefaults()
+        store.resetAnimationDefaults()
 
         XCTAssertEqual(store.windowListAnimationStyle, .staggered)
     }
 
     @MainActor
-    func test_resetCarouselDefaultsRestoresWindowListAnimationSpeed() {
+    func test_resetAnimationDefaultsRestoresWindowListAnimationSpeed() {
         let store = SettingsStore(userDefaults: makeDefaults())
         store.windowListAnimationSpeed = 1.8
 
-        store.resetCarouselDefaults()
+        store.resetAnimationDefaults()
 
         XCTAssertEqual(store.windowListAnimationSpeed, SettingsStore.defaultWindowListAnimationSpeed)
+    }
+
+    @MainActor
+    func test_resetAnimationDefaultsRestoresWindowListAnimationDelay() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+        store.windowListAnimationDelay = 0.8
+
+        store.resetAnimationDefaults()
+
+        XCTAssertEqual(store.windowListAnimationDelay, SettingsStore.defaultWindowListAnimationDelay)
+    }
+
+    @MainActor
+    func test_resetCarouselDefaultsDoesNotChangeAnimationPreferences() {
+        let store = SettingsStore(userDefaults: makeDefaults())
+        store.animateCarouselPresentation = false
+        store.windowListAnimationStyle = .whole
+        store.windowListAnimationSpeed = 1.8
+        store.windowListAnimationDelay = 0.8
+
+        store.resetCarouselDefaults()
+
+        XCTAssertFalse(store.animateCarouselPresentation)
+        XCTAssertEqual(store.windowListAnimationStyle, .whole)
+        XCTAssertEqual(store.windowListAnimationSpeed, 1.8)
+        XCTAssertEqual(store.windowListAnimationDelay, 0.8)
     }
 
     @MainActor

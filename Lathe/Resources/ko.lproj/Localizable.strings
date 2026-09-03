@@ -40,6 +40,11 @@
 "settings.carousel.fanSpacing" = "부채꼴 간격";
 "settings.carousel.showAppNames" = "앱 이름 표시";
 "settings.carousel.animateOnOpen" = "열릴 때 카드 펼치기";
+"settings.animation.section" = "애니메이션";
+"settings.animation.style" = "스타일";
+"settings.animation.windowListAnimation.delay" = "시작 지연";
+"settings.animation.seconds.short" = "초";
+"settings.animation.restoreDefaults" = "애니메이션 기본값 복원";
 "settings.carousel.windowListAnimation" = "창 목록 애니메이션";
 "settings.carousel.windowListAnimation.speed" = "애니메이션 속도";
 "settings.carousel.windowListAnimation.replay" = "미리보기 다시 재생";

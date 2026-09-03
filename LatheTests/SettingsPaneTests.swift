@@ -8,6 +8,7 @@ final class SettingsPaneTests: XCTestCase {
             .general,
             .permissions,
             .carousel,
+            .animation,
             .hiddenApps,
             .about,
         ])
@@ -15,6 +16,8 @@ final class SettingsPaneTests: XCTestCase {
         XCTAssertEqual(SettingsPane.permissions.titleKey, "settings.permissions.section")
         XCTAssertEqual(SettingsPane.permissions.systemImage, "hand.raised")
         XCTAssertEqual(SettingsPane.carousel.systemImage, "rectangle.stack")
+        XCTAssertEqual(SettingsPane.animation.titleKey, "settings.animation.section")
+        XCTAssertEqual(SettingsPane.animation.systemImage, "play.circle")
         XCTAssertEqual(SettingsPane.hiddenApps.systemImage, "eye.slash")
         XCTAssertEqual(SettingsPane.about.titleKey, "settings.about.section")
     }
