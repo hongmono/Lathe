@@ -41,6 +41,21 @@ private enum WindowListPresentationMotion {
     static let expandResponse = 0.34
 }
 
+enum WindowListPresentationGeometry {
+    static func initialRowOffsetY(for style: WindowListAnimationStyle) -> CGFloat {
+        style == .staggered ? WindowListPresentationMotion.staggeredInitialOffsetY : 0
+    }
+
+    static func initialRowOpacity(for style: WindowListAnimationStyle) -> Double {
+        style == .staggered ? 0 : 1
+    }
+
+    static func rowZIndex(for style: WindowListAnimationStyle, presentationOrder: Int) -> Double {
+        guard style == .expand else { return 0 }
+        return Double(WindowListLayout.maxVisibleRows - presentationOrder)
+    }
+}
+
 struct WindowListView: View {
     let items: [WindowSelectionItem]
     let selectedIndex: Int
@@ -58,8 +73,8 @@ struct WindowListView: View {
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                         row(for: item, isSelected: index == selectedIndex)
                             .id(index)
-                            .offset(y: rowOffsetY(for: index))
-                            .opacity(rowOpacity(for: index))
+                            .offset(y: rowOffsetY)
+                            .opacity(rowOpacity)
                             .zIndex(rowZIndex(for: index))
                             .animation(rowPresentationAnimation(for: index), value: areRowsPresented)
                     }
@@ -130,37 +145,21 @@ struct WindowListView: View {
         return areRowsPresented ? 0 : WindowListPresentationMotion.wholeInitialOffsetY
     }
 
-    private func rowOffsetY(for index: Int) -> CGFloat {
+    private var rowOffsetY: CGFloat {
         guard !accessibilityReduceMotion, !areRowsPresented else { return 0 }
-        switch presentationStyle {
-        case .whole:
-            return 0
-        case .staggered:
-            return WindowListPresentationMotion.staggeredInitialOffsetY
-        case .expand:
-            return -CGFloat(presentationOrder(for: index)) * rowStride
-        }
+        return WindowListPresentationGeometry.initialRowOffsetY(for: presentationStyle)
     }
 
-    private func rowOpacity(for index: Int) -> Double {
+    private var rowOpacity: Double {
         guard !areRowsPresented else { return 1 }
-        switch presentationStyle {
-        case .whole:
-            return 1
-        case .staggered:
-            return 0
-        case .expand:
-            return presentationOrder(for: index) == 0 ? 1 : 0
-        }
+        return WindowListPresentationGeometry.initialRowOpacity(for: presentationStyle)
     }
 
     private func rowZIndex(for index: Int) -> Double {
-        guard presentationStyle == .expand else { return 0 }
-        return Double(WindowListLayout.maxVisibleRows - presentationOrder(for: index))
-    }
-
-    private var rowStride: CGFloat {
-        WindowListLayout.rowHeight + WindowListLayout.rowSpacing
+        WindowListPresentationGeometry.rowZIndex(
+            for: presentationStyle,
+            presentationOrder: presentationOrder(for: index)
+        )
     }
 
     private func presentationOrder(for index: Int) -> Int {
@@ -210,13 +209,7 @@ struct WindowListView: View {
             .delay(delay)
             .speed(resolvedPresentationSpeed)
         case .expand:
-            let delay = Double(presentationOrder(for: index)) * WindowListPresentationMotion.staggerDelay
-            return .spring(
-                response: WindowListPresentationMotion.expandResponse,
-                dampingFraction: WindowListPresentationMotion.dampingFraction
-            )
-            .delay(delay)
-            .speed(resolvedPresentationSpeed)
+            return nil
         }
     }
 

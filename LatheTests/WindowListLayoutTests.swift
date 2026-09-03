@@ -25,4 +25,22 @@ final class WindowListLayoutTests: XCTestCase {
 
         XCTAssertEqual(orders, [0, 1, 2, 3, 4, 5])
     }
+
+    func test_expandRowsStayAtTheirFinalPositionsBehindTheContainerMask() {
+        XCTAssertEqual(WindowListPresentationGeometry.initialRowOffsetY(for: .expand), 0)
+        XCTAssertEqual(WindowListPresentationGeometry.initialRowOpacity(for: .expand), 1)
+    }
+
+    func test_expandRowsPlaceLowerRowsBehindUpperRows() {
+        let firstRowZIndex = WindowListPresentationGeometry.rowZIndex(
+            for: .expand,
+            presentationOrder: 0
+        )
+        let secondRowZIndex = WindowListPresentationGeometry.rowZIndex(
+            for: .expand,
+            presentationOrder: 1
+        )
+
+        XCTAssertGreaterThan(firstRowZIndex, secondRowZIndex)
+    }
 }
