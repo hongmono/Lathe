@@ -38,12 +38,34 @@ private enum WindowListPresentationMotion {
     static let dampingFraction = 1.0
     static let backgroundLeadTime = 0.04
     static let staggerDelay = 0.025
-    static let expandResponse = 0.34
+    static let expandResponse = 0.30
+    static let expandRowResponse = 0.28
+    static let expandRowLeadTime = 0.03
+    static let expandRowStaggerDelay = 0.035
+    static let expandInitialRowOffsetY: CGFloat = -22
+    static let expandAdditionalRowOffsetY: CGFloat = -4
+    static let expandMaximumRowOffsetY: CGFloat = -30
 }
 
 enum WindowListPresentationGeometry {
-    static func initialRowOffsetY(for style: WindowListAnimationStyle) -> CGFloat {
-        style == .staggered ? WindowListPresentationMotion.staggeredInitialOffsetY : 0
+    static func initialRowOffsetY(
+        for style: WindowListAnimationStyle,
+        presentationOrder: Int
+    ) -> CGFloat {
+        switch style {
+        case .whole:
+            return 0
+        case .staggered:
+            return WindowListPresentationMotion.staggeredInitialOffsetY
+        case .expand:
+            guard presentationOrder > 0 else { return 0 }
+            let additionalOffset = CGFloat(min(presentationOrder - 1, 2))
+                * WindowListPresentationMotion.expandAdditionalRowOffsetY
+            return max(
+                WindowListPresentationMotion.expandInitialRowOffsetY + additionalOffset,
+                WindowListPresentationMotion.expandMaximumRowOffsetY
+            )
+        }
     }
 
     static func initialRowOpacity(for style: WindowListAnimationStyle) -> Double {
@@ -73,8 +95,13 @@ struct WindowListView: View {
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                         row(for: item, isSelected: index == selectedIndex)
                             .id(index)
-                            .offset(y: rowOffsetY)
+                            .offset(y: rowOffsetY(for: index))
                             .opacity(rowOpacity)
+                            .modifier(
+                                WindowListExpandRowClipModifier(
+                                    isEnabled: presentationStyle == .expand && !accessibilityReduceMotion
+                                )
+                            )
                             .zIndex(rowZIndex(for: index))
                             .animation(rowPresentationAnimation(for: index), value: areRowsPresented)
                     }
@@ -145,9 +172,12 @@ struct WindowListView: View {
         return areRowsPresented ? 0 : WindowListPresentationMotion.wholeInitialOffsetY
     }
 
-    private var rowOffsetY: CGFloat {
+    private func rowOffsetY(for index: Int) -> CGFloat {
         guard !accessibilityReduceMotion, !areRowsPresented else { return 0 }
-        return WindowListPresentationGeometry.initialRowOffsetY(for: presentationStyle)
+        return WindowListPresentationGeometry.initialRowOffsetY(
+            for: presentationStyle,
+            presentationOrder: presentationOrder(for: index)
+        )
     }
 
     private var rowOpacity: Double {
@@ -209,7 +239,16 @@ struct WindowListView: View {
             .delay(delay)
             .speed(resolvedPresentationSpeed)
         case .expand:
-            return nil
+            let order = presentationOrder(for: index)
+            guard order > 0 else { return nil }
+            let delay = WindowListPresentationMotion.expandRowLeadTime
+                + Double(order - 1) * WindowListPresentationMotion.expandRowStaggerDelay
+            return .spring(
+                response: WindowListPresentationMotion.expandRowResponse,
+                dampingFraction: WindowListPresentationMotion.dampingFraction
+            )
+            .delay(delay)
+            .speed(resolvedPresentationSpeed)
         }
     }
 
@@ -274,6 +313,19 @@ struct WindowListView: View {
             return window.displayTitle
         case .browserTab(let tab):
             return tab.title
+        }
+    }
+}
+
+private struct WindowListExpandRowClipModifier: ViewModifier {
+    let isEnabled: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content.clipped()
+        } else {
+            content
         }
     }
 }

@@ -26,9 +26,26 @@ final class WindowListLayoutTests: XCTestCase {
         XCTAssertEqual(orders, [0, 1, 2, 3, 4, 5])
     }
 
-    func test_expandRowsStayAtTheirFinalPositionsBehindTheContainerMask() {
-        XCTAssertEqual(WindowListPresentationGeometry.initialRowOffsetY(for: .expand), 0)
+    func test_expandKeepsFirstRowFixedAndMovesLowerRowsDownward() {
+        let offsets = (0..<4).map {
+            WindowListPresentationGeometry.initialRowOffsetY(
+                for: .expand,
+                presentationOrder: $0
+            )
+        }
+
+        XCTAssertEqual(offsets, [0, -22, -26, -30])
         XCTAssertEqual(WindowListPresentationGeometry.initialRowOpacity(for: .expand), 1)
+    }
+
+    func test_staggeredRowsKeepTheirExistingInitialOffset() {
+        XCTAssertEqual(
+            WindowListPresentationGeometry.initialRowOffsetY(
+                for: .staggered,
+                presentationOrder: 3
+            ),
+            -10
+        )
     }
 
     func test_expandRowsPlaceLowerRowsBehindUpperRows() {
